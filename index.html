@@ -1,8 +1,199 @@
 <!DOCTYPE html>
-<html>
-<head><title>DCI Arcade</title></head>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>DCI Arcade</title>
+<style>
+  :root {
+    --bg: #0f1115;
+    --card-bg: #1a1d24;
+    --text: #f2f2f2;
+    --muted: #9aa0ab;
+    --accent: #2d6cdf;
+    --border: #2a2e37;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+  }
+  header {
+    padding: 32px 24px 16px;
+    text-align: center;
+  }
+  header h1 {
+    margin: 0 0 8px;
+    font-size: 2rem;
+  }
+  header p {
+    margin: 0;
+    color: var(--muted);
+  }
+  .filters {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    flex-wrap: wrap;
+    padding: 16px 24px;
+  }
+  .filters select {
+    background: var(--card-bg);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 0.9rem;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 16px;
+    padding: 16px 24px 48px;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+  .card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    text-decoration: none;
+    color: var(--text);
+    transition: transform 0.15s ease, border-color 0.15s ease;
+  }
+  .card:hover {
+    transform: translateY(-2px);
+    border-color: var(--accent);
+  }
+  .card .thumb {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    background: #30343d;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    color: var(--muted);
+  }
+  .card .thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .card .info {
+    padding: 12px 14px 16px;
+  }
+  .card h3 {
+    margin: 0 0 4px;
+    font-size: 1.05rem;
+  }
+  .card .meta {
+    font-size: 0.8rem;
+    color: var(--muted);
+  }
+  .empty {
+    text-align: center;
+    color: var(--muted);
+    padding: 48px 24px;
+  }
+</style>
+</head>
 <body>
-  <h1>DCI Arcade</h1>
-  <p>Coming soon.</p>
+
+<header>
+  <h1>🕹️ DCI Arcade</h1>
+  <p>Games built by students, for students.</p>
+</header>
+
+<div class="filters">
+  <select id="subject-filter">
+    <option value="">All subjects</option>
+  </select>
+  <select id="grade-filter">
+    <option value="">All grades</option>
+  </select>
+</div>
+
+<div class="grid" id="game-grid">
+  <p class="empty">Loading games…</p>
+</div>
+
+<script>
+  const grid = document.getElementById("game-grid");
+  const subjectFilter = document.getElementById("subject-filter");
+  const gradeFilter = document.getElementById("grade-filter");
+
+  let allGames = [];
+
+  function uniqueSorted(values) {
+    return [...new Set(values.filter(Boolean))].sort();
+  }
+
+  function populateFilterOptions() {
+    uniqueSorted(allGames.map(g => g.subject)).forEach(subject => {
+      const opt = document.createElement("option");
+      opt.value = subject;
+      opt.textContent = subject;
+      subjectFilter.appendChild(opt);
+    });
+    uniqueSorted(allGames.map(g => g.grade)).forEach(grade => {
+      const opt = document.createElement("option");
+      opt.value = grade;
+      opt.textContent = `Grade ${grade}`;
+      gradeFilter.appendChild(opt);
+    });
+  }
+
+  function renderGames(games) {
+    if (games.length === 0) {
+      grid.innerHTML = `<p class="empty">No games match those filters yet.</p>`;
+      return;
+    }
+    grid.innerHTML = games.map(game => `
+      <a class="card" href="games/${game.slug}/">
+        <div class="thumb">
+          ${game.thumbnail
+            ? `<img src="${game.thumbnail}" alt="${game.title}" />`
+            : "🎮"}
+        </div>
+        <div class="info">
+          <h3>${game.title}</h3>
+          <div class="meta">${game.subject || ""}${game.grade ? " · Grade " + game.grade : ""}</div>
+        </div>
+      </a>
+    `).join("");
+  }
+
+  function applyFilters() {
+    const subject = subjectFilter.value;
+    const grade = gradeFilter.value;
+    const filtered = allGames.filter(g =>
+      (!subject || g.subject === subject) &&
+      (!grade || g.grade === grade)
+    );
+    renderGames(filtered);
+  }
+
+  subjectFilter.addEventListener("change", applyFilters);
+  gradeFilter.addEventListener("change", applyFilters);
+
+  fetch("catalog/games.json")
+    .then(res => res.json())
+    .then(data => {
+      allGames = data.filter(g => g.status === "live");
+      populateFilterOptions();
+      renderGames(allGames);
+    })
+    .catch(err => {
+      console.error("Failed to load catalog", err);
+      grid.innerHTML = `<p class="empty">Couldn't load the game list. Try refreshing.</p>`;
+    });
+</script>
+
 </body>
 </html>
