@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>My Stats — DCI Arcade</title>
+<style>
+  :root {
+    --bg: #0f1115;
+    --card-bg: #1a1d24;
+    --text: #f2f2f2;
+    --muted: #9aa0ab;
+    --accent: #2d6cdf;
+    --gold: #e0b94f;
+    --border: #2a2e37;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+  }
+  header {
+    padding: 32px 24px 8px;
+    text-align: center;
+  }
+  header a.back {
+    display: inline-block;
+    margin-bottom: 16px;
+    color: var(--muted);
+    text-decoration: none;
+    font-size: 0.9rem;
+  }
+  header a.back:hover { color: var(--text); }
+  header h1 { margin: 0 0 4px; font-size: 1.8rem; }
+  #handle-line {
+    color: var(--muted);
+    margin: 0 0 24px;
+  }
+  #handle-line strong { color: var(--text); }
+  .wrap {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 0 24px 48px;
+  }
+  .row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px 18px;
+    margin-bottom: 12px;
+  }
+  .row .left h3 {
+    margin: 0 0 4px;
+    font-size: 1.05rem;
+  }
+  .row .left .score {
+    color: var(--muted);
+    font-size: 0.85rem;
+  }
+  .row .right {
+    text-align: right;
+  }
+  .row .rank {
+    font-size: 1.4rem;
+    font-weight: 700;
+  }
+  .row .rank.gold { color: var(--gold); }
+  .row .of {
+    font-size: 0.75rem;
+    color: var(--muted);
+  }
+  .empty {
+    text-align: center;
+    color: var(--muted);
+    padding: 48px 24px;
+  }
+  .empty a { color: var(--accent); }
+</style>
+</head>
+<body>
+
+<header>
+  <a class="back" href="./">&larr; Back to Arcade</a>
+  <h1>📊 My Stats</h1>
+  <p id="handle-line">Loading…</p>
+</header>
+
+<div class="wrap" id="stats-list">
+  <p class="empty">Loading your games…</p>
+</div>
+
+<script type="module">
+  import "./shared/lab-sdk.js";
+
+  // lab-sdk.js attaches itself to window.LabSDK once its module runs.
+  // Give it a tick to finish auth bootstrap before calling in.
+  async function waitForSDK() {
+    while (!window.LabSDK) {
+      await new Promise(r => setTimeout(r, 50));
+    }
+  }
+
+  function medalClass(rank) {
+    return rank === 1 ? "gold" : "";
+  }
+
+  async function render() {
+    await waitForSDK();
+
+    const handle = await LabSDK.getHandle();
+    document.getElementById("handle-line").innerHTML =
+      `Playing as <strong>${handle}</strong>`;
+
+    const stats = await LabSDK.getMyStats();
+    const list = document.getElementById("stats-list");
+
+    if (stats.length === 0) {
+      list.innerHTML = `
+        <p class="empty">
+          You haven't played any games yet.<br />
+          <a href="./">Browse the arcade</a> to get started.
+        </p>`;
+      return;
+    }
+
+    // Best rank first
+    stats.sort((a, b) => a.rank - b.rank);
+
+    list.innerHTML = stats.map(s => `
+      <div class="row">
+        <div class="left">
+          <h3>${s.game_id}</h3>
+          <div class="score">Best score: ${s.best_score}</div>
+        </div>
+        <div class="right">
+          <div class="rank ${medalClass(s.rank)}">#${s.rank}</div>
+          <div class="of">of ${s.total_players}</div>
+        </div>
+      </div>
+    `).join("");
+  }
+
+  render().catch(err => {
+    console.error("Failed to load stats", err);
+    document.getElementById("stats-list").innerHTML =
+      `<p class="empty">Couldn't load your stats. Try refreshing.</p>`;
+  });
+</script>
+
+</body>
+</html>
