@@ -6,118 +6,203 @@
 <title>DCI Arcade</title>
 <style>
   :root {
-    --bg: #0f1115;
-    --card-bg: #1a1d24;
-    --text: #f2f2f2;
-    --muted: #9aa0ab;
-    --accent: #2d6cdf;
-    --border: #2a2e37;
+    --bg: #ffffff;
+    --text: #1a1a1a;
+    --muted: #6b7280;
+    --accent: #e4002b;
+    --accent-dark: #b8001f;
+    --card-bg: #ffffff;
+    --card-border: #e2e4e8;
+    --label-bg: #f4f5f7;
   }
   * { box-sizing: border-box; }
   body {
     margin: 0;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
     background: var(--bg);
     color: var(--text);
   }
+
+  /* Top bar */
+  .topbar {
+    background: var(--accent);
+    height: 6px;
+  }
   header {
-    padding: 32px 24px 16px;
-    text-align: center;
-  }
-  header h1 {
-    margin: 0 0 8px;
-    font-size: 2rem;
-  }
-  header p {
-    margin: 0;
-    color: var(--muted);
-  }
-  .filters {
-    display: flex;
-    gap: 8px;
-    justify-content: center;
-    flex-wrap: wrap;
-    padding: 16px 24px;
-  }
-  .filters select {
-    background: var(--card-bg);
-    color: var(--text);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 8px 12px;
-    font-size: 0.9rem;
-  }
-  .grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-    gap: 16px;
-    padding: 16px 24px 48px;
+    padding: 36px 24px 20px;
     max-width: 1100px;
     margin: 0 auto;
   }
+  header h1 {
+    font-size: 2.4rem;
+    font-weight: 800;
+    margin: 0 0 4px;
+    letter-spacing: -0.5px;
+  }
+  header h1 span { color: var(--accent); }
+  header p.tagline {
+    margin: 0;
+    color: var(--muted);
+    font-size: 1.05rem;
+  }
+  header .stats-link {
+    margin-top: 10px;
+    display: inline-block;
+    color: var(--accent);
+    font-weight: 600;
+    text-decoration: none;
+    font-size: 0.9rem;
+  }
+  header .stats-link:hover { text-decoration: underline; }
+
+  /* Category pills */
+  .pills {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 4px 24px 28px;
+  }
+  .pill {
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 999px;
+    padding: 12px 20px;
+    font-size: 0.88rem;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: background 0.15s ease, transform 0.1s ease;
+  }
+  .pill:hover { background: var(--accent-dark); }
+  .pill:active { transform: scale(0.97); }
+  .pill.inactive {
+    background: var(--label-bg);
+    color: var(--text);
+  }
+  .pill.inactive:hover { background: #e9ebef; }
+
+  /* Section header */
+  .section-title {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 8px 24px 0;
+  }
+  .section-title h2 {
+    font-size: 1.4rem;
+    font-weight: 800;
+    margin: 0 0 4px;
+    display: inline-block;
+    padding-bottom: 10px;
+    border-bottom: 3px solid var(--accent);
+  }
+
+  /* Grid */
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 20px;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 20px 24px 60px;
+  }
   .card {
     background: var(--card-bg);
-    border: 1px solid var(--border);
-    border-radius: 12px;
+    border: 1px solid var(--card-border);
+    border-radius: 10px;
     overflow: hidden;
-    display: flex;
-    flex-direction: column;
     text-decoration: none;
     color: var(--text);
-    transition: transform 0.15s ease, border-color 0.15s ease;
+    display: flex;
+    flex-direction: column;
+    transition: box-shadow 0.15s ease, transform 0.15s ease;
+    position: relative;
   }
   .card:hover {
+    box-shadow: 0 6px 18px rgba(0,0,0,0.1);
     transform: translateY(-2px);
-    border-color: var(--accent);
   }
   .card .thumb {
     width: 100%;
-    aspect-ratio: 16 / 9;
-    background: #30343d;
+    aspect-ratio: 1 / 1;
+    background: linear-gradient(135deg, #f4f5f7, #e9ebef);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 2rem;
-    color: var(--muted);
+    font-size: 2.4rem;
+    position: relative;
   }
   .card .thumb img {
     width: 100%;
     height: 100%;
     object-fit: cover;
   }
+  .card .badge {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    background: var(--accent);
+    color: #fff;
+    font-size: 0.68rem;
+    font-weight: 800;
+    padding: 3px 8px;
+    border-radius: 4px;
+    letter-spacing: 0.4px;
+  }
+  .card .label-strip {
+    background: var(--label-bg);
+    text-align: center;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--muted);
+    padding: 6px 0;
+    letter-spacing: 0.3px;
+    border-top: 1px solid var(--card-border);
+    border-bottom: 1px solid var(--card-border);
+    text-transform: uppercase;
+  }
   .card .info {
-    padding: 12px 14px 16px;
+    padding: 10px 12px 14px;
   }
   .card h3 {
-    margin: 0 0 4px;
-    font-size: 1.05rem;
+    margin: 0 0 2px;
+    font-size: 0.95rem;
+    font-weight: 700;
+    line-height: 1.3;
   }
   .card .meta {
-    font-size: 0.8rem;
+    font-size: 0.78rem;
     color: var(--muted);
   }
   .empty {
     text-align: center;
     color: var(--muted);
-    padding: 48px 24px;
+    padding: 60px 24px;
+    grid-column: 1 / -1;
   }
 </style>
 </head>
 <body>
 
+<div class="topbar"></div>
+
 <header>
-  <h1>🕹️ DCI Arcade</h1>
-  <p>Games built by students, for students.</p>
-<p style="margin-top:12px;"><a href="my-stats.html" style="color:#2d6cdf;">📊 View My Stats</a></p>
+  <h1>🕹️ DCI <span>Arcade</span></h1>
+  <p class="tagline">Games built by students, for students.</p>
+  <a class="stats-link" href="my-stats.html">📊 View My Stats &rarr;</a>
 </header>
 
-<div class="filters">
-  <select id="subject-filter">
-    <option value="">All subjects</option>
-  </select>
-  <select id="grade-filter">
-    <option value="">All grades</option>
-  </select>
+<div class="pills" id="filter-pills">
+  <button class="pill" data-type="subject" data-value="">All Games</button>
+</div>
+
+<div class="section-title">
+  <h2 id="section-label">All Games</h2>
 </div>
 
 <div class="grid" id="game-grid">
@@ -126,69 +211,73 @@
 
 <script>
   const grid = document.getElementById("game-grid");
-  const subjectFilter = document.getElementById("subject-filter");
-  const gradeFilter = document.getElementById("grade-filter");
+  const pillsEl = document.getElementById("filter-pills");
+  const sectionLabel = document.getElementById("section-label");
 
   let allGames = [];
+  let activeSubject = "";
 
   function uniqueSorted(values) {
     return [...new Set(values.filter(Boolean))].sort();
   }
 
-  function populateFilterOptions() {
-    uniqueSorted(allGames.map(g => g.subject)).forEach(subject => {
-      const opt = document.createElement("option");
-      opt.value = subject;
-      opt.textContent = subject;
-      subjectFilter.appendChild(opt);
-    });
-    uniqueSorted(allGames.map(g => g.grade)).forEach(grade => {
-      const opt = document.createElement("option");
-      opt.value = grade;
-      opt.textContent = `Grade ${grade}`;
-      gradeFilter.appendChild(opt);
+  function subjectIcon(subject) {
+    const map = {
+      "Math": "🔢",
+      "Science": "🔬",
+      "ELA": "📖",
+      "Social Studies": "🌍",
+      "Other": "✨"
+    };
+    return map[subject] || "🎮";
+  }
+
+  function buildPills() {
+    const subjects = uniqueSorted(allGames.map(g => g.subject));
+    pillsEl.innerHTML = `<button class="pill" data-value="">All Games</button>` +
+      subjects.map(s => `<button class="pill inactive" data-value="${s}">${subjectIcon(s)} ${s}</button>`).join("");
+
+    pillsEl.querySelectorAll(".pill").forEach(btn => {
+      btn.addEventListener("click", () => {
+        activeSubject = btn.dataset.value;
+        pillsEl.querySelectorAll(".pill").forEach(b => {
+          b.classList.toggle("inactive", b.dataset.value !== activeSubject);
+        });
+        sectionLabel.textContent = activeSubject ? activeSubject + " Games" : "All Games";
+        render();
+      });
     });
   }
 
-  function renderGames(games) {
-    if (games.length === 0) {
-      grid.innerHTML = `<p class="empty">No games match those filters yet.</p>`;
+  function render() {
+    const filtered = allGames.filter(g => !activeSubject || g.subject === activeSubject);
+    if (filtered.length === 0) {
+      grid.innerHTML = `<p class="empty">No games here yet.</p>`;
       return;
     }
-    grid.innerHTML = games.map(game => `
+    grid.innerHTML = filtered.map(game => `
       <a class="card" href="games/${game.slug}/">
         <div class="thumb">
+          ${game.badge ? `<span class="badge">${game.badge}</span>` : ""}
           ${game.thumbnail
             ? `<img src="${game.thumbnail}" alt="${game.title}" />`
-            : "🎮"}
+            : subjectIcon(game.subject)}
         </div>
+        <div class="label-strip">${game.subject || "Game"}</div>
         <div class="info">
           <h3>${game.title}</h3>
-          <div class="meta">${game.subject || ""}${game.grade ? " · Grade " + game.grade : ""}</div>
+          <div class="meta">${game.grade ? "Grade " + game.grade : ""}</div>
         </div>
       </a>
     `).join("");
   }
 
-  function applyFilters() {
-    const subject = subjectFilter.value;
-    const grade = gradeFilter.value;
-    const filtered = allGames.filter(g =>
-      (!subject || g.subject === subject) &&
-      (!grade || g.grade === grade)
-    );
-    renderGames(filtered);
-  }
-
-  subjectFilter.addEventListener("change", applyFilters);
-  gradeFilter.addEventListener("change", applyFilters);
-
   fetch("catalog/games.json")
     .then(res => res.json())
     .then(data => {
       allGames = data.filter(g => g.status === "live");
-      populateFilterOptions();
-      renderGames(allGames);
+      buildPills();
+      render();
     })
     .catch(err => {
       console.error("Failed to load catalog", err);
