@@ -36,9 +36,43 @@
   header h1 { margin: 0 0 4px; font-size: 1.8rem; }
   #handle-line {
     color: var(--muted);
-    margin: 0 0 24px;
+    margin: 0 0 16px;
   }
   #handle-line strong { color: var(--text); }
+  .points-hero {
+    max-width: 640px;
+    margin: 0 auto 28px;
+    padding: 0 24px;
+  }
+  .points-card {
+    background: linear-gradient(135deg, #1a1d24, #242832);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 24px;
+    text-align: center;
+  }
+  .points-card .value {
+    font-size: 2.6rem;
+    font-weight: 800;
+    color: var(--gold);
+    line-height: 1;
+  }
+  .points-card .label {
+    color: var(--muted);
+    font-size: 0.85rem;
+    margin-top: 6px;
+  }
+  .points-chip {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--gold);
+    background: rgba(224, 185, 79, 0.12);
+    border: 1px solid rgba(224, 185, 79, 0.3);
+    border-radius: 6px;
+    padding: 2px 8px;
+    margin-top: 4px;
+    display: inline-block;
+  }
   .wrap {
     max-width: 640px;
     margin: 0 auto;
@@ -90,6 +124,13 @@
   <p id="handle-line">Loading…</p>
 </header>
 
+<div class="points-hero">
+  <div class="points-card">
+    <div class="value" id="total-points">—</div>
+    <div class="label">Arcade Points</div>
+  </div>
+</div>
+
 <div class="wrap" id="stats-list">
   <p class="empty">Loading your games…</p>
 </div>
@@ -116,6 +157,9 @@
     document.getElementById("handle-line").innerHTML =
       `Playing as <strong>${handle}</strong>`;
 
+    const { total, breakdown } = await LabSDK.getArcadePoints();
+    document.getElementById("total-points").textContent = total;
+
     const stats = await LabSDK.getMyStats();
     const list = document.getElementById("stats-list");
 
@@ -128,7 +172,8 @@
       return;
     }
 
-    // Best rank first
+    // Merge points into each stat row, best rank first
+    const pointsByGame = Object.fromEntries(breakdown.map(b => [b.game_id, b.points]));
     stats.sort((a, b) => a.rank - b.rank);
 
     list.innerHTML = stats.map(s => `
@@ -136,6 +181,7 @@
         <div class="left">
           <h3>${s.game_id}</h3>
           <div class="score">Best score: ${s.best_score}</div>
+          <div class="points-chip">+${pointsByGame[s.game_id]} pts</div>
         </div>
         <div class="right">
           <div class="rank ${medalClass(s.rank)}">#${s.rank}</div>
