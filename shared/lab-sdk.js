@@ -270,10 +270,38 @@ async function getMyStats() {
   );
 }
 
+// Converts a rank (out of totalPlayers) into Arcade Points.
+// Placement-based, not score-based — a 1st place is worth the same
+// whether 3 people played that game or 300. Keeps every game
+// comparable regardless of its own scoring scale.
+function pointsForRank(rank, totalPlayers) {
+  if (rank === 1) return 10;
+  if (rank === 2) return 7;
+  if (rank === 3) return 5;
+  if (rank <= Math.ceil(totalPlayers / 2)) return 3;
+  return 1;
+}
+
+// This player's total Arcade Points across every game they've played,
+// plus the per-game breakdown that produced it.
+// Returns: { total, breakdown: [{ game_id, rank, total_players, points }, ...] }
+async function getArcadePoints() {
+  const stats = await getMyStats();
+  const breakdown = stats.map(s => ({
+    game_id: s.game_id,
+    rank: s.rank,
+    total_players: s.total_players,
+    points: pointsForRank(s.rank, s.total_players)
+  }));
+  const total = breakdown.reduce((sum, b) => sum + b.points, 0);
+  return { total, breakdown };
+}
+
 window.LabSDK = {
   getHandle,
   recordScore,
   getGameLeaderboard,
   getMyRank,
-  getMyStats
+  getMyStats,
+  getArcadePoints
 };
