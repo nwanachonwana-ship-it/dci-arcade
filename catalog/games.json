@@ -1,13 +1,6 @@
 [
-  {
-    "slug": "test-game",
-    "title": "Test Game",
-    "subject": "Math",
-    "grade": "5",
-    "thumbnail": "",
-    "status": "live"
-  }
-  ,
+ 
+  
   {
   "slug": "bs-card-game",
   "title": "BS Card Game",
