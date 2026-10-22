@@ -33,4 +33,13 @@
   "thumbnail": "games/legends-defense/icon.png",
   "status": "live"
 }
+  ,
+{
+  "slug": "math-opps",
+  "title": "Math Ops",
+  "subject": "Math",
+  "grade": "N/A",
+  "thumbnail": "games/math-opps/icon.png",
+  "status": "live"
+}
 ]
