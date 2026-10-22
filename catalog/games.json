@@ -24,5 +24,13 @@
   "thumbnail": "games/number-smashers/icon.png",
   "status": "live"
 }
-  
+,
+{
+  "slug": "legends-defense",
+  "title": "Legends Defense",
+  "subject": "Math",
+  "grade": "N/A",
+  "thumbnail": "games/legends-defense/icon.png",
+  "status": "live"
+}
 ]
