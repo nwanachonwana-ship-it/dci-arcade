@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Math Ops</title>
+<style>
+:root{--bg:#f3f1ec;--fg:#1d1d1b;--card:#fff;--ac:#c2410c;--mu:#6b6b66;--bd:#d6d3cb;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#17171a;--fg:#ececea;--card:#232327;--ac:#fb923c;--mu:#9a9a96;--bd:#38383d}}
+:root[data-theme="dark"]{--bg:#17171a;--fg:#ececea;--card:#232327;--ac:#fb923c;--mu:#9a9a96;--bd:#38383d}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,sans-serif;display:flex;flex-direction:column;align-items:center;padding:10px}
+h1{margin:6px 0;font-size:22px;letter-spacing:1px}
+.wrap{width:100%;max-width:820px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:14px;margin:8px 0}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+button,select,input{font:inherit;color:var(--fg);background:var(--card);border:1px solid var(--bd);border-radius:6px;padding:7px 12px}
+button{cursor:pointer}button:hover:not(:disabled){border-color:var(--ac)}button:disabled{opacity:.4;cursor:default}
+button.p{background:var(--ac);color:#fff;border-color:var(--ac)}
+.mu{color:var(--mu);font-size:13px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:8px}
+.up{display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid var(--bd);font-size:14px}
+canvas{display:block;width:100%;max-width:800px;background:#1b1b1f;border-radius:10px;touch-action:none;cursor:crosshair}
+.q{font-size:26px;margin:10px 0;font-weight:600}
+.hide{display:none}
+</style></head><body>
+<div class="wrap">
+<h1>MATH OPS</h1>
+<div id="menu">
+ <div class="card"><div class="row"><b id="gold"></b><span class="mu" id="prog"></span><span style="flex:1"></span><button class="p" id="play">Start next level</button><button id="reset">New run</button></div>
+ <div class="mu" style="margin-top:6px">WASD move · mouse aim · click shoot · 1/2/3 switch gun · grab keys to open matching doors · ammo comes from math below</div></div>
+ <div class="card"><b>Ammo</b> <span class="mu">(solve problems to refill)</span><div class="row" id="ammo" style="margin-top:6px"></div></div>
+ <div class="card"><b>Math → ammo</b> <span class="mu">(no switching tabs, and don't rush — cheating earns nothing)</span>
+  <div class="row" style="margin:8px 0"><label>Grade <select id="grade"></select></label><label>Load into <select id="tgt"><option value="rifle">Rifle</option><option value="shotgun">Shotgun</option><option value="sniper">Sniper</option></select></label><span class="mu" id="reward"></span></div>
+  <div class="q" id="q"></div>
+  <div class="row"><input id="ans" type="number" step="any" placeholder="answer" autocomplete="off"><button class="p" id="sub">Submit</button><button id="skip">New problem</button><span id="fb"></span></div></div>
+ <div class="card"><b>Shop</b><div class="grid" id="shop" style="margin-top:6px"></div></div>
+</div>
+<div id="game" class="hide"><canvas id="c" width="800" height="560"></canvas><div class="row" style="margin-top:6px"><button id="quit">Quit to menu</button><span class="mu" id="msg"></span></div></div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const GUNS={rifle:{n:'Rifle',dmg:20,rate:.14,range:330,spread:.07,cap:60,pel:1},shotgun:{n:'Shotgun',dmg:11,rate:.85,range:170,spread:.32,cap:24,pel:6},sniper:{n:'Sniper',dmg:95,rate:1.3,range:760,spread:.012,cap:10,pel:1}};
+const UPS=[['cap','Ammo cap'],['range','Range'],['acc','Accuracy'],['dmg','Damage'],['rate','Fire rate']];
+let S;
+function fresh(){const o={gold:0,beaten:0,order:[],ammo:{rifle:30,shotgun:10,sniper:5},up:{rifle:{},shotgun:{},sniper:{}},hp:0,spd:0};
+ for(const g in GUNS)UPS.forEach(u=>o.up[g][u[0]]=0);
+ const a=[...Array(25).keys()].map(i=>(Math.random()*1e9|0));o.order=a;return o}
+S=fresh();
+try{const t=localStorage.getItem('mathops');if(t)S=JSON.parse(t)}catch(e){}
+function save(){try{localStorage.setItem('mathops',JSON.stringify(S))}catch(e){}}
+const R=(a,b)=>a+Math.floor(Math.random()*(b-a+1));
+function stats(g){const b=GUNS[g],u=S.up[g];return{dmg:b.dmg*(1+.15*u.dmg),rate:b.rate*Math.pow(.92,u.rate),range:b.range*(1+.08*u.range),spread:b.spread*Math.pow(.88,u.acc),cap:Math.round(b.cap*(1+.25*u.cap)),pel:b.pel}}
+const maxHp=()=>100+20*S.hp,pspd=()=>150+12*S.spd;
+const totalUps=()=>{let n=S.hp+S.spd;for(const g in S.up)for(const k in S.up[g])n+=S.up[g][k];return n};
+// ---- math
+function gen(g){let q,a;
+ if(g==6){const t=R(0,3);if(t==0){const x=R(12,60),y=R(12,60);q=`${x} + ${y} × 2`;a=x+y*2}else if(t==1){const d=R(2,9),n=R(2,9);q=`${d*n} ÷ ${d} + ${R(3,15)}`;a=n+0;const e=+q.split('+ ')[1];a=n+e}else if(t==2){const x=R(2,9),y=R(2,9);q=`${x}² + ${y}²`;a=x*x+y*y}else{const p=R(1,9)*10;q=`${p}% of ${R(2,9)*20}`;a=p/100*+q.split('of ')[1]}}
+ else if(g==7){const t=R(0,2);if(t==0){const x=R(-20,-3),y=R(5,25);q=`(${x}) × ${R(2,6)} + ${y}`;a=x*R(1,1);const m=+q.match(/× (\d+)/)[1];a=x*m+y}else if(t==1){const p=R(1,9)*5,b=R(2,9)*20;q=`${p}% of ${b}`;a=p/100*b}else{const x=R(2,9),y=R(2,9);q=`Area of a triangle, base ${x*2}, height ${y}`;a=x*y}}
+ else if(g==8){const x=R(-9,12),a1=R(2,9),b=R(-15,15);q=`Solve: ${a1}x + (${b}) = ${a1*x+b}`;a=x}
+ else if(g==9){const t=R(0,1);if(t==0){const x=R(-8,10),k=R(2,6),b=R(1,9);q=`Solve: ${k}(x + ${b}) = ${k*(x+b)}`;a=x}else{const x1=R(-5,6),y1=R(-5,6),m=R(-4,5),dx=R(1,5);q=`Slope of the line through (${x1}, ${y1}) and (${x1+dx}, ${y1+m*dx})`;a=m}}
+ else if(g==10){const r1=R(-6,8),r2=R(-6,8);const s=r1+r2,p=r1*r2;q=`Larger root of x² ${s?(-s>0?'+ ':'− ')+Math.abs(s)+'x ':''}${p>=0?'+ ':'− '}${Math.abs(p)} = 0`;a=Math.max(r1,r2)}
+ else if(g==11){const t=R(0,2);if(t==0){const b=R(2,5),k=R(2,5);q=`log base ${b} of ${Math.pow(b,k)}`;a=k}else if(t==1){const x=R(2,5);q=`If 2^x = ${Math.pow(2,x+1)}, what is x?`;a=x+1}else{const n=R(4,9);q=`Sum of the first ${n} terms of 2, 4, 6, …`;a=n*(n+1)}}
+ else{const t=R(0,1);if(t==0){const A=R(1,5),B=R(-9,9),c=R(-3,3);q=`f(x) = ${A}x³ ${B>=0?'+':'−'} ${Math.abs(B)}x. Find f′(${c})`;a=3*A*c*c+B}else{const k=R(2,6),c=R(1,4);q=`∫ from 0 to ${c} of ${2*k}x dx`;a=k*c*c}}
+ return{q,a}}
+let cur,qT=0;function newQ(){qT=performance.now();cur=gen(+$('grade').value);$('q').textContent=cur.q;$('ans').value='';$('fb').textContent='';updReward()}
+const pts=()=>+$('grade').value-5;
+function updReward(){const p=pts();$('reward').textContent=`Correct = +${3*p} rifle / +${p} shotgun / +${Math.ceil(p/2)} sniper`}
+for(let g=6;g<=12;g++)$('grade').add(new Option(g+'th grade',g));
+$('grade').onchange=newQ;
+$('sub').onclick=()=>{const v=parseFloat($('ans').value);if(isNaN(v))return;const t=$('tgt').value,p=pts();if((performance.now()-qT)/1000<2+(+$('grade').value-6)*.8){newQ();busted('answered too fast');return}
+ if(Math.abs(v-cur.a)<.01){const add={rifle:3*p,shotgun:p,sniper:Math.ceil(p/2)}[t];S.ammo[t]=Math.min(stats(t).cap,S.ammo[t]+add);$('fb').textContent='✓ +'+add+' '+GUNS[t].n+' ammo';$('fb').style.color='#16a34a';save();render();$('q').textContent='';setTimeout(newQ,500)}
+ else{$('fb').textContent='✗ Not quite (answer: '+cur.a+')';$('fb').style.color='#dc2626';setTimeout(newQ,1400)}};
+$('ans').onkeydown=e=>{if(e.key=='Enter')$('sub').click()};
+$('skip').onclick=newQ;
+// ---- menu render
+const cost=l=>30+25*l,MAXL=8;
+function render(){$('gold').textContent='Gold: '+S.gold;$('prog').textContent=`Missions cleared: ${S.beaten} · enemy strength ×${(1+.06*totalUps()).toFixed(2)}`;
+ $('play').textContent='Start random mission';
+ $('ammo').innerHTML=Object.keys(GUNS).map(g=>`<span class="card" style="margin:0;padding:6px 10px">${GUNS[g].n}: <b>${S.ammo[g]}</b>/${stats(g).cap}</span>`).join('');
+ let h='';for(const g in GUNS){h+=`<div class="card" style="margin:0"><b>${GUNS[g].n}</b>`+UPS.map(u=>{const l=S.up[g][u[0]];return `<div class="up"><span>${u[1]} <span class="mu">Lv ${l}</span></span><button data-g="${g}" data-k="${u[0]}" ${l>=MAXL||S.gold<cost(l)?'disabled':''}>${l>=MAXL?'MAX':cost(l)+'g'}</button></div>`}).join('')+'</div>'}
+ h+=`<div class="card" style="margin:0"><b>You</b><div class="up"><span>Health <span class="mu">${maxHp()} · Lv ${S.hp}</span></span><button data-g="p" data-k="hp" ${S.hp>=MAXL||S.gold<cost(S.hp)?'disabled':''}>${S.hp>=MAXL?'MAX':cost(S.hp)+'g'}</button></div><div class="up"><span>Speed <span class="mu">${pspd()} · Lv ${S.spd}</span></span><button data-g="p" data-k="spd" ${S.spd>=MAXL||S.gold<cost(S.spd)?'disabled':''}>${S.spd>=MAXL?'MAX':cost(S.spd)+'g'}</button></div></div>`;
+ $('shop').innerHTML=h;
+ $('shop').querySelectorAll('button').forEach(b=>b.onclick=()=>{const g=b.dataset.g,k=b.dataset.k;if(g=='p'){const l=S[k];if(S.gold<cost(l))return;S.gold-=cost(l);S[k]++}else{const l=S.up[g][k];if(S.gold<cost(l))return;S.gold-=cost(l);S.up[g][k]++}save();render()})}
+$('reset').onclick=()=>{if(confirm('Start a brand new run? All progress resets.')){S=fresh();save();render()}};
+// ---- game
+const cv=$('c'),ctx=cv.getContext('2d'),W=800,H=560;
+let L,P,E,B,keys={},mouse={x:400,y:300,down:false},run=false,last=0,ammoSnap,gunSel='rifle',cd=0,over=null,tracers=[];
+function rng(s){return()=>{s|=0;s=s+0x6D2B79F5|0;let t=Math.imul(s^s>>>15,1|s);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+const hitRect=(x,y,r,w)=>x+r>w.x&&x-r<w.x+w.w&&y+r>w.y&&y-r<w.y+w.h;
+const blocked=(x,y,r)=>L.walls.some(w=>hitRect(x,y,r,w));
+function los(x1,y1,x2,y2){const d=Math.hypot(x2-x1,y2-y1),n=Math.ceil(d/6);for(let i=1;i<n;i++){const t=i/n,x=x1+(x2-x1)*t,y=y1+(y2-y1)*t;if(L.walls.some(w=>x>w.x&&x<w.x+w.w&&y>w.y&&y<w.y+w.h))return false}return true}
+function build(idx){const r=rng(S.order[idx]),walls=[{x:0,y:0,w:W,h:16},{x:0,y:H-16,w:W,h:16},{x:0,y:0,w:16,h:H},{x:W-16,y:0,w:16,h:H}];
+ const start={x:50,y:H-50};L={walls};const n=9+Math.floor(r()*5);
+ for(let i=0,t=0;i<n&&t<200;t++){const hz=r()<.5,w=hz?60+r()*140:22,h=hz?22:60+r()*140,x=40+r()*(W-80-w),y=40+r()*(H-80-h);const o={x,y,w,h};if(hitRect(start.x,start.y,110,o))continue;walls.push(o);i++}
+ const free=(x,y)=>!blocked(x,y,22),pt=()=>{for(let t=0;t<300;t++){const x=40+r()*(W-80),y=40+r()*(H-80);if(free(x,y))return{x,y}}return{x:W/2,y:H/2}};
+ const ne=Math.min(8,3+Math.floor(idx/5)+(r()<.5?1:0)),en=[];const sc=1+.06*totalUps();
+ for(let i=0;i<ne;i++){let a;for(let t=0;t<100;t++){a=pt();if(Math.hypot(a.x-start.x,a.y-start.y)>320)break}
+  const path=[a];for(let k=0;k<2;k++){for(let t=0;t<60;t++){const b=pt();if(Math.hypot(b.x-a.x,b.y-a.y)<260&&los(a.x,a.y,b.x,b.y)&&Math.hypot(b.x-a.x,b.y-a.y)>70){path.push(b);break}}}
+  const hp=45*sc*(1+idx*.03);en.push({x:a.x,y:a.y,path,pi:0,dir:1,ang:0,hp,max:hp,meter:0,chase:0,seen:null,fire:.8,acc:Math.min(.75,.3+.012*totalUps()+idx*.004),dmg:7*sc})}
+ L.start=start;return en}
+const DC={1:'#ef4444',2:'#22c55e',3:'#a855f7'};
+const THEMES=[{a:'#2d4a3e',b:'#294236',w:'#3b7a57',t:'#6fcf97'},{a:'#33375f',b:'#2d3157',w:'#5b5fc7',t:'#8b8fff'},{a:'#5a3d2b',b:'#523626',w:'#b45309',t:'#fbbf24'},{a:'#2a4550',b:'#243d47',w:'#0e7490',t:'#22d3ee'}];
+const LEVELS=[`
+..............................
+.a..........A.................
+..............................
+..###..###..###..###..###.....
+..###..###..###..###..###.....
+..............................
+.b..........B.......c.....C...
+..............................
+..###..###..###..###..###.....
+..###..###..###..###..###.....
+..............................
+..........d...............D..
+..............................
+..............................
+..###..###..###..###..###.....
+..###..###..###..###..###.....
+..............................
+............e.........E.......
+..............................
+P.............................
+`,`
+..............................
+.a..........A.................
+..............................
+..............................
+..............................
+..............................
+........######1#######........
+........#.e........E.#........
+........#............#........
+........#..f........F#........
+........#............#........
+........#............#........
+........##############........
+..............................
+..............................
+........g.........G...........
+..............................
+P............................!
+`,`
+..............#...............
+..!...........#.......@.......
+..............#...............
+..a.........A.#.....########..
+..............#.....#......#..
+..............#.....#..e...#..
+..............#.....#......#..
+..............#.....#..f...#..
+..............#.....###2####..
+..............#...............
+..............1...............
+..............#.....b.....B...
+..............#...............
+..c........C..#...............
+..............#...............
+..............#...............
+..............#...............
+P.............#...............
+`,`
+........#.......#.......#.....
+.!......#.......#.......#.....
+........#.......#.......#.....
+.a....A.#.......#.......#.....
+........#.......#.c...C.#.....
+........#.......#.......#.....
+........#.b...B.#.......#.d.D.
+........#.......#.......#.....
+........#.......#.......#.....
+........1.......2.......3.....
+........#.......#.......#.....
+........#.......#.......#.....
+........#.....@.#.......#.e.E.
+........#.......#.......#.....
+........#.......#.....$.#.....
+........#.......#.......#.....
+.P......#.......#.......#.....
+........#.......#.......#.....
+`].map(s=>s.trim());
+let lastLv=-1,cam={x:0,y:0};
+function buildMap(i){const rows=LEVELS[i].split('\n'),T=32,cw=30,ws=[],en={},wp={};let st={x:80,y:80};
+ L={w:(cw+2)*T,h:(rows.length+2)*T,walls:ws,keys:[]};
+ ws.push({x:0,y:0,w:L.w,h:T},{x:0,y:L.h-T,w:L.w,h:T},{x:0,y:0,w:T,h:L.h},{x:L.w-T,y:0,w:T,h:L.h});
+ rows.forEach((r,j)=>{let run=null;for(let k=0;k<=cw;k++){const c=k<cw?(r[k]||'.'):'.',x=(k+1)*T,y=(j+1)*T,cx=x+T/2,cy=y+T/2;
+  if(c=='#'){if(!run)run={x,y,w:0,h:T};run.w+=T}else{if(run){ws.push(run);run=null}
+   if(c=='P')st={x:cx,y:cy};else if('123'.includes(c))ws.push({x,y,w:T,h:T,d:+c});else if('!@$'.includes(c))L.keys.push({x:cx,y:cy,d:'!@$'.indexOf(c)+1});
+   else if(c>='a'&&c<='h')en[c]={x:cx,y:cy};else if(c>='A'&&c<='H')(wp[c.toLowerCase()]=wp[c.toLowerCase()]||[]).push({x:cx,y:cy})}}});
+ const sc=1+.06*totalUps();
+ E=Object.keys(en).map(c=>{const a=en[c],hp=45*sc;return{x:a.x,y:a.y,path:[a,...(wp[c]||[])],pi:0,dir:1,ang:0,hp,max:hp,meter:0,chase:0,seen:null,fire:.8,acc:Math.min(.75,.3+.012*totalUps()),dmg:7*sc}});
+ L.th=THEMES[i%THEMES.length];L.start=st;return E}
+function startLevel(){let i;do{i=R(0,LEVELS.length-1)}while(i==lastLv&&LEVELS.length>1);lastLv=i;
+ E=buildMap(i);P={x:L.start.x,y:L.start.y,hp:maxHp(),ang:0,keys:[]};cam={x:0,y:0};ammoSnap={...S.ammo};B=[];tracers=[];over=null;gunSel='rifle';cd=0;
+ $('menu').classList.add('hide');$('game').classList.remove('hide');run=true;last=performance.now();requestAnimationFrame(loop)}
+$('play').onclick=startLevel;
+function endGame(){run=false;$('game').classList.add('hide');$('menu').classList.remove('hide');save();render();newQ()}
+$('quit').onclick=()=>{S.ammo=ammoSnap;endGame()};
+function shoot(){const g=gunSel,s=stats(g);if(cd>0||S.ammo[g]<=0)return;S.ammo[g]--;cd=s.rate;
+ for(let i=0;i<s.pel;i++){const a=P.ang+(Math.random()-.5)*2*s.spread;let x=P.x,y=P.y,hit=null,d=0;
+  while(d<s.range){x+=Math.cos(a)*5;y+=Math.sin(a)*5;d+=5;if(L.walls.some(w=>x>w.x&&x<w.x+w.w&&y>w.y&&y<w.y+w.h))break;hit=E.find(e=>e.hp>0&&Math.hypot(e.x-x,e.y-y)<13);if(hit)break}
+  tracers.push({x1:P.x,y1:P.y,x2:x,y2:y,t:.08,c:'#fde68a'});
+  if(hit){hit.hp-=s.dmg;if(hit.meter<1){hit.meter=1;hit.chase=10}hit.chase=10;hit.seen={x:P.x,y:P.y}}}}
+function update(dt){
+ let dx=(keys.d?1:0)-(keys.a?1:0),dy=(keys.s?1:0)-(keys.w?1:0);if(dx&&dy){dx*=.7071;dy*=.7071}
+ const sp=pspd()*dt;if(!blocked(P.x+dx*sp,P.y,10))P.x+=dx*sp;if(!blocked(P.x,P.y+dy*sp,10))P.y+=dy*sp;
+ cam.x=Math.max(0,Math.min(L.w-W,P.x-W/2));cam.y=Math.max(0,Math.min(L.h-H,P.y-H/2));P.ang=Math.atan2(mouse.y+cam.y-P.y,mouse.x+cam.x-P.x);
+ for(const k of L.keys)if(!k.got&&Math.hypot(k.x-P.x,k.y-P.y)<18){k.got=1;P.keys.push(k.d)}
+ const dw=L.walls.find(w=>w.d&&P.keys.includes(w.d)&&hitRect(P.x,P.y,14,w));if(dw){P.keys.splice(P.keys.indexOf(dw.d),1);L.walls.splice(L.walls.indexOf(dw),1)}cd-=dt;if(mouse.down)shoot();
+ for(const e of E){if(e.hp<=0)continue;
+  const dist=Math.hypot(P.x-e.x,P.y-e.y);let da=Math.abs(((Math.atan2(P.y-e.y,P.x-e.x)-e.ang+Math.PI*3)%(Math.PI*2))-Math.PI);
+  const sees=dist<240&&da<.5&&los(e.x,e.y,P.x,P.y);
+  if(e.chase<=0){if(sees)e.meter=Math.min(1,e.meter+dt/1.5*(dist<110?1.6:1));else e.meter=Math.max(0,e.meter-dt*.5);
+   if(e.meter>=1){e.chase=10;e.seen={x:P.x,y:P.y}}
+   const t=e.path[e.pi];if(e.path.length>1){const a=Math.atan2(t.y-e.y,t.x-e.x),d=Math.hypot(t.x-e.x,t.y-e.y);e.ang=a;if(d<5){if(e.pi+e.dir<0||e.pi+e.dir>=e.path.length)e.dir*=-1;e.pi+=e.dir}else{e.x+=Math.cos(a)*55*dt;e.y+=Math.sin(a)*55*dt}}else e.ang+=dt*.8}
+  else{e.chase-=dt;const vis=dist<520&&los(e.x,e.y,P.x,P.y);if(vis)e.seen={x:P.x,y:P.y};if(e.chase<=0)e.meter=0;
+   const t=e.seen;if(t){const d=Math.hypot(t.x-e.x,t.y-e.y),a=Math.atan2(t.y-e.y,t.x-e.x);e.ang=a;const stop=vis?150:8;
+    if(d>stop){const nx=e.x+Math.cos(a)*105*dt,ny=e.y+Math.sin(a)*105*dt;if(!blocked(nx,e.y,11))e.x=nx;if(!blocked(e.x,ny,11))e.y=ny}}
+   e.fire-=dt;if(vis&&dist<230&&e.fire<=0){e.fire=1;const hitIt=Math.random()<e.acc;tracers.push({x1:e.x,y1:e.y,x2:hitIt?P.x:P.x+(Math.random()-.5)*60,y2:hitIt?P.y:P.y+(Math.random()-.5)*60,t:.1,c:'#f87171'});if(hitIt)P.hp-=e.dmg}}}
+ tracers=tracers.filter(t=>(t.t-=dt)>0);
+ if(P.hp<=0){over='lose';run=false}
+ else if(E.every(e=>e.hp<=0)){over='win';run=false}}
+function draw(){ctx.fillStyle='#26262b';ctx.fillRect(0,0,W,H);
+ ctx.save();ctx.translate(-cam.x,-cam.y);const th=L.th;for(let ty=Math.floor(cam.y/32);ty<=(cam.y+H)/32;ty++)for(let tx=Math.floor(cam.x/32);tx<=(cam.x+W)/32;tx++){ctx.fillStyle=(tx+ty)&1?th.a:th.b;ctx.fillRect(tx*32,ty*32,32,32)}
+ L.walls.forEach(w=>{if(w.d){ctx.fillStyle=DC[w.d];ctx.fillRect(w.x,w.y,w.w,w.h);ctx.fillStyle='rgba(255,255,255,.35)';ctx.fillRect(w.x+6,w.y+6,w.w-12,w.h-12)}else{ctx.fillStyle=th.w;ctx.fillRect(w.x,w.y,w.w,w.h);ctx.fillStyle=th.t;ctx.fillRect(w.x,w.y,w.w,5);ctx.fillStyle='rgba(0,0,0,.25)';ctx.fillRect(w.x,w.y+w.h-5,w.w,5)}});L.keys.forEach(k=>{if(!k.got){ctx.fillStyle=DC[k.d];ctx.beginPath();ctx.arc(k.x,k.y,7,0,7);ctx.fill();ctx.strokeStyle='#fff';ctx.lineWidth=2;ctx.stroke()}});
+ for(const e of E){if(e.hp<=0)continue;const col=e.chase>0?'rgba(248,113,113,.28)':`rgba(250,204,21,${.12+.2*e.meter})`;
+  ctx.fillStyle=col;ctx.beginPath();ctx.moveTo(e.x,e.y);
+  const n=14;for(let i=0;i<=n;i++){const a=e.ang-.5+i/n,rl=(()=>{let d=0;while(d<240){const x=e.x+Math.cos(a)*d,y=e.y+Math.sin(a)*d;if(L.walls.some(w=>x>w.x&&x<w.x+w.w&&y>w.y&&y<w.y+w.h))break;d+=8}return d})();ctx.lineTo(e.x+Math.cos(a)*rl,e.y+Math.sin(a)*rl)}ctx.closePath();ctx.fill()}
+ for(const e of E){if(e.hp<=0)continue;ctx.fillStyle=e.chase>0?'#ef4444':'#d97706';ctx.beginPath();ctx.arc(e.x,e.y,12,0,7);ctx.fill();ctx.strokeStyle='#000';ctx.beginPath();ctx.moveTo(e.x,e.y);ctx.lineTo(e.x+Math.cos(e.ang)*18,e.y+Math.sin(e.ang)*18);ctx.lineWidth=3;ctx.stroke();
+  ctx.fillStyle='#000';ctx.fillRect(e.x-14,e.y-24,28,4);ctx.fillStyle='#ef4444';ctx.fillRect(e.x-14,e.y-24,28*e.hp/e.max,4);
+  if(e.meter>0){ctx.fillStyle='#000';ctx.fillRect(e.x-14,e.y-30,28,4);ctx.fillStyle=e.chase>0?'#ef4444':'#facc15';ctx.fillRect(e.x-14,e.y-30,28*e.meter,4)}}
+ tracers.forEach(t=>{ctx.strokeStyle=t.c;ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(t.x1,t.y1);ctx.lineTo(t.x2,t.y2);ctx.stroke()});
+ ctx.fillStyle='#38bdf8';ctx.beginPath();ctx.arc(P.x,P.y,10,0,7);ctx.fill();ctx.strokeStyle='#e0f2fe';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(P.x,P.y);ctx.lineTo(P.x+Math.cos(P.ang)*18,P.y+Math.sin(P.ang)*18);ctx.stroke();
+ ctx.restore();ctx.strokeStyle='#fff';ctx.lineWidth=1;ctx.beginPath();ctx.arc(mouse.x,mouse.y,6,0,7);ctx.stroke();
+ ctx.fillStyle='#000a';ctx.fillRect(22,22,250,50);ctx.fillStyle='#374151';ctx.fillRect(30,30,120,10);ctx.fillStyle='#22c55e';ctx.fillRect(30,30,120*Math.max(0,P.hp)/maxHp(),10);
+ ctx.fillStyle='#fff';ctx.font='13px system-ui';ctx.fillText(`${GUNS[gunSel].n}: ${S.ammo[gunSel]}   Enemies: ${E.filter(e=>e.hp>0).length}   Keys: ${P.keys.length}`,30,60)}
+function loop(t){const dt=Math.min(.05,(t-last)/1000);last=t;if(run)update(dt);draw();
+ if(run)requestAnimationFrame(loop);else if(over)finish()}
+let fin=false;
+function finish(){if(fin)return;fin=true;ctx.fillStyle='#000b';ctx.fillRect(0,0,W,H);ctx.fillStyle='#fff';ctx.textAlign='center';ctx.font='bold 36px system-ui';
+ if(over=='win'){const g=60+Math.min(S.beaten,30)*3;S.gold+=g;S.beaten++;if(window.LabSDK){window.LabSDK.recordScore('math-opps',S.beaten).catch(e=>console.error('LabSDK scoring failed',e))}ctx.fillText('Level cleared!',W/2,H/2-10);ctx.font='18px system-ui';ctx.fillText('+'+g+' gold — returning to menu…',W/2,H/2+25)}
+ else{S.ammo=ammoSnap;ctx.fillText('You died',W/2,H/2-10);ctx.font='18px system-ui';ctx.fillText('Ammo restored — returning to menu…',W/2,H/2+25)}
+ ctx.textAlign='left';save();setTimeout(()=>{fin=false;endGame()},1800)}
+addEventListener('keydown',e=>{const k=e.key.toLowerCase();if(!run)return;if('wasd'.includes(k)&&k.length==1){keys[k]=true;e.preventDefault()}if(k=='1')gunSel='rifle';if(k=='2')gunSel='shotgun';if(k=='3')gunSel='sniper'});
+addEventListener('keyup',e=>{keys[e.key.toLowerCase()]=false});
+function mp(e){const r=cv.getBoundingClientRect();mouse.x=(e.clientX-r.left)*W/r.width;mouse.y=(e.clientY-r.top)*H/r.height}
+cv.addEventListener('pointermove',mp);cv.addEventListener('pointerdown',e=>{mp(e);mouse.down=true});addEventListener('pointerup',()=>mouse.down=false);
+function busted(why){$('fb').textContent='🚨 CHEATING DETECTED ('+why+') — new problem, no reward';$('fb').style.color='#dc2626'}
+function leave(){if(!$('menu').classList.contains('hide')&&$('q').textContent){newQ();busted('left the page')}}
+addEventListener('blur',leave);document.addEventListener('visibilitychange',()=>{if(document.hidden)leave()});
+render();newQ();
+</script>
+<script type="module" src="../../shared/lab-sdk.js"></script>
+</body></html>
