@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Legends Defense</title>
+<style>
+*{box-sizing:border-box}
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);--bg:#e8ecee;--cd:#f7f9fa;--ink:#16212b;--mu:#58687a;--ln:#c3ccd4;--ac:#1f4a7a;--ap:#fff}
+@media(prefers-color-scheme:dark){:root:not([data-theme=light]){color-scheme:dark;--bg:#101a22;--cd:#182632;--ink:#e7edf2;--mu:#8fa3b5;--ln:#2a3d4d;--ac:#d6a93a;--ap:#1a1405}}
+:root[data-theme=dark]{color-scheme:dark;--bg:#101a22;--cd:#182632;--ink:#e7edf2;--mu:#8fa3b5;--ln:#2a3d4d;--ac:#d6a93a;--ap:#1a1405}
+html{scroll-padding-top:env(safe-area-inset-top,0px);background:var(--bg)}
+body{margin:0;background:var(--bg);background-image:radial-gradient(circle at 15% 0,rgba(214,169,58,.14),transparent 45%),radial-gradient(circle at 95% 25%,rgba(120,70,170,.14),transparent 45%);background-attachment:fixed;color:var(--ink);font:15px/1.45 Palatino,'Palatino Linotype','Book Antiqua',Georgia,serif}
+[hidden]{display:none!important}
+.w{max-width:880px;margin:auto;padding:10px}
+h1{font-size:26px;margin:4px 0 0;letter-spacing:.5px}
+h3{margin:10px 0 4px}
+nav,.row,.hand{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}
+button{font:inherit;background:var(--cd);color:var(--ink);border:1px solid var(--ln);border-radius:8px;padding:7px 12px;cursor:pointer}
+button.p{background:var(--ac);color:var(--ap);border-color:var(--ac);font-weight:bold}
+button.on{outline:2px solid var(--ac)}
+button:disabled{opacity:.45;cursor:default}
+canvas{width:100%;height:auto;display:block;border:2px solid var(--ln);border-radius:10px;touch-action:none}
+.bar{font-weight:bold;margin:6px 0}
+.g{display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:8px}
+.c{background:var(--cd);border:2px solid var(--rc,var(--ln));border-radius:10px;padding:8px;text-align:center;font-size:12px;height:100%}
+.c .pt{font-size:36px;line-height:1.2}
+.c b{display:block;font-size:14px}
+.c .r{color:var(--rc);font-weight:bold}
+.c p{margin:4px 0 0;color:var(--mu)}
+.lk{opacity:.75;filter:grayscale(.85)}
+.in{box-shadow:0 0 0 3px var(--ac),0 0 16px var(--ac)}
+.eq{position:absolute;top:6px;right:6px;z-index:1;background:var(--ac);color:var(--ap);font-size:11px;font-weight:bold;padding:2px 8px;border-radius:10px}
+.sl{flex:1;min-width:84px;border:2px solid;border-radius:10px;padding:6px;text-align:center;font-size:12px;background:var(--cd)}
+.sl.em{border-style:dashed;border-color:var(--ln);color:var(--mu);display:flex;align-items:center;justify-content:center}
+.rv>div{animation:pop .5s both}
+@keyframes pop{from{transform:scale(.3) rotate(-8deg);opacity:0}}
+@media(prefers-reduced-motion:reduce){.rv>div{animation:none}}
+.hand button{flex:1;min-width:88px;border-width:2px}
+#info,#msg{min-height:24px;margin:6px 0}
+.mu{color:var(--mu)}
+#qd,#md{position:fixed;inset:0;background:#000a;display:flex;align-items:center;justify-content:center;padding:14px;z-index:9}
+#qb,#mb{background:var(--cd);border:2px solid var(--ln);border-radius:12px;padding:14px;max-width:470px;max-height:85vh;overflow:auto}
+.c img{box-shadow:0 2px 8px #0006}
+html:root:root:root{color-scheme:dark;--bg:#1b1038;--cd:#33203b;--ink:#f6ead0;--mu:#c9b48a;--ln:#7a5a2c;--ac:#e0a82e;--ap:#20140a}
+body{background:linear-gradient(165deg,#1b1038 0%,#4a1a3a 55%,#7a3c1a 100%) fixed}
+h3{color:#e8c46a;letter-spacing:.5px}
+button{background:#3d2646;border-color:#8a6a2c}
+.c{background:linear-gradient(180deg,#3d2646,#2b1a33)}
+#hero{position:relative;border-radius:14px;overflow:hidden;margin:6px 0;border:2px solid var(--ln)}
+#hb{width:100%;height:200px;display:block}
+#ht{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;color:#f4e6bd;text-shadow:0 2px 10px #000;gap:6px;padding:8px}
+#ht h1{font-size:clamp(26px,7vw,44px);margin:0;letter-spacing:4px;font-variant:small-caps}
+#qd{z-index:10}#qb{max-width:520px}#qb>div#qo button{text-align:left}
+#op{text-align:center;min-height:340px;position:relative;overflow:hidden;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center}
+#pkx{font-size:96px;animation:shk .25s infinite;filter:drop-shadow(0 0 18px var(--c))}.go #pkx{animation:bst .35s forwards}
+#rys{position:absolute;inset:-70%;background:repeating-conic-gradient(var(--c) 0 6deg,transparent 6deg 18deg);opacity:0;-webkit-mask-image:radial-gradient(circle,#000 0,transparent 55%);mask-image:radial-gradient(circle,#000 0,transparent 55%)}.go #rys{animation:rot 6s linear infinite,fin .6s forwards}
+#fl{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none}.go #fl{animation:flh .7s}
+#rc{position:absolute;opacity:0;transform:rotateY(90deg) scale(.4);z-index:2}.go #rc{animation:flp .8s .3s cubic-bezier(.2,1.4,.4,1) forwards}
+.sp{position:absolute;left:50%;top:50%;width:7px;height:7px;border-radius:50%;background:var(--c);opacity:0;box-shadow:0 0 8px var(--c)}.go .sp{animation:spk 1.1s .35s ease-out forwards}
+@keyframes shk{0%,100%{transform:translate(0) rotate(0)}25%{transform:translate(-5px,2px) rotate(-7deg)}75%{transform:translate(5px,-2px) rotate(7deg)}}
+@keyframes bst{to{transform:scale(3);opacity:0}}@keyframes rot{to{transform:rotate(360deg)}}@keyframes fin{to{opacity:.55}}@keyframes flh{0%{opacity:.95}100%{opacity:0}}@keyframes flp{to{opacity:1;transform:none}}@keyframes spk{0%{opacity:1;transform:translate(0)}100%{opacity:0;transform:translate(var(--dx),var(--dy))}}
+@media(prefers-reduced-motion:reduce){#pkx,.go #rys{animation:none}}
+#op{min-height:400px;background:radial-gradient(circle at 50% 55%,#2a1f3d,#07050d 75%);border-radius:12px}
+.ck{position:absolute;left:50%;top:50%;width:3px;height:0;background:linear-gradient(var(--c),transparent);transform-origin:top center;transform:rotate(var(--a));box-shadow:0 0 10px var(--c);animation:ckg 1.1s var(--d) forwards}.go .ck{animation:ckf .3s forwards}
+@keyframes ckg{to{height:130px}}@keyframes ckf{to{height:300px;opacity:0}}
+.rg{position:absolute;left:50%;top:50%;width:20px;height:20px;margin:-10px;border:3px solid var(--c);border-radius:50%;opacity:0}.go .rg{animation:rgx 1s ease-out forwards}.go .r2{animation-delay:.15s}.go .r3{animation-delay:.3s}
+@keyframes rgx{0%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(26)}}
+.go.big{animation:qs .7s}@keyframes qs{0%,100%{transform:none}20%{transform:translate(-9px,5px)}40%{transform:translate(8px,-6px)}60%{transform:translate(-6px,-4px)}80%{transform:translate(5px,6px)}}
+#fr{width:200px;padding:14px;border-radius:16px;background:linear-gradient(160deg,#1c1730,#0b0914);border:3px solid var(--c);box-shadow:0 0 40px var(--c),inset 0 0 25px #0008;position:relative;overflow:hidden;transform:perspective(600px) rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg));animation:pu 2s infinite}
+@keyframes pu{50%{box-shadow:0 0 75px var(--c),inset 0 0 25px #0008}}
+.sh{position:absolute;inset:0;background:linear-gradient(115deg,transparent 30%,#fff8 48%,transparent 62%);transform:translateX(-120%);animation:shn 2.4s 1.1s infinite;pointer-events:none}@keyframes shn{to{transform:translateX(120%)}}
+.rl{opacity:0}.go .rl{animation:slam .45s .85s cubic-bezier(.2,2,.4,1) forwards}@keyframes slam{0%{opacity:0;transform:scale(4)}100%{opacity:1;transform:scale(1)}}
+.st{opacity:0;display:inline-block}.go .st{animation:pop .3s forwards}@keyframes pop{0%{opacity:0;transform:scale(0) rotate(-90deg)}100%{opacity:1;transform:none}}
+</style></head><body><div class="w">
+<header id="hero"><canvas id="hb" width="880" height="200"></canvas><div id="ht"><h1>Legends Defense</h1><div>Summon history's greatest figures and defend the realm.</div><button id="mu">Music off</button></div></header>
+<nav><button data-t="b" class="on">Battle</button><button data-t="p">Packs</button><button data-t="c">Collection</button><b id="co" style="margin-left:auto;align-self:center"></b></nav>
+
+<section id="b">
+ <div id="menu"><h3>Choose a battlefield</h3><div class="row" id="maps"></div><div id="mdsc" class="mu"></div><h3>Difficulty</h3><div class="row" id="dfs"></div><div id="dd" class="mu"></div><div id="dk" class="mu"></div><div class="row"><button class="p" id="go">March to battle</button></div><div id="bs" class="mu"></div>
+ <p class="mu">How it works: spend gold to place figures on grass tiles. Figures level up from duplicate pulls (+20% damage each) and can be upgraded in battle three times. Every 10th wave brings a warlord. Try Endless to see how many waves you can survive. Coins you earn buy more packs.</p></div>
+ <div id="game" hidden><div class="bar" id="hud"></div><canvas id="cv" width="800" height="500"></canvas>
+ <div class="hand" id="hand"></div><div id="info"></div>
+ <div class="row"><button class="p" id="wv">Send wave 1</button><button id="sp">Speed 1x</button><button id="rt">Retreat</button></div><div id="msg" class="mu"></div></div>
+</section>
+
+<section id="p" hidden>
+ <h3>Summon figures</h3><p class="mu">Odds: Common 60%, Rare 28%, Epic 9%, Legendary 3%. A Legendary is guaranteed within 40 pulls. Duplicates raise a figure's level up to 5. Ten-packs cost 9 times one pack and guarantee a Rare or better. Each pack reveals a figure's biography: answer the question about it correctly to recruit them, or they get away!</p>
+ <div class="g" id="pks"></div>
+ <div id="pi" class="mu"></div><div id="rv" class="g rv"></div>
+</section>
+
+<section id="c" hidden><div id="cn" class="mu"></div><div class="g" id="cg"></div></section>
+</div>
+<div id="qd" hidden><div id="qb"></div></div>
+<div id="md" hidden><div id="mb"></div></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+const $=s=>document.querySelector(s),RC={C:['Common','#8a8f98'],R:['Rare','#3b82f6'],E:['Epic','#a855f7'],L:['Legendary','#f59e0b']};
+// id,name,emoji,era,rarity,cost,damage,range,seconds per shot,type,description
+const F=[
+['leonidas','Leonidas I','🛡️','Sparta, 480 BC','C',70,22,75,.7,'single','Held the pass with 300. Steady melee damage.'],
+['boudica','Boudica','🔥','Britain, 61 AD','C',80,11,95,.35,'single','Warrior queen. Rapid strikes.'],
+['archimedes','Archimedes','🪞','Syracuse, 212 BC','C',110,16,105,1.2,'splash','Burning mirrors scorch groups.'],
+['hannibal','Hannibal','🐘','Carthage, 218 BC','C',100,18,100,1,'stun','War elephants: 25% chance to stun.'],
+['joan','Joan of Arc','⚜️','France, 1429','R',150,30,100,.8,'crit','Divine fervor: 20% chance of 2.5x crit.'],
+['suntzu','Sun Tzu','📜','China, 500 BC','R',140,8,110,1,'buff','Strategy: allies in range deal +25%.'],
+['cleo','Cleopatra VII','🐍','Egypt, 40 BC','R',150,6,80,1,'income','Wealth: +30 gold per wave, grows with upgrades.'],
+['davinci','Leonardo da Vinci','⚙️','Italy, 1500','R',170,26,130,1.3,'pierce','Hits 3 enemies per shot.'],
+['napoleon','Napoleon Bonaparte','🎖️','France, 1805','E',260,70,150,1.6,'splash','Grand battery with a large blast.'],
+['tesla','Nikola Tesla','⚡','USA, 1893','E',280,34,120,.9,'chain','Lightning arcs through 4 enemies.'],
+['newton','Isaac Newton','🍎','England, 1687','E',250,30,115,.9,'slow','Gravity halves enemy speed.'],
+['curie','Marie Curie','☢️','France, 1903','E',270,12,120,.7,'poison','Radiation poisons over time.'],
+['alexander','Alexander the Great','🏇','Macedon, 330 BC','L',420,160,130,.9,'single','Undefeated. Crushing single-target blows.'],
+['genghis','Genghis Khan','🏹','Mongol Empire, 1206','L',400,28,180,.22,'single','Horse-archer storm with huge range.'],
+['caesar','Julius Caesar','🦅','Rome, 49 BC','L',450,20,140,.9,'buff','Veni, vidi, vici: allies in range deal +50%.'],
+['einstein','Albert Einstein','💥','Germany, 1905','L',500,300,160,6,'nuke','E=mc2. Blasts every enemy in range.']];
+F.push(
+['themistocles','Themistocles','','Athens, 480 BC','C',90,15,110,.7,'single','Fleet admiral. Steady ranged fire.'],
+['hadrian','Hadrian','','Rome, 122 AD','C',85,20,80,.6,'single','Wall builder. Reliable legion strikes.'],
+['pericles','Pericles','','Athens, 440 BC','R',150,6,80,1,'income','Golden age: +30 gold per wave.'],
+['scipio','Scipio Africanus','','Rome, 202 BC','R',150,36,100,.8,'crit','Cunning: 20% chance of 2.5x crit.'],
+['marcus','Marcus Aurelius','','Rome, 170 AD','E',270,10,115,1,'buff','Stoic emperor: allies in range deal +30%.'],
+['augustus','Augustus','','Rome, 27 BC','E',280,75,140,1.6,'splash','Imperial artillery with a large blast.'],
+['vercingetorix','Vercingetorix','','Gaul, 52 BC','C',80,19,85,.6,'single','Gaulish chieftain. Fierce charges.'],
+['spartacus','Spartacus','','Thrace, 73 BC','C',90,26,80,.8,'single','Gladiator rebel. Heavy melee.'],
+['arminius','Arminius','','Germania, 9 AD','R',150,32,95,.8,'crit','Forest ambush: 20% chance of 2.5x crit.'],
+['shapur','Shapur I','','Persia, 260 AD','R',170,24,130,1.2,'pierce','Persian lancers hit 3 enemies.'],
+['mithridates','Mithridates VI','','Pontus, 88 BC','E',270,12,120,.7,'poison','Poisoner king. Venom over time.'],
+['zenobia','Zenobia','','Palmyra, 270 AD','E',250,28,115,.9,'slow','Warrior queen halves enemy speed.'],
+['attila','Attila the Hun','','Hunnic Empire, 451','L',430,45,95,.45,'single','Scourge of God. Relentless horsemen.'],
+['tomoe','Tomoe Gozen','','Japan, 1184','C',85,18,80,.55,'single','Samurai heroine. Swift strikes.'],
+['yoshitsune','Minamoto no Yoshitsune','','Japan, 1185','C',90,15,110,.6,'single','Daring archer-general.'],
+['subutai','Subutai','','Mongol Empire, 1223','C',95,16,115,.75,'single','Master tactician. Steady ranged fire.'],
+['yuefei','Yue Fei','','Song China, 1140','C',85,21,80,.65,'single','Loyal general. Strong melee.'],
+['zhuge','Zhuge Liang','','Shu Han, 230 AD','R',150,12,110,1,'slow','Fog and traps halve enemy speed.'],
+['musashi','Miyamoto Musashi','','Japan, 1612','R',160,40,85,.7,'crit','Twin swords: 20% chance of 2.5x crit.'],
+['qin','Qin Shi Huang','','China, 221 BC','E',260,6,80,1,'income','First emperor: +30 gold per wave.'],
+['nobunaga','Oda Nobunaga','','Japan, 1575','E',290,30,140,1.1,'pierce','Matchlock volleys hit 3 enemies.'],
+['richard','Richard the Lionheart','','England, 1191','C',90,24,80,.7,'single','Crusader king. Mighty melee.'],
+['wallace','William Wallace','','Scotland, 1297','C',85,22,80,.65,'single','Highland rebel. Hard-hitting.'],
+['washington','George Washington','','USA, 1781','C',100,17,115,.75,'single','Continental rifles at range.'],
+['elizabeth','Elizabeth I','','England, 1588','R',160,8,115,1,'buff','Golden age: allies in range deal +25%.'],
+['gustavus','Gustavus Adolphus','','Sweden, 1632','E',280,60,145,1.5,'splash','Mobile artillery with a blast.'],
+['suleiman','Suleiman the Magnificent','','Ottoman Empire, 1529','L',460,160,160,1.7,'splash','Great cannons. Devastating blast.'],
+['galileo','Galileo Galilei','','Italy, 1610','C',90,18,125,.8,'single','Telescope eye. Long range.'],
+['franklin','Benjamin Franklin','','USA, 1752','C',100,18,105,.9,'chain','Lightning rod chains to 4 enemies.'],
+['roosevelt','Theodore Roosevelt','','USA, 1898','C',85,24,80,.7,'single','Rough Riders charge.'],
+['darwin','Charles Darwin','','England, 1859','C',100,10,95,1.1,'slow','Adaptation halves enemy speed.'],
+['churchill','Winston Churchill','','Britain, 1940','R',150,10,115,1,'buff','Never surrender: allies deal +25%.'],
+['lovelace','Ada Lovelace','','England, 1843','R',150,6,80,1,'income','Programmed profit: +30 gold per wave.'],
+['turing','Alan Turing','','Britain, 1941','E',280,12,120,1,'buff','Code-breaker: allies in range deal +35%.']);
+F.push(
+['leif','Leif Erikson','','Greenland, 1000 AD','C',90,23,85,.7,'single','Norse explorer. Axe-wielding raider.'],
+['pachacuti','Pachacuti','','Inca Empire, 1438','C',95,16,115,.7,'single','Inca slingers rain stones.'],
+['shaka','Shaka Zulu','','Zulu Kingdom, 1816','R',160,30,85,.9,'stun','Buffalo horns tactics: 25% chance to stun.'],
+['saladin','Saladin','','Ayyubid Sultanate, 1187','E',280,38,115,.9,'crit','Chivalrous sultan: 20% chance of 2.5x crit.'],
+['charlemagne','Charlemagne','','Frankish Empire, 800','E',275,10,120,1,'buff','Emperor of the Franks: allies in range deal +30%.'],
+['ramesses','Ramesses II','','Egypt, 1274 BC','L',470,150,150,1.6,'splash','Chariot archers of Kadesh. Huge blast.']);
+const BAL={franklin:[110,14],tesla:[280,40],archimedes:[105,20],hannibal:[100,20],newton:[250,34],darwin:[100,12,95,1],zhuge:[150,14],curie:[270,14],mithridates:[270,14],gustavus:[280,68],einstein:[500,420,160,5]};
+F.forEach(f=>{const b=BAL[f[0]];if(b){f[5]=b[0];f[6]=b[1];if(b[2])f[7]=b[2];if(b[3])f[8]=b[3]}});
+const CL=f=>['buff','income','slow'].includes(f[9])?'Support':f[0]=='alexander'||f[7]<=100?'Melee':'Ranged';let cf='All';
+const FM=Object.fromEntries(F.map(f=>[f[0],f]));
+const BIO={
+leonidas:'King of Sparta (c. 540-480 BC). He led about 7,000 Greeks, including his 300 Spartan bodyguards, against Xerxes\' Persian army at Thermopylae in 480 BC. Holding the narrow pass for three days, he died there, and his stand became a symbol of courage.',
+boudica:'Queen of the Iceni in Roman Britain. After Roman officials flogged her and abused her daughters in 60/61 AD, she led a massive uprising that burned Camulodunum, Londinium and Verulamium before Roman discipline crushed her army.',
+archimedes:'Greek mathematician and inventor of Syracuse (c. 287-212 BC). He discovered the principle of buoyancy and designed war machines, such as cranes and catapults, that stalled Rome\'s siege. The burning-mirror story is a later legend.',
+hannibal:'Carthaginian general (247-183 BC). In the Second Punic War he marched an army with war elephants across the Alps and crushed Rome at Cannae in 216 BC, one of history\'s greatest tactical victories.',
+joan:'French peasant girl (c. 1412-1431) who said saints told her to save France. At 17 she helped lift the siege of Orleans and had Charles VII crowned at Reims. Captured by the Burgundians, she was burned at the stake at 19.',
+suntzu:'Chinese military strategist (c. 544-496 BC) credited with The Art of War, which teaches that the best victory wins without fighting: know yourself, know the enemy, use deception and terrain.',
+cleo:'Last active pharaoh of Ptolemaic Egypt (69-30 BC). She spoke many languages, allied with Julius Caesar and then Mark Antony, and fought to keep Egypt independent until Octavian defeated them at Actium.',
+davinci:'Italian Renaissance polymath (1452-1519). Painter of the Mona Lisa, he also filled notebooks with designs for flying machines, armored vehicles and giant crossbows, and served as a military engineer.',
+napoleon:'Corsican-born French general (1769-1821) who rose through the Revolution to become Emperor. A master of artillery, he won at Austerlitz in 1805, ruled much of Europe, and was finally beaten at Waterloo in 1815.',
+tesla:'Serbian-American inventor (1856-1943). He pioneered alternating current power systems, the induction motor and the Tesla coil, and demonstrated wireless power and radio with sparks of artificial lightning.',
+newton:'English physicist and mathematician (1643-1727). His Principia set out the laws of motion and universal gravitation, and he co-invented calculus. He later ran the Royal Mint.',
+curie:'Polish-French physicist and chemist (1867-1934). She discovered polonium and radium, coined the word radioactivity, and remains the only person to win Nobel Prizes in two different sciences.',
+alexander:'King of Macedon (356-323 BC). Taught by Aristotle, he conquered the Persian Empire, Egypt and lands to India by age 30 without losing a battle, and died in Babylon at 32.',
+genghis:'Founder of the Mongol Empire (c. 1162-1227). Born Temujin, he united the steppe tribes in 1206 and built a disciplined horse-archer army that conquered an empire stretching from China to Persia, the largest contiguous land empire in history.',
+caesar:'Roman general and statesman (100-44 BC). He conquered Gaul, crossed the Rubicon in 49 BC to win a civil war, and became dictator. He was assassinated by senators on the Ides of March.',
+einstein:'German-born physicist (1879-1955). His 1905 work on relativity and E=mc2 transformed physics, and he won the 1921 Nobel Prize for the photoelectric effect. He urged the US to study atomic weapons in 1939.'};
+Object.assign(BIO,{
+themistocles:'Athenian statesman (c. 524-459 BC). He built the Athenian fleet and led it to victory over Persia at Salamis in 480 BC.',
+hadrian:'Roman emperor (76-138 AD). He built the wall across Britain that bears his name and toured the empire to strengthen its borders.',
+pericles:'Athenian leader (c. 495-429 BC). He guided the golden age of Athens, commissioning the Parthenon, and led the city early in the Peloponnesian War.',
+scipio:'Roman general (236-183 BC). He defeated Hannibal at Zama in 202 BC, ending the Second Punic War.',
+marcus:'Roman emperor (121-180 AD) and Stoic philosopher. He defended the frontier for years and wrote Meditations.',
+augustus:'First Roman emperor (63 BC-14 AD). Heir of Julius Caesar, he ended the civil wars and began the Pax Romana.',
+vercingetorix:'Gallic chieftain (c. 82-46 BC) who united the Gauls against Caesar. He surrendered at Alesia in 52 BC.',
+spartacus:'Thracian gladiator who led the great slave revolt against Rome in 73-71 BC, defeating several Roman armies.',
+arminius:'Germanic chieftain (18 BC-21 AD) who ambushed and destroyed three Roman legions in the Teutoburg Forest in 9 AD.',
+shapur:'Sassanid Persian king (c. 215-272 AD). He defeated and captured the Roman emperor Valerian in 260.',
+mithridates:'King of Pontus (134-63 BC). He fought three wars against Rome and was famed for his study of poisons.',
+zenobia:'Queen of Palmyra (c. 240-274 AD). She conquered Egypt and much of the Roman east before Aurelian defeated her.',
+attila:'Ruler of the Huns (c. 406-453). His armies raided both Roman empires, reaching Gaul and Italy.',
+tomoe:'Female samurai of 12th-century Japan, praised in the Tale of the Heike for her archery and swordsmanship.',
+yoshitsune:'Japanese general (1159-1189) whose daring tactics won the Genpei War for his brother Yoritomo.',
+subutai:'Mongol general (1175-1248) who won more territory than any other commander, serving Genghis Khan and Ogedei.',
+yuefei:'Chinese Song dynasty general (1103-1142) who fought the Jurchen invaders and remains a symbol of loyalty.',
+zhuge:'Chancellor of Shu Han (181-234). A brilliant strategist of the Three Kingdoms era, famed for clever tactics.',
+musashi:'Japanese swordsman (c. 1584-1645), undefeated in dozens of duels. He founded the two-sword style and wrote The Book of Five Rings.',
+qin:'First emperor of China (259-210 BC). He unified the warring states, standardized writing and weights, and was buried with the Terracotta Army.',
+nobunaga:'Japanese warlord (1534-1582) who began unifying Japan and used massed matchlock guns to win at Nagashino.',
+richard:'King of England (1157-1199), called the Lionheart. He led the Third Crusade and fought Saladin.',
+wallace:'Scottish knight (c. 1270-1305) who led resistance to English rule and won at Stirling Bridge in 1297.',
+washington:'Commander of the Continental Army and first US president (1732-1799). He led the Revolution to victory at Yorktown.',
+elizabeth:'Queen of England (1533-1603). Her reign saw the defeat of the Spanish Armada in 1588 and a flourishing of the arts.',
+gustavus:'King of Sweden (1594-1632). He modernized warfare with mobile artillery and fell at the Battle of Lutzen.',
+suleiman:'Ottoman sultan (1494-1566) who expanded the empire to its height, taking Belgrade and Rhodes and besieging Vienna.',
+galileo:'Italian astronomer (1564-1642). With his telescope he found the moons of Jupiter and supported the Sun-centered model.',
+franklin:'American polymath (1706-1790). He proved lightning is electrical, invented the lightning rod and helped found the United States.',
+roosevelt:'US president (1858-1919) who led the Rough Riders in Cuba, championed conservation and won the Nobel Peace Prize.',
+darwin:'English naturalist (1809-1882). His book On the Origin of Species set out evolution by natural selection.',
+churchill:'British prime minister (1874-1965) who led the UK through the Second World War and won the Nobel Prize in Literature.',
+lovelace:'English mathematician (1815-1852) who wrote what is considered the first computer program, for the Analytical Engine.',
+turing:'British mathematician (1912-1954). He helped break the Enigma code in the Second World War and laid the foundations of computer science.'});
+const PS={leonidas:['#7a1414','helm','#c98f62','#222','b'],boudica:['#2d6a3a','wild','#e3b08a','#b5451b',''],archimedes:['#d8d2c0','bald','#d9a577','#bbb','b'],hannibal:['#5a2a6a','cap','#a8704a','#222','b'],joan:['#8a97a6','slick','#e3b08a','#6b4a2a',''],suntzu:['#2f5d8a','topknot','#d9b27c','#111','b'],cleo:['#1f6f8b','headdress','#c9966a','#111',''],davinci:['#8a3b2a','beret','#e0b78e','#bbb','b'],napoleon:['#1c2f66','bicorne','#e3b08a','#5a3a1a',''],tesla:['#222','slick','#e3b08a','#111','m'],newton:['#5a3a2a','wig','#e3b08a','#ddd',''],curie:['#222','updo','#e3b08a','#7a5a3a',''],alexander:['#7a1c4a','laurel','#e3b08a','#d9b24a',''],genghis:['#7a5a2a','fur','#b8855a','#222','b'],caesar:['#8a1c4a','laurel','#d9a577','#222',''],einstein:['#3a3a3a','wild','#e3b08a','#e8e8e8','m']};
+Object.assign(PS,{themistocles:['#2a4a7a','helm','#c98f62','#222','b'],hadrian:['#7a1414','laurel','#d9a577','#222','b'],pericles:['#d8d2c0','helm','#d9a577','#555','b'],scipio:['#8a1c1c','helm','#d9a577','#222',''],marcus:['#6a1c5a','laurel','#d9a577','#bbb','b'],augustus:['#8a1c4a','laurel','#e3b08a','#d9b24a',''],vercingetorix:['#2d6a3a','wild','#e3b08a','#d9b24a','m'],spartacus:['#5a4a3a','cap','#c98f62','#222','b'],arminius:['#4a5a2a','wild','#e3b08a','#b57a2b','b'],shapur:['#2a2a6a','headdress','#a8704a','#111','b'],mithridates:['#5a1c7a','headdress','#c9966a','#111','b'],zenobia:['#7a1c4a','headdress','#c9966a','#111',''],attila:['#4a3a2a','fur','#b8855a','#222','b'],tomoe:['#8a1c3a','topknot','#e3c0a0','#111',''],yoshitsune:['#2a3a6a','topknot','#e0b78e','#111',''],subutai:['#6a4a2a','fur','#b8855a','#222','m'],yuefei:['#2a2a2a','helm','#d9b27c','#111','b'],zhuge:['#d8d2c0','topknot','#d9b27c','#111','b'],musashi:['#3a3a3a','topknot','#d9b27c','#111','m'],qin:['#222','headdress','#d9b27c','#111','b'],nobunaga:['#7a1414','topknot','#e0b78e','#111','m'],richard:['#7a1414','helm','#e3b08a','#d9b24a','b'],wallace:['#2a3a6a','wild','#e3b08a','#b5451b','b'],washington:['#1c2f66','wig','#e3b08a','#ddd',''],elizabeth:['#8a1c1c','updo','#f0d0b8','#b5451b',''],gustavus:['#2a4a7a','bicorne','#e3b08a','#b57a2b','m'],suleiman:['#8a1c4a','headdress','#d9a577','#222','b'],galileo:['#3a2a2a','bald','#e3b08a','#ddd','b'],franklin:['#3a2a1a','wig','#e3b08a','#bbb',''],roosevelt:['#5a4a2a','cap','#e3b08a','#7a5a3a','m'],darwin:['#222','bald','#e3b08a','#ddd','b'],churchill:['#222','bald','#f0c8a8','#ddd',''],lovelace:['#2a4a7a','updo','#f0d0b8','#4a2a1a',''],turing:['#3a3a3a','slick','#e3b08a','#4a2a1a','']});
+Object.assign(BIO,{
+leif:'Norse explorer (c. 970-1020 AD), son of Erik the Red. Around 1000 AD he sailed west from Greenland and landed in North America, which he called Vinland, about 500 years before Columbus.',
+pachacuti:'Ninth ruler of the Inca (c. 1438-1471). He transformed the small kingdom of Cusco into the Inca Empire, expanded it along the Andes, and is credited with planning Machu Picchu.',
+shaka:'Zulu king (c. 1787-1828). He reformed the army with the short stabbing spear and the "buffalo horns" formation, and built a small clan into a powerful kingdom in southern Africa.',
+saladin:'Sultan of Egypt and Syria (1137-1193). He united Muslim lands, crushed the Crusaders at the Battle of Hattin in 1187, retook Jerusalem, and later faced Richard the Lionheart in the Third Crusade.',
+charlemagne:'King of the Franks (748-814). He conquered much of western Europe and was crowned Emperor by the Pope on Christmas Day in 800, reviving the idea of a Western empire.',
+ramesses:'Pharaoh of Egypt (c. 1303-1213 BC), called Ramesses the Great. He fought the Hittites at the Battle of Kadesh in 1274 BC and built monuments such as the temples of Abu Simbel.'});
+Object.assign(PS,{leif:['#5a4a2a','helm','#e3b08a','#b57a2b','b'],pachacuti:['#8a1c1c','headdress','#c9966a','#111',''],shaka:['#3a2a1a','cap','#8a5a3a','#111',''],saladin:['#1f6f4a','headdress','#c9966a','#111','b'],charlemagne:['#6a1c5a','laurel','#e3b08a','#b57a2b','b'],ramesses:['#2a6fb0','headdress','#c9966a','#111','']});
+const PCa={};
+function PC(f){if(PCa[f[0]])return PCa[f[0]];const[c,h,sk,hr,ex]=PS[f[0]],k=document.createElement('canvas');k.width=k.height=96;const x=k.getContext('2d'),e=(a,b,w,d,col)=>{x.fillStyle=col;x.beginPath();x.ellipse(a,b,w,d,0,0,7);x.fill()};
+let g=x.createRadialGradient(48,40,5,48,48,70);g.addColorStop(0,'#f2e3b8');g.addColorStop(1,'#4a3a22');x.fillStyle=g;x.fillRect(0,0,96,96);
+if(h=='wild'||h=='wig')e(48,38,h=='wig'?25:23,h=='wig'?29:25,hr);
+if(h=='wild'&&f[0]=='boudica')x.fillRect(25,38,10,50),x.fillRect(61,38,10,50);
+e(48,100,40,30,c);x.fillStyle=sk;x.fillRect(41,58,14,16);e(48,42,17,21,sk);
+g=x.createRadialGradient(40,34,2,48,44,26);g.addColorStop(0,'rgba(255,255,255,.25)');g.addColorStop(1,'rgba(0,0,0,.35)');x.fillStyle=g;x.beginPath();x.ellipse(48,42,17,21,0,0,7);x.fill();
+if(ex.includes('b')){x.fillStyle=hr;x.beginPath();x.ellipse(48,56,14,12,0,0,3.14);x.fill();e(48,52,9,4,sk)}
+x.fillStyle='#111';e(41,40,2,1.6,'#fff');e(55,40,2,1.6,'#fff');e(41,40,1,1,'#111');e(55,40,1,1,'#111');x.fillStyle=hr;x.fillRect(37,35,9,2);x.fillRect(50,35,9,2);
+x.strokeStyle='rgba(60,30,10,.6)';x.beginPath();x.moveTo(48,42);x.lineTo(46,50);x.lineTo(49,50);x.stroke();if(ex.includes('m'))e(48,53,8,2.5,hr);else{x.strokeStyle='#733';x.beginPath();x.arc(48,54,4,.3,2.8);x.stroke()}
+const top=(col,r=19)=>{x.fillStyle=col;x.beginPath();x.arc(48,38,r,Math.PI,0);x.fill()};
+if(h=='helm'){top('#b08d3a');e(48,14,5,12,'#a22');x.fillRect(45,36,6,12)}
+else if(h=='cap')top('#3a2a4a');else if(h=='slick'||h=='laurel')top(hr,18);
+else if(h=='updo'){top(hr,18);e(48,18,7,7,hr)}
+else if(h=='topknot'){top('#111',19);e(48,14,5,6,'#111')}
+else if(h=='headdress'){top('#d4a020',19);x.fillStyle='#2a6fb0';x.fillRect(28,30,6,34);x.fillRect(62,30,6,34)}
+else if(h=='beret')e(46,24,23,9,'#7a1c1c');
+else if(h=='bicorne'){e(48,26,32,9,'#111');e(48,22,10,6,'#111');e(52,30,3,3,'#e3c24a')}
+else if(h=='fur'){e(48,26,24,11,'#4a3a2a');e(48,20,15,7,'#6a5a3a')}
+if(h=='laurel')for(let i=0;i<9;i++)e(32+i*4,28+Math.abs(i-4)*1.5,3,2,'#4a8a3a');
+x.fillStyle='rgba(0,0,0,.18)';x.fillRect(0,0,96,96);k.getContext('2d');PCa[f[0]]=k;return k}
+const PT=f=>PC(f).toDataURL();
+function BG(g){const k=document.createElement('canvas');k.width=800;k.height=500;const x=k.getContext('2d'),n=g.m.n[0]=='N',L=x.createLinearGradient(0,0,0,500);L.addColorStop(0,n?'#dcb86e':'#76a257');L.addColorStop(1,n?'#a8834a':'#3d6733');x.fillStyle=L;x.fillRect(0,0,800,500);
+for(let i=0;i<1600;i++){x.fillStyle=`rgba(${n?'90,60,20':'20,50,10'},${Math.random()*.13})`;x.fillRect(Math.random()*800,Math.random()*500,2+Math.random()*3,2)}
+for(let i=0;i<26;i++){const a=Math.random()*800,b=Math.random()*500;if(n){x.fillStyle='rgba(255,235,170,.22)';x.beginPath();x.ellipse(a,b,60,12,0,0,7);x.fill();if(i%4==0){x.fillStyle='#3a5a2a';x.fillRect(a,b-26,3,26);for(let j=0;j<5;j++){x.beginPath();x.ellipse(a+1+Math.cos(j*1.3)*9,b-26+Math.sin(j*1.3)*4,9,2.5,j,0,7);x.fill()}}}else{x.fillStyle='rgba(0,0,0,.25)';x.beginPath();x.ellipse(a+5,b+10,14,5,0,0,7);x.fill();x.fillStyle='#2f5a2a';x.beginPath();x.arc(a,b,13,0,7);x.fill();x.fillStyle='#4d8a3d';x.beginPath();x.arc(a-3,b-4,8,0,7);x.fill()}}
+const v=x.createRadialGradient(400,250,200,400,250,520);v.addColorStop(0,'rgba(0,0,0,0)');v.addColorStop(1,'rgba(0,0,0,.6)');x.fillStyle=v;x.fillRect(0,0,800,500);return k}
+function bio(id){const f=FM[id],l=S.own[id]||1,d=f[6]*(1+.2*(l-1));$('#md').hidden=0;$('#mb').innerHTML=`<img src="${PT(f)}" width="96" height="96" style="float:left;margin:0 12px 6px 0;border-radius:12px"><h3 style="margin:0">${f[1]}</h3><div class="mu">${f[3]}</div><div style="color:${RC[f[4]][1]};font-weight:bold">${RC[f[4]][0]} ${CL(f)}${S.own[id]?', level '+l:', not owned yet'}</div><p style="clear:both">${BIO[id]}</p><p><b>In battle:</b> ${f[10]}<br>Damage ${d.toFixed(0)}, range ${f[7]}, ${(1/f[8]).toFixed(1)} shots per second, about ${(d/f[8]).toFixed(0)} damage per second, costs ${f[5]} gold.</p><p class="mu">Found in: ${PK.filter(k=>!k.p||k.p.includes(id)).map(k=>k.n).join(', ')}</p><button onclick="$('#md').hidden=1">Close</button>`}
+let S={coins:500,own:{leonidas:1,archimedes:1},deck:['leonidas','archimedes'],pulls:0,pity:0,best:0};
+try{const x=JSON.parse(localStorage.getItem('ld1'));if(x&&x.own)S=x}catch(e){}
+const save=()=>{try{localStorage.setItem('ld1',JSON.stringify(S))}catch(e){}};
+let tab='b',G=null,mi=0;
+const card=(f,l,x='')=>`<div class="c ${x}" style="--rc:${RC[f[4]][1]}"><div class="pt"><img src="${PT(f)}" width="72" height="72" style="border-radius:50%"></div><b>${f[1]}</b><div class="mu">${f[3]}</div><div class="r">${RC[f[4]][0]} ${CL(f)}${l?' Lv'+l:', not owned'}</div><div>Cost ${f[5]}, dmg ${f[6]}, range ${f[7]}</div><p>${f[10]}</p><button onclick="event.stopPropagation();bio('${f[0]}')">Biography</button></div>`;
+function lbR(){let e=$('#lb');if(!e){e=document.createElement('div');e.id='lb';$('#bs').after(e)}const L=S.lb||[];e.innerHTML=`<div class="mu" style="margin-top:8px"><b>Endless leaderboard</b> (saved in this browser) &nbsp; Your name: <input value="${String(S.name||'Player').replace(/[<>"&]/g,'')}" maxlength="12" oninput="S.name=this.value.replace(/[<>&quot;&]/g,'').trim().slice(0,12)||'Player';save()" style="width:110px;padding:3px 6px;border-radius:6px;border:1px solid var(--ln);background:#0006;color:inherit"></div>`+(L.length?`<table style="width:100%;font-size:13px;margin-top:4px">${L.map((r,i)=>`<tr><td>#${i+1}</td><td>${r.n}</td><td>Wave ${r.w}</td><td>${r.k} kills</td><td class="mu">${r.d}</td></tr>`).join('')}</table>`:'<div class="mu">No runs yet. Reach wave 1 in Endless to claim a spot.</div>')}
+function ui(){$('#co').textContent='Coins: '+S.coins;$('#dk').innerHTML='<b>Equipped:</b> '+S.deck.map(i=>`<img src="${PT(FM[i])}" width="28" height="28" style="border-radius:50%;vertical-align:middle"> ${FM[i][1]}`).join(' &nbsp; ')+' <span class="mu">(change in Collection)</span>';$('#bs').textContent=`Best wave: ${S.best}, best endless wave: ${S.bestE||0}. Packs opened: ${S.pulls}.`;lbR()}
+document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{tab=b.dataset.t;['b','p','c'].forEach(i=>$('#'+i).hidden=i!=tab);document.querySelectorAll('nav button').forEach(x=>x.classList.toggle('on',x==b));if(tab=='c')renderC();ui()});
+// Packs
+function roll(fr,pool){S.pity++;const r=Math.random()*100;let q=S.pity>=40||r<3?'L':r<12?'E':r<40?'R':'C';if(fr&&q=='C')q='R';if(q=='L')S.pity=0;const pl=F.filter(f=>!pool||pool.includes(f[0])),a=pl.filter(f=>f[4]==q),z=a.length?a:pl;return z[Math.random()*z.length|0]}
+// Quiz: [question, correct answer, wrong, wrong, wrong]; every answer is in the biography
+const QZ={
+leonidas:["Where did Leonidas hold the pass against Xerxes' Persian army?","Thermopylae","Marathon","Salamis","Plataea"],
+boudica:["Boudica was queen of which people?","The Iceni","The Brigantes","The Silures","The Picts"],
+archimedes:["Which principle did Archimedes discover?","Buoyancy","Gravity","Relativity","Inertia"],
+hannibal:["Which battle did Hannibal win against Rome in 216 BC?","Cannae","Zama","Actium","Marathon"],
+joan:["Which city's siege did Joan of Arc help lift?","Orleans","Paris","Calais","Rouen"],
+suntzu:["Which book is Sun Tzu credited with writing?","The Art of War","The Prince","Meditations","The Book of Five Rings"],
+cleo:["Who defeated Cleopatra and Mark Antony at Actium?","Octavian","Pompey","Julius Caesar","Brutus"],
+davinci:["Which famous painting did Leonardo da Vinci paint?","The Mona Lisa","Starry Night","The Scream","Girl with a Pearl Earring"],
+napoleon:["Where did Napoleon win a great victory in 1805?","Austerlitz","Waterloo","Trafalgar","Borodino"],
+tesla:["Which kind of power system did Nikola Tesla pioneer?","Alternating current","Steam power","Nuclear power","Hydrogen fuel"],
+newton:["Which institution did Isaac Newton later run?","The Royal Mint","The Bank of England","The Royal Navy","Parliament"],
+curie:["Which two elements did Marie Curie discover?","Polonium and radium","Uranium and thorium","Helium and neon","Plutonium and radon"],
+alexander:["Who taught Alexander the Great?","Aristotle","Plato","Socrates","Homer"],
+genghis:["What was Genghis Khan's birth name?","Temujin","Kublai","Ogedei","Batu"],
+caesar:["Which river did Julius Caesar cross in 49 BC?","The Rubicon","The Tiber","The Danube","The Po"],
+einstein:["What did Einstein win the 1921 Nobel Prize for?","The photoelectric effect","Relativity","E=mc2","Quantum gravity"],
+themistocles:["Where did Themistocles' fleet defeat Persia in 480 BC?","Salamis","Marathon","Thermopylae","Plataea"],
+hadrian:["What did Hadrian build across Britain?","A wall","A canal","A harbor","A great theater"],
+pericles:["Which famous building did Pericles commission?","The Parthenon","The Colosseum","The Pantheon","The Great Library"],
+scipio:["Whom did Scipio Africanus defeat at Zama?","Hannibal","Pyrrhus","Mithridates","Attila"],
+marcus:["Which book did Marcus Aurelius write?","Meditations","The Republic","The Art of War","The Aeneid"],
+augustus:["What peaceful era did Augustus begin?","The Pax Romana","The Golden Age","The Pax Britannica","The Enlightenment"],
+vercingetorix:["Where did Vercingetorix surrender to Caesar?","Alesia","Cannae","Zama","Actium"],
+spartacus:["What was Spartacus before he led the revolt?","A gladiator","A senator","A merchant","A sailor"],
+arminius:["Where did Arminius destroy three Roman legions?","The Teutoburg Forest","Thermopylae","Alesia","Cannae"],
+shapur:["Which Roman emperor did Shapur I defeat and capture?","Valerian","Hadrian","Aurelian","Nero"],
+mithridates:["What was Mithridates VI famed for studying?","Poisons","Astronomy","Siege machines","Poetry"],
+zenobia:["Which city did Queen Zenobia rule?","Palmyra","Antioch","Alexandria","Carthage"],
+attila:["Which people did Attila rule?","The Huns","The Goths","The Vandals","The Franks"],
+tomoe:["Which work praises Tomoe Gozen's archery and swordsmanship?","The Tale of the Heike","The Tale of Genji","The Art of War","The Book of Five Rings"],
+yoshitsune:["Which war did Yoshitsune win for his brother Yoritomo?","The Genpei War","The Onin War","The Boshin War","The Sengoku War"],
+subutai:["Which two rulers did Subutai serve?","Genghis Khan and Ogedei","Kublai Khan and Batu","Timur and Babur","Attila and Bleda"],
+yuefei:["Which invaders did Yue Fei fight?","The Jurchen","The Mongols","The Japanese","The Tibetans"],
+zhuge:["Zhuge Liang was chancellor of which state?","Shu Han","Wei","Wu","Qin"],
+musashi:["Which book did Miyamoto Musashi write?","The Book of Five Rings","The Art of War","Hagakure","The Tale of Genji"],
+qin:["Which army was Qin Shi Huang buried with?","The Terracotta Army","The Praetorian Guard","The Immortals","The Ten Thousand"],
+nobunaga:["At which battle did Nobunaga's matchlocks win?","Nagashino","Sekigahara","Okehazama","Osaka"],
+richard:["Which crusade did Richard the Lionheart lead?","The Third Crusade","The First Crusade","The Second Crusade","The Fourth Crusade"],
+wallace:["Where did William Wallace win in 1297?","Stirling Bridge","Bannockburn","Falkirk","Culloden"],
+washington:["Where did Washington win the final victory of the Revolution?","Yorktown","Saratoga","Gettysburg","Bunker Hill"],
+elizabeth:["Which fleet was defeated during Elizabeth I's reign in 1588?","The Spanish Armada","The French fleet","The Dutch fleet","The Ottoman fleet"],
+gustavus:["At which battle did Gustavus Adolphus fall?","Lutzen","Breitenfeld","Poltava","Narva"],
+suleiman:["Which city did Suleiman the Magnificent besiege?","Vienna","Rome","Paris","Moscow"],
+galileo:["What did Galileo discover with his telescope?","The moons of Jupiter","The moons of Mars","The planet Uranus","Halley's Comet"],
+franklin:["What did Benjamin Franklin invent?","The lightning rod","The telephone","The light bulb","The steam engine"],
+roosevelt:["Which unit did Theodore Roosevelt lead in Cuba?","The Rough Riders","The Minutemen","The Green Berets","The Marines"],
+darwin:["Which book did Charles Darwin write?","On the Origin of Species","Principia","The Wealth of Nations","Silent Spring"],
+churchill:["Churchill won the Nobel Prize in which field?","Literature","Peace","Physics","Economics"],
+lovelace:["For which machine did Ada Lovelace write the first computer program?","The Analytical Engine","The Enigma","The ENIAC","The Colossus"],
+turing:["Which code did Alan Turing help break in the Second World War?","Enigma","Morse","The Caesar cipher","Purple"]};
+Object.assign(QZ,{
+leif:["What did Leif Erikson call the land he found in North America?","Vinland","Greenland","Iceland","Helluland"],
+pachacuti:["Which small kingdom did Pachacuti turn into the Inca Empire?","Cusco","Lima","Quito","Tikal"],
+shaka:["Which army formation did Shaka Zulu use?","Buffalo horns","The phalanx","The wedge","The testudo"],
+saladin:["At which battle in 1187 did Saladin crush the Crusaders?","Hattin","Hastings","Tours","Lepanto"],
+charlemagne:["Who crowned Charlemagne Emperor?","The Pope","The Byzantine emperor","The Saxon dukes","His own son"],
+ramesses:["Which people did Ramesses II fight at Kadesh?","The Hittites","The Assyrians","The Persians","The Nubians"]});
+let CQ=null,QT=[];
+function gq(id){const m=BIO[id].split(/\.\s+(?=[A-Z])/).filter(x=>/\b\d{3,4}\b/.test(x));
+if(m.length&&Math.random()<.55){const t=m[Math.random()*m.length|0],n=t.match(/\b\d{3,4}\b/g),v=n[Math.random()*n.length|0],x=+v,o=new Set([x]),d=[5,8,10,15,20,25,30,40,60];while(o.size<4){const y=x+(Math.random()<.5?-1:1)*d[Math.random()*d.length|0];if(y>0)o.add(y)}return ['Fill in the blank from the biography: "'+t.replace(v,'____')+'"',...[...o].map(String)]}return QZ[id]}
+let QO=[];
+function grant(id){const o=S.own[id]||0;if(!o){S.own[id]=1;return 'New figure!'}if(o<5){S.own[id]=o+1;return 'Level up to '+(o+1)}S.coins+=25;return 'Maxed: +25 coins'}
+function pull(n,k=0){if(S.pend&&S.pend.length)return quiz();const P=PK[k],c=n>1?P.c*9:P.c;if(S.coins<c)return $('#pi').textContent='Not enough coins. Win battles to earn more.';S.coins-=c;
+S.pe=P.e;S.pend=[];S.rs=[];for(let i=0;i<n;i++)S.pend.push(roll(n>1&&i==n-1,P.p)[0]);S.tot=n;S.pulls+=n;$('#rv').innerHTML='';save();ui();quiz()}
+function quiz(){if(!S.pend||!S.pend.length)return;QT.forEach(clearTimeout);const id=S.pend[0],f=FM[id],c=RC[f[4]][1],i=S.tot-S.pend.length+1,L=f[4]=='L',B=L||f[4]=='E',ns={C:1,R:2,E:3,L:5}[f[4]];CQ=gq(id);$('#qd').hidden=0;
+$('#qb').innerHTML=`<div id="op" onclick="q2()" style="--c:${c}"><div id="rys"></div><div class="mu" style="position:absolute;top:0;z-index:3">Pack ${i} of ${S.tot}</div>${[0,1,2,3,4,5,6,7].map(k=>`<i class="ck" style="--a:${k*45+20}deg;--d:${k*.1}s"></i>`).join('')}<div id="pkx">${S.pe||'📦'}</div><b class="rg"></b><b class="rg r2"></b><b class="rg r3"></b><div id="rc"><div id="fr"><div class="sh"></div><img src="${PT(f)}" width="130" height="130" style="border-radius:50%;border:4px solid ${c};box-shadow:0 0 30px ${c}"><div style="font:bold 21px Palatino,serif;margin-top:8px">${f[1]}</div><div class="mu">${f[3]}</div><div class="rl" style="color:${c};font-weight:bold;letter-spacing:${L?6:3}px;font-size:${L?28:21}px;text-transform:uppercase">${RC[f[4]][0]}</div><div style="color:${c};font-size:20px;min-height:26px">${Array.from({length:ns},(_,k)=>`<span class="st" style="animation-delay:${1.2+k*.15}s">★</span>`).join('')}</div></div></div>${Array.from({length:L?60:34},()=>{const a=Math.random()*6.28,d=90+Math.random()*170;return `<i class="sp" style="--dx:${Math.cos(a)*d|0}px;--dy:${Math.sin(a)*d|0}px"></i>`}).join('')}<div id="fl"></div><div class="mu" style="position:absolute;bottom:2px;z-index:3">Tap to continue</div></div>`;
+const op=$('#op');op.onmousemove=e=>{const r=op.getBoundingClientRect();op.style.setProperty('--ry',((e.clientX-r.left)/r.width-.5)*30+'deg');op.style.setProperty('--rx',-((e.clientY-r.top)/r.height-.5)*30+'deg')};
+QT.push(setTimeout(()=>{const o=$('#op');if(o){o.classList.add('go');if(B)o.classList.add('big')}if(AC&&mu){nt(70,AC.currentTime,.7,'sine',.22);[0,4,7,12,16].slice(0,L?5:f[4]=='E'?4:2).forEach((n,j)=>nt(220*2**(n/12),AC.currentTime+.1+j*.09,.6,'triangle',.08))}},L?1900:1200),setTimeout(q2,L?6600:5400))}
+function q2(){QT.forEach(clearTimeout);QT=[];if(!S.pend||!S.pend.length)return;const id=S.pend[0],f=FM[id],q=CQ,i=S.tot-S.pend.length+1;QO=q.slice(1).map((t,j)=>[t,j==0]).sort(()=>Math.random()-.5);
+$('#qb').innerHTML=`<div class="mu" style="text-align:center">Pack ${i} of ${S.tot}</div><img src="${PT(f)}" width="96" height="96" style="float:left;margin:8px 12px 6px 0;border-radius:12px;border:2px solid ${RC[f[4]][1]}"><h3 style="margin:8px 0 0">${f[1]}</h3><div style="color:${RC[f[4]][1]};font-weight:bold">${RC[f[4]][0]}</div><p style="clear:both">${BIO[id]}</p><p><b>Answer correctly to recruit ${f[1]}:</b><br>${q[0]}</p><div id="qo" style="display:grid;gap:6px">${QO.map((o,j)=>`<button onclick="ans(${j})">${o[0]}</button>`).join('')}</div><div id="qf" style="margin-top:10px"></div>`}
+function ans(j){const id=S.pend.shift(),ok=QO[j][1],t=ok?grant(id):(S.coins+=20,'Missed');S.rs.push({id,ok,t});save();ui();
+document.querySelectorAll('#qo button').forEach((b,x)=>{b.disabled=1;b.style.outline=QO[x][1]?'2px solid #4d4':x==j?'2px solid #f55':'none'});
+const last=!S.pend.length;$('#qf').innerHTML=`<b style="color:${ok?'#6d6':'#f77'}">${ok?'Correct! '+t:'Wrong. '+FM[id][1]+' got away (+20 consolation coins). The right answer was: '+QO.find(o=>o[1])[0]}</b><div class="row"><button class="p" onclick="${last?'fin()':'quiz()'}">${last?'See results':'Next pack'}</button></div>`}
+function fin(){$('#qd').hidden=1;$('#rv').innerHTML=S.rs.map((r,i)=>`<div style="animation-delay:${i*.15}s">${card(FM[r.id],r.ok?S.own[r.id]:0,r.ok?'':'lk')}<div class="r" style="text-align:center;color:var(--ac)">${r.ok?r.t:'Missed: wrong answer'}</div></div>`).join('');const got=S.rs.filter(r=>r.ok).length;$('#pi').textContent=`You recruited ${got} of ${S.rs.length}. Pulls so far: ${S.pulls}. Legendary guaranteed within ${40-S.pity} pulls.`;S.rs=[];S.tot=0;save();ui()}
+function odds(pool){const B={C:60,R:28,E:9,L:3},pl=F.filter(f=>!pool||pool.includes(f[0])),o={},t={};for(const q in B){const a=pl.filter(f=>f[4]==q),z=a.length?a:pl;z.forEach(f=>{o[f[0]]=(o[f[0]]||0)+B[q]/z.length;t[f[4]]=(t[f[4]]||0)+B[q]/z.length})}
+return '<div style="margin-bottom:4px">'+'LERC'.split('').filter(q=>t[q]).map(q=>`<b style="color:${RC[q][1]}">${RC[q][0]} ${t[q].toFixed(0)}%</b>`).join(', ')+'</div><div style="columns:1">'+pl.sort((a,b)=>'LERC'.indexOf(a[4])-'LERC'.indexOf(b[4])).map(f=>`<div style="color:${RC[f[4]][1]}">${f[1]} (${CL(f)}) ${o[f[0]].toFixed(1)}%</div>`).join('')+'</div>'}
+const PK=[{n:'Standard Pack',e:'📦',c:100,d:'Figures from every age.',p:null},{n:'Classical Empires',e:'🏛️',c:140,d:'Greece, Macedon and Rome.',p:['leonidas','archimedes','alexander','caesar']},{n:'Foes of Rome',e:'🐘',c:140,d:'Carthage, Britain and Egypt.',p:['boudica','hannibal','cleo']},{n:'Eastern Empires',e:'🐎',c:140,d:'The steppe and ancient China.',p:['genghis','suntzu']},{n:'Renaissance and Revolution',e:'🎨',c:160,d:'Faith, art and revolution in Europe.',p:['joan','davinci','napoleon','newton']},{n:'Age of Science',e:'⚛️',c:160,d:'Minds that reshaped the modern world.',p:['tesla','curie','einstein','newton']}];
+PK.length=0;PK.push({n:'Classical Empires',e:'🏛️',c:140,d:'Greece, Macedon and Rome.',p:['leonidas','archimedes','themistocles','hadrian','pericles','scipio','marcus','augustus','alexander','caesar']},{n:'Foes of Rome',e:'🐘',c:140,d:'Carthage, Gaul, Germania, Persia and the Huns.',p:['boudica','hannibal','vercingetorix','spartacus','cleo','arminius','shapur','mithridates','zenobia','attila']},{n:'Eastern Empires',e:'🐎',c:140,d:'Mongolia, China and Japan.',p:['tomoe','yoshitsune','subutai','yuefei','suntzu','zhuge','musashi','qin','nobunaga','genghis']},{n:'Renaissance and Revolution',e:'🎨',c:160,d:'Knights, queens and revolutions.',p:['richard','wallace','washington','joan','davinci','elizabeth','napoleon','newton','gustavus','suleiman']},{n:'Modern Age',e:'⚛️',c:160,d:'Inventors, scientists and wartime leaders.',p:['galileo','franklin','roosevelt','darwin','churchill','lovelace','tesla','curie','turing','einstein']});
+PK.push({n:'Distant Realms',e:'🌍',c:150,d:'Pharaohs, Vikings, Incas, Zulus and sultans.',p:['leif','pachacuti','shaka','cleo','saladin','charlemagne','ramesses']});
+$('#pks').innerHTML=PK.map((k,i)=>`<div class="c" style="--rc:var(--ac)"><div style="font-size:40px">${k.e}</div><b>${k.n}</b><p>${k.d} ${k.p?k.p.map(j=>FM[j][1].split(' ')[0]).join(', '):'All 16 figures.'}</p><div style="text-align:left;font-size:11px;line-height:1.5">${odds(k.p)}</div><div class="row" style="justify-content:center"><button class="p" onclick="pull(1,${i})">1 pack (${k.c})</button><button class="p" onclick="pull(10,${i})">10 packs (${k.c*9})</button></div></div>`).join('');
+// Collection
+let cq='',cr='All',cs='Rarity',co=false;const RO={L:0,E:1,R:2,C:3};
+function cfl(){const q=cq.toLowerCase();return F.filter(f=>(cf=='All'||CL(f)==cf)&&(cr=='All'||f[4]==cr)&&(!co||S.own[f[0]])&&(!q||(f[1]+' '+f[3]).toLowerCase().includes(q))).sort((a,b)=>cs=='Cost'?a[5]-b[5]:cs=='Name'?a[1].localeCompare(b[1]):cs=='Level'?(S.own[b[0]]||0)-(S.own[a[0]]||0):RO[a[4]]-RO[b[4]]||a[5]-b[5])}
+function renderC(){$('#cn').innerHTML=`<b>Equipped deck (${S.deck.length}/5)</b> <span class="mu">Tap a figure below to equip or unequip it. Owned ${Object.keys(S.own).length} of ${F.length}.</span><div class="row" style="margin:6px 0">${[0,1,2,3,4].map(i=>{const f=FM[S.deck[i]];return f?`<div class="sl" style="border-color:${RC[f[4]][1]}"><img src="${PT(f)}" width="44" height="44" style="border-radius:50%"><div><b>${f[1].split(' ')[0]}</b></div></div>`:`<div class="sl em">Empty slot</div>`}).join('')}</div><div class="row">${['All','Melee','Ranged','Support'].map(c=>`<button class="${c==cf?'on':''}" onclick="cf='${c}';renderC()">${c}</button>`).join('')}</div><div class="row" style="margin-top:6px"><input id="cqi" placeholder="Search name or era..." value="${cq}" oninput="cq=this.value;rg()" style="flex:1;min-width:140px;padding:6px;border-radius:8px;border:1px solid var(--ln);background:#0006;color:inherit">${['All','C','R','E','L'].map(r=>`<button class="${r==cr?'on':''}" onclick="cr='${r}';renderC()">${r=='All'?'Any rarity':RC[r][0]}</button>`).join('')}</div><div class="row" style="margin-top:6px">${['Rarity','Cost','Name','Level'].map(x=>`<button class="${x==cs?'on':''}" onclick="cs='${x}';renderC()">Sort: ${x}</button>`).join('')}<button class="${co?'on':''}" onclick="co=!co;renderC()">Owned only</button></div><div class="mu" id="ccn"></div>`;
+rg()}
+function rg(){const L=cfl();$('#ccn').textContent=`Showing ${L.length} of ${F.length}. `+['C','R','E','L'].map(r=>RC[r][0]+' '+F.filter(f=>f[4]==r&&S.own[f[0]]).length+'/'+F.filter(f=>f[4]==r).length).join(', ');$('#cg').innerHTML=L.map(f=>{const l=S.own[f[0]];return l?`<div data-i="${f[0]}" style="position:relative;cursor:pointer">${S.deck.includes(f[0])?'<div class="eq">Equipped</div>':''}${card(f,l,S.deck.includes(f[0])?'in':'')}</div>`:`<div>${card(f,0,'lk')}</div>`}).join('');
+document.querySelectorAll('#cg [data-i]').forEach(d=>d.onclick=()=>{const i=d.dataset.i,k=S.deck.indexOf(i);if(k>=0){if(S.deck.length>1)S.deck.splice(k,1)}else if(S.deck.length<5)S.deck.push(i);save();renderC()})}
+// Maps
+const MP=[{n:'Marathon, Greece',t:'g',f:'Persian invaders',pc:'#e0cf9e',d:'490 BC. Olive groves and open fields where Athens beat Persia.',p:[[-25,75],[175,75],[175,275],[425,275],[425,125],[625,125],[625,425],[275,425],[275,525]]},
+{n:'Nile Delta, Egypt',t:'n',f:'Sea Peoples raiders',pc:'#ecdcab',d:'Winding canals and dunes under the Egyptian sun.',p:[[-25,425],[125,425],[125,125],[325,125],[325,375],[525,375],[525,75],[725,75],[725,525]]},
+{n:'Steppe, Mongolia',t:'s',f:'Jin dynasty soldiers',pc:'#b79a62',d:'The endless grassland of the Mongol horse lords.',p:[[-25,225],[225,225],[225,75],[475,75],[475,325],[125,325],[125,425],[675,425],[675,175],[825,175]]},
+{n:'Alpine Pass, Alps',t:'a',f:'Roman legionaries',pc:'#cfd8df',d:'The icy pass Hannibal crossed with his elephants.',p:[[-25,475],[175,475],[175,325],[375,325],[375,475],[575,475],[575,175],[225,175],[225,75],[725,75],[725,275],[825,275]]}];
+$('#maps').innerHTML=MP.map((m,i)=>`<button data-m="${i}" class="${i?'':'on'}">${m.n}</button>`).join('');
+document.querySelectorAll('#maps button').forEach(b=>b.onclick=()=>{mi=+b.dataset.m;$('#mdsc').textContent=MP[mi].d;document.querySelectorAll('#maps button').forEach(x=>x.classList.toggle('on',x==b))});
+// Battle
+const ET={a:['🗡️',40,50,5],b:['🏃',26,95,5],c:['🛡️',140,40,9],d:['👹',420,30,18],e:['👑',2800,26,120]};
+const BUF={suntzu:.25,caesar:.5,marcus:.3,elizabeth:.25,churchill:.25,turing:.35,charlemagne:.3},RAD={napoleon:65,augustus:60,gustavus:60,suleiman:70,ramesses:65},msg=s=>$('#msg').textContent=s,lv=t=>S.own[t.f[0]]||1;
+const HS=w=>1.085**(w-1)*(w>30?1.04**(w-30):1),UM=()=>G.df.e?5:3,D=t=>t.f[6]*(1+.2*(lv(t)-1))*(1+.5*t.up)*t.b,Rg=t=>t.f[7]*(1+.06*t.up);
+$('#go').onclick=()=>{const m=MP[mi],p=m.p,L=[0];for(let i=1;i<p.length;i++)L.push(L[i-1]+Math.hypot(p[i][0]-p[i-1][0],p[i][1]-p[i-1][1]));
+G={m,p,L,T:L[L.length-1],df:DF[di],gold:DF[di].g,lives:DF[di].l,w:0,act:0,q:[],sp:0,gap:1,en:[],tw:[],fx:[],sel:null,pk:null,spd:1,kills:0,hx:-99,hy:-99,over:0};
+$('#menu').hidden=1;$('#game').hidden=0;$('#rt').textContent='Retreat';$('#wv').disabled=0;$('#wv').textContent='Send wave 1';$('#sp').textContent='Speed 1x';hand();info();msg('Pick a figure, tap a grass tile to place it, then send the first wave. Keys: 1-5 pick, W wave, F speed, V view, U upgrade, X sell.')};
+const EP={g:['#2a5ca8','#e8e2d0','#d9a577','#b8862b'],n:['#c2a15a','#a8793a','#a8704a','#7a2a1a'],s:['#a8222a','#5a5a64','#d9b27c','#d6a93a'],a:['#a8222a','#b8bcc4','#e3b08a','#8a1c1c']};
+function man(x,e,th){const P=EP[th],T=e.t,s={e:2,d:1.5,c:1.25,b:1,a:1.1}[T],w=Math.sin(e.d/5)*3;x.save();x.translate(e.x,e.y);x.scale(s,s);
+x.fillStyle='rgba(0,0,0,.35)';x.beginPath();x.ellipse(0,12,9,3.5,0,0,7);x.fill();
+if(T=='e'){x.fillStyle=P[3];x.fillRect(-8,-8,16,18)}
+x.fillStyle='#2b2118';x.fillRect(-5,3,4,9+w*.4);x.fillRect(1,3,4,9-w*.4);
+x.fillStyle=P[0];x.fillRect(-6,-7,12,11);if(T=='c'||T=='d'||T=='e'){x.fillStyle=P[1];x.fillRect(-6,-7,12,6)}
+x.fillStyle=P[2];x.fillRect(-9,-6+w*.3,3,8);x.fillRect(6,-6-w*.3,3,8);x.beginPath();x.arc(0,-11,5,0,7);x.fill();x.fillStyle=P[1];
+if(th=='g'){x.fillRect(-5,-17,10,5);x.beginPath();x.arc(0,-17,4,0,7);x.fill()}
+else if(th=='n'){x.beginPath();x.arc(0,-12,5.5,Math.PI,0);x.fill();x.fillRect(-7,-17,2,5);x.fillRect(5,-17,2,5)}
+else if(th=='s'){x.beginPath();x.moveTo(-6,-13);x.lineTo(0,-23);x.lineTo(6,-13);x.fill()}
+else{x.beginPath();x.arc(0,-12,5.5,Math.PI,0);x.fill();x.fillStyle=P[3];x.fillRect(-1,-20,2,6);x.fillRect(-4,-20,8,2)}
+if(T=='c'||T=='d'||T=='e'){x.fillStyle=P[3];x.beginPath();x.arc(-9,0,6,0,7);x.fill();x.strokeStyle='#d8c070';x.lineWidth=1.2;x.stroke()}
+if(T!='b'){x.strokeStyle='#6a5a44';x.lineWidth=1.6;x.beginPath();x.moveTo(9,10);x.lineTo(9,-20);x.stroke();x.fillStyle='#ccd';x.beginPath();x.moveTo(7.5,-20);x.lineTo(9,-26);x.lineTo(10.5,-20);x.fill()}
+if(T=='e'){x.fillStyle='#e0b020';x.fillRect(-5,-18,10,3)}
+if(e.sl>0||e.st>0){x.fillStyle=e.st>0?'rgba(255,255,80,.3)':'rgba(80,170,255,.3)';x.fillRect(-9,-24,18,36)}
+x.restore()}
+function pos(d){const{p,L}=G;let i=1;while(i<L.length-1&&L[i]<d)i++;const t=(d-L[i-1])/(L[i]-L[i-1]);return[p[i-1][0]+(p[i][0]-p[i-1][0])*t,p[i-1][1]+(p[i][1]-p[i-1][1])*t]}
+function onPath(x,y){const p=G.p;for(let i=1;i<p.length;i++){const a=p[i-1],b=p[i],dx=b[0]-a[0],dy=b[1]-a[1];let t=((x-a[0])*dx+(y-a[1])*dy)/(dx*dx+dy*dy);t=Math.max(0,Math.min(1,t));if(Math.hypot(x-a[0]-dx*t,y-a[1]-dy*t)<36)return 1}return 0}
+function hand(){$('#hand').innerHTML=S.deck.map(i=>{const f=FM[i];return `<button data-i="${i}" style="border-color:${RC[f[4]][1]}" class="${G.sel==i?'on':''}"><img src="${PT(f)}" width="34" height="34" style="border-radius:50%"><br>${f[1].split(' ')[0]}<br>${CL(f)}, ${f[5]} gold</button>`}).join('');
+document.querySelectorAll('#hand button').forEach(b=>b.onclick=()=>{G.sel=G.sel==b.dataset.i?null:b.dataset.i;G.pk=null;G.pe=null;hand();info()})}
+function info(){const t=G.pk,e=$('#info');if(G.pe&&G.pe.hp>0&&!t&&!G.sel){const n=G.pe,N={a:'Spearman',b:'Scout',c:'Shieldbearer',d:'Brute',e:'Warlord'}[n.t];e.innerHTML=`<b>${n.e[0]} ${N}</b>: health ${Math.ceil(n.hp)}/${Math.ceil(n.mx)}, speed ${Math.round(n.v)}, bounty ${Math.round(n.e[3]*(1+G.w*.04))} gold${n.t=='e'?', costs 5 lives if it leaks':''}${n.sl>0?', slowed':''}${n.st>0?', stunned':''}${{c:'. Armored: takes 40% less from single-target attacks',b:'. Agile: takes 20% less from single and crit attacks',d:'. Resists stun and slows less',e:'. Immune to stun, slowed less',a:''}[n.t]}`;return}if(!t){e.innerHTML=G.sel?`Placing <b>${FM[G.sel][1]}</b>: damage ${FM[G.sel][6]*(1+.2*((S.own[G.sel]||1)-1))|0}, range ${FM[G.sel][7]}. ${FM[G.sel][10]} Tap a free grass tile. <button onclick="bio('${G.sel}')">Biography</button>`:'<span class="mu">Tap a placed figure to upgrade or sell it.</span>';return}
+const c=Math.round(t.f[5]*.45*(t.up+1));const f=t.f,d=D(t);e.innerHTML=`<div style="display:flex;gap:10px;align-items:center"><img src="${PT(f)}" width="64" height="64" style="border-radius:50%;border:2px solid ${RC[f[4]][1]}"><div style="flex:1"><b>${f[1]}</b> <span class="mu">${f[3]}</span><br><span style="color:${RC[f[4]][1]}">${RC[f[4]][0]} ${CL(f)}, Lv${lv(t)}</span><br>${f[10]}</div></div><div class="g" style="grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:4px;margin:6px 0">${[['Damage',d.toFixed(0)],['DPS',(d/f[8]).toFixed(0)],['Range',Rg(t).toFixed(0)],['Speed',(1/f[8]).toFixed(1)+'/s'],['Upgrade',t.up+'/'+UM()],['Buff',t.b>1?'+'+Math.round((t.b-1)*100)+'%':'none'],['Shots',t.sh||0],['Sells for',Math.floor(t.inv*.6)]].map(a=>`<div class="c" style="padding:4px;height:auto"><span class="mu">${a[0]}</span><b>${a[1]}</b></div>`).join('')}</div><button id="ug" ${t.up>=UM()||G.gold<c?'disabled':''}>Upgrade (${c})</button> <button id="sl">Sell (${Math.floor(t.inv*.6)})</button> <button id="tg">Target: ${t.tm||'First'}</button> <button onclick="bio('${f[0]}')">Biography</button>`;
+$('#ug').onclick=()=>{if(G.gold>=c&&t.up<UM()){G.gold-=c;t.inv+=c;t.up++;info()}};$('#sl').onclick=()=>{G.gold+=Math.floor(t.inv*.6);G.tw=G.tw.filter(x=>x!=t);G.pk=null;info()}}
+const cv=$('#cv'),cx=cv.getContext('2d');
+const pt=e=>{if(R3)return R3.pick(e);const r=cv.getBoundingClientRect();return[(e.clientX-r.left)*800/r.width,(e.clientY-r.top)*500/r.height]};
+cv.onpointermove=e=>{if(G)[G.hx,G.hy]=pt(e)};
+cv.onpointerdown=e=>{if(!G||G.over)return;const[x,y]=pt(e);G.hx=x;G.hy=y;const hit=G.tw.find(t=>Math.hypot(t.x-x,t.y-y)<22);
+if(hit){G.pk=hit;G.pe=null;G.sel=null;hand();info();return}
+const eh=G.en.find(o=>Math.hypot(o.x-x,o.y-y)<24);if(eh&&!G.sel){G.pe=eh;G.pk=null;hand();info();return}
+if(G.sel){const f=FM[G.sel],gx=(x/50|0)*50+25,gy=(y/50|0)*50+25;
+if(onPath(gx,gy)||G.tw.some(t=>t.x==gx&&t.y==gy))return msg('You cannot build there.');
+if(G.gold<f[5])return msg('Not enough gold.');G.gold-=f[5];G.tw.push({f,x:gx,y:gy,up:0,cd:0,b:1,inv:f[5]});msg('');return}
+G.pk=null;G.pe=null;info()};
+let R3=null;
+(function(){if(!window.THREE)return;try{
+const T=THREE,el=document.createElement('canvas');el.width=800;el.height=500;
+const rn=new T.WebGLRenderer({canvas:el,antialias:true});rn.setPixelRatio(Math.min(devicePixelRatio||1,2));rn.setSize(800,500,false);rn.shadowMap.enabled=true;rn.shadowMap.type=T.PCFSoftShadowMap;
+el.style.cssText='width:100%;height:auto;display:block;border:2px solid var(--ln);border-radius:10px;touch-action:none';cv.style.display='none';cv.parentNode.insertBefore(el,cv);
+const sc=new T.Scene(),cm=new T.PerspectiveCamera(40,1.6,.1,120),VW=[[0,13,10.5],[0,18,3],[-10,8,8]],ray=new T.Raycaster(),pl=new T.Plane(new T.Vector3(0,1,0),0),gb=new T.Group(),TW=new Map(),EN=new Map(),FX=new Map(),HT={};let vi=0,fr=0,GT=null;
+sc.add(gb,new T.HemisphereLight(0xdfe8ff,0x5a6a40,.9));
+const sun=new T.DirectionalLight(0xfff0cc,.85);sun.position.set(-6,12,6);sun.castShadow=true;sun.shadow.mapSize.set(1024,1024);Object.assign(sun.shadow.camera,{left:-10,right:10,top:8,bottom:-8,far:40});sc.add(sun);
+const W=(x,y)=>[(x-400)/50,(y-250)/50],M=(c,o)=>new T.MeshStandardMaterial(Object.assign({color:c,roughness:.8},o||{})),cyl=new T.CylinderGeometry(1,1,1,14),cone=new T.ConeGeometry(1,1,12),sph=new T.SphereGeometry(1,14,10),box=new T.BoxGeometry(1,1,1),tor=new T.TorusGeometry(1,.1,8,24),ringG=new T.RingGeometry(.93,1,48).rotateX(-Math.PI/2);
+const ms=(g,m,p,s,c)=>{const o=new T.Mesh(g,m);o.position.set(p[0],p[1],p[2]);o.scale.set(s[0],s[1],s[2]);o.castShadow=!!c;return o};
+const rs=new T.Mesh(ringG,new T.MeshBasicMaterial({color:'#fff',transparent:true,opacity:.85,side:T.DoubleSide})),fl2=new T.Mesh(new T.PlaneGeometry(1,1).rotateX(-Math.PI/2),new T.MeshBasicMaterial({color:'#fff',transparent:true,opacity:.3}));sc.add(rs,fl2);
+function head(f){return HT[f[0]]||(HT[f[0]]=(()=>{const k=document.createElement('canvas');k.width=k.height=96;const x=k.getContext('2d');x.save();x.beginPath();x.arc(48,48,46,0,7);x.clip();x.drawImage(PC(f),0,0);x.restore();x.lineWidth=6;x.strokeStyle=RC[f[4]][1];x.beginPath();x.arc(48,48,45,0,7);x.stroke();return new T.CanvasTexture(k)})())}
+function deco(t,x,z){const o=new T.Group();
+if(t=='n'){o.add(ms(cyl,M('#8a6a3a'),[0,.7,0],[.07,1.4,.07]));for(let i=0;i<5;i++){const l=ms(box,M('#3f7a2f'),[Math.cos(i*1.26)*.3,1.45,Math.sin(i*1.26)*.3],[.6,.04,.14]);l.rotation.y=-i*1.26;o.add(l)}}
+else if(t=='s'){o.add(ms(cyl,M('#efe8d6'),[0,.25,0],[.45,.5,.45]));o.add(ms(cone,M('#9a4a2a'),[0,.7,0],[.52,.5,.52]))}
+else{o.add(ms(cyl,M('#5a3a1a'),[0,.2,0],[.08,.4,.08]));o.add(ms(cone,M(t=='a'?'#1f4a3a':'#2f6a2a'),[0,.9,0],[.4,1.1,.4]));if(t=='a')o.add(ms(cone,M('#fff'),[0,1.25,0],[.22,.45,.22]))}
+o.scale.setScalar(.7+Math.random()*.7);o.position.set(x,0,z);o.rotation.y=Math.random()*6;return o}
+function build(g){while(gb.children.length)gb.remove(gb.children[0]);TW.clear();EN.clear();FX.clear();const t=g.m.t,sk={g:'#9cc6ea',n:'#f0c98a',s:'#b7d3e6',a:'#cfdde8'}[t],gr={g:'#3f6a35',n:'#b58f55',s:'#728b3d',a:'#dfe8ef'}[t];sc.background=new T.Color(sk);sc.fog=new T.Fog(sk,20,48);
+const k=document.createElement('canvas');k.width=1600;k.height=1000;const x=k.getContext('2d');x.drawImage(BG2(g),0,0,1600,1000);x.scale(2,2);x.lineCap=x.lineJoin='round';const P=()=>{x.beginPath();g.p.forEach((q,i)=>i?x.lineTo(q[0],q[1]):x.moveTo(q[0],q[1]));x.stroke()};x.strokeStyle='#5a4524';x.lineWidth=52;P();x.strokeStyle=g.m.pc;x.lineWidth=44;P();x.strokeStyle='rgba(120,90,40,.35)';x.lineWidth=30;x.setLineDash([2,14]);P();
+const gm=new T.Mesh(new T.PlaneGeometry(16,10).rotateX(-Math.PI/2),new T.MeshStandardMaterial({map:new T.CanvasTexture(k),roughness:1}));gm.receiveShadow=true;gb.add(gm);
+const fl=new T.Mesh(new T.PlaneGeometry(120,120).rotateX(-Math.PI/2),M(gr,{roughness:1}));fl.position.y=-.02;gb.add(fl);
+for(let i=0;i<60;i++){let a,b;do{a=(Math.random()-.5)*26;b=(Math.random()-.5)*20}while(Math.abs(a)<8.6&&Math.abs(b)<5.6);gb.add(deco(t,a,b))}
+for(let i=0;i<7;i++){const h=3+Math.random()*3;gb.add(ms(cone,M(t=='a'?'#e8eef4':t=='n'?'#c9a15a':'#5a7a5a'),[-14+i*4.6,h/2,-12-Math.random()*4],[3.2,h,3.2]))}
+const s0=W(g.p[0][0],g.p[0][1]),e0=g.p[g.p.length-1],e1=W(e0[0],e0[1]);GT=ms(tor,M('#a855f7',{emissive:'#7a2ab0'}),[s0[0]+.5,.8,s0[1]],[.8,.8,.8]);GT.rotation.y=Math.PI/2;gb.add(GT);
+const c=new T.Group();c.add(ms(box,M('#9a9aa4'),[0,.4,0],[1.3,.8,1.3],1));[[-1,-1],[1,-1],[-1,1],[1,1]].forEach(q=>{c.add(ms(cyl,M('#b4b4be'),[q[0]*.65,.6,q[1]*.65],[.22,1.2,.22],1));c.add(ms(cone,M('#a22'),[q[0]*.65,1.4,q[1]*.65],[.3,.4,.3],1))});c.add(ms(cyl,M('#654'),[0,1.3,0],[.03,1,.03]));c.add(ms(box,M('#e0a82e'),[.2,1.6,0],[.4,.25,.03]));c.position.set(e1[0],0,e1[1]);gb.add(c)}
+const rot=(m,x,y,z)=>{m.rotation.set(x,y,z);return m},gold=()=>M('#ffd24a',{emissive:'#ffb000',emissiveIntensity:.8,metalness:.6});
+function mkT(t){const f=t.f,o=new T.Group(),c=RC[f[4]][1],P=PS[f[0]],r={C:1,R:1.1,E:1.2,L:1.35}[f[4]],k=f[9],u={};o.add(ms(cyl,M('#8a8478'),[0,.12,0],[.5,.24,.5],1));
+const rg=ms(tor,M(c,{emissive:c,emissiveIntensity:.6}),[0,.26,0],[.46,.46,.46]);rg.rotation.x=Math.PI/2;o.add(rg);u.rg=rg;
+const bd=new T.Group();bd.scale.setScalar(r);o.add(bd);bd.add(ms(cone,M(P[0]),[0,.65,0],[.3,.8,.3],1));bd.add(ms(box,M(P[3]=='#111'?'#8a1c1c':P[3]),[0,.7,-.22],[.34,.7,.04],1));[-1,1].forEach(q=>bd.add(ms(sph,M('#b0a070',{metalness:.6}),[q*.24,.95,0],[.1,.07,.1],1)));
+const pr=new T.Group();pr.position.set(.4,.45,.1);bd.add(pr);u.pr=pr;u.py=.45;
+if(k=='splash'){pr.add(rot(ms(cyl,M('#3a3a42',{metalness:.7}),[0,0,.15],[.1,.55,.1],1),Math.PI/2,0,0));pr.add(ms(sph,M('#5a4a3a'),[0,-.08,0],[.12,.12,.12],1))}
+else if(k=='pierce'){pr.add(ms(cyl,M('#6a5a44'),[0,.4,0],[.02,1.2,.02],1));pr.add(ms(cone,M('#dde',{metalness:.9}),[0,1.05,0],[.05,.14,.05],1))}
+else if(k=='chain'){pr.add(ms(cyl,M('#555'),[0,.1,0],[.07,.3,.07],1));pr.add(ms(sph,M('#ff0',{emissive:'#fd0',emissiveIntensity:1.2}),[0,.35,0],[.12,.12,.12]))}
+else if(k=='slow'){pr.add(ms(sph,M('#5cf',{emissive:'#38f',emissiveIntensity:1}),[0,.3,0],[.14,.14,.14]))}
+else if(k=='poison'){pr.add(ms(sph,M('#4d4',{emissive:'#2a2',emissiveIntensity:.9}),[0,.1,0],[.12,.12,.12]));pr.add(ms(cyl,M('#ccc'),[0,.25,0],[.04,.12,.04]))}
+else if(k=='buff'){pr.add(ms(cyl,M('#654'),[0,.5,0],[.02,1.1,.02],1));pr.add(ms(box,M(c,{emissive:c,emissiveIntensity:.3}),[.17,.9,0],[.34,.22,.02]))}
+else if(k=='income'){for(let i=0;i<4;i++)pr.add(ms(cyl,gold(),[0,i*.06,0],[.12,.05,.12]))}
+else if(k=='nuke'){pr.add(ms(sph,M('#f33',{emissive:'#f22',emissiveIntensity:1.2}),[0,.4,0],[.17,.17,.17]))}
+else{const sw=new T.Group();sw.add(ms(box,M('#dde',{metalness:.9,roughness:.2}),[0,.3,0],[.05,.6,.02],1));sw.add(ms(box,gold(),[0,.02,0],[.2,.04,.04]));sw.rotation.z=-.3;pr.add(sw)}
+const sp=new T.Sprite(new T.SpriteMaterial({map:head(f)}));u.sy=1.3+(r-1)*.5;sp.scale.set(.8*r,.8*r,1);sp.position.y=u.sy;o.add(sp);u.sp=sp;u.r=r;
+if('EL'.includes(f[4])){const og=new T.Group();for(let i=0;i<(f[4]=='L'?5:3);i++){const a=i*6.283/(f[4]=='L'?5:3);og.add(ms(sph,M(c,{emissive:c,emissiveIntensity:1.2}),[Math.cos(a)*.62,.8,Math.sin(a)*.62],[.07,.07,.07]))}o.add(og);u.or=og}
+if(f[4]=='L'){const hl=ms(tor,gold(),[0,u.sy+.5,0],[.3,.3,.3]);hl.rotation.x=Math.PI/2;o.add(hl);u.hl=hl;o.add(ms(cyl,new T.MeshBasicMaterial({color:c,transparent:true,opacity:.16}),[0,.95,0],[.42,1.8,.42]))}
+u.pp=[0,1,2,3,4].map(i=>{const q=ms(sph,gold(),[(i-2)*.14,.38,.45],[.05,.05,.05]);q.visible=false;o.add(q);return q});o.userData=u;return o}
+function mkE(e,th){const P=EP[th],ty=e.t,s={e:1.9,d:1.6,c:1.25,b:.95,a:1.1}[ty]*.9,o=new T.Group(),b=new T.Group(),sk=ty=='d'?'#6a9a4a':P[2],bm=M(P[0]),mt=M(P[3],{metalness:.5}),bw={b:.11,d:.24,e:.17,c:.17,a:.15}[ty],eye=new T.MeshBasicMaterial({color:ty=='e'||ty=='d'?'#ff3030':'#fff'});
+b.add(ms(cyl,bm,[0,.3,0],[bw,ty=='b'?.34:ty=='d'?.42:.38,bw],1));b.add(ms(sph,M(sk),[0,.62,0],[.11,.11,.11],1));b.add(ms(sph,M(P[1],{metalness:.4}),[0,.66,0],[.125,.1,.125],1));[-1,1].forEach(q=>b.add(ms(sph,eye,[q*.04,.63,.095],[.02,.02,.02])));
+if(ty=='a'){b.add(ms(cone,M('#c22'),[0,.8,0],[.03,.14,.03]));b.add(ms(cyl,M('#6a5a44'),[.2,.4,0],[.015,.8,.015]));b.add(ms(cone,M('#ccd'),[.2,.85,0],[.04,.1,.04]))}
+else if(ty=='b'){b.add(rot(ms(box,M('#c33'),[0,.5,-.17],[.14,.05,.32]),-.3,0,0));[-1,1].forEach(q=>b.add(ms(box,M('#dde',{metalness:.9}),[q*.17,.3,.1],[.02,.02,.22])))}
+else if(ty=='c'){b.add(ms(box,mt,[0,.32,.19],[.32,.42,.04],1));b.add(ms(sph,M('#e0b020',{metalness:.7}),[0,.34,.22],[.06,.06,.03]));b.add(ms(sph,M('#c22'),[0,.82,0],[.05,.09,.05]))}
+else if(ty=='d'){b.add(rot(ms(cyl,M('#5a3a1a'),[.32,.4,.05],[.05,.7,.05],1),0,0,.4));b.add(ms(sph,M('#4a3a2a'),[.45,.75,.05],[.11,.11,.11],1));[-1,1].forEach(q=>b.add(rot(ms(cone,M('#eee'),[q*.1,.78,0],[.035,.12,.035]),0,0,-q*.4)))}
+else{[-1,1].forEach(q=>b.add(rot(ms(cone,M('#e8e0c0'),[q*.11,.8,0],[.04,.2,.04],1),0,0,-q*.5)));b.add(ms(box,M('#8a1c1c'),[0,.45,-.2],[.4,.7,.04],1));b.add(ms(cyl,M('#654'),[.22,.6,-.1],[.02,1,.02]));b.add(ms(box,M('#a22',{emissive:'#a00',emissiveIntensity:.5}),[.34,1,-.1],[.26,.2,.02]));const ar=ms(tor,M('#f80',{emissive:'#f60',emissiveIntensity:1.2}),[0,.03,0],[.5,.5,.5]);ar.rotation.x=Math.PI/2;b.add(ar)}
+b.scale.setScalar(s);o.add(b);const hb=new T.Group(),fg=new T.Mesh(new T.PlaneGeometry(1,.07).translate(.5,0,0),new T.MeshBasicMaterial({color:'#4d4'}));fg.position.set(-.3,0,.001);hb.add(new T.Mesh(new T.PlaneGeometry(.6,.07),new T.MeshBasicMaterial({color:'#300'})),fg);hb.position.y=.95*s+.1;o.add(hb);o.userData={b,hb,fg,px:e.x,py:e.y};return o}
+function r3(dt){const g=G;if(!g.b3){build(g);g.b3=1}fr++;const tm=performance.now()/1000,v=VW[vi];cm.position.set(v[0]+(g.sh>0?(Math.random()-.5)*.3:0),v[1],v[2]);cm.lookAt(0,0,.3);if(GT)GT.material.emissiveIntensity=.6+.4*Math.sin(tm*4);
+for(const t of g.tw){let o=TW.get(t);if(!o){o=mkT(t);const q=W(t.x,t.y);o.position.set(q[0],0,q[1]);gb.add(o);TW.set(t,o)}const ph=t.cd>0?Math.min(1,t.cd/t.f[8]):0,u=o.userData;u.sp.position.y=u.sy+.15*ph*ph;u.sp.scale.setScalar(.8*u.r*(1+.2*ph*ph));u.rg.material.emissiveIntensity=.5+.4*Math.sin(tm*3+t.x);u.pp.forEach((q,i)=>q.visible=i<t.up);if(u.or)u.or.rotation.y=tm*1.6;if(u.hl)u.hl.rotation.z=tm*2;u.pr.position.y=u.py+Math.sin(tm*2+t.x)*.04;u.k=fr}
+for(const[t,o]of TW)if(o.userData.k!=fr){gb.remove(o);TW.delete(t)}
+for(const e of g.en){let o=EN.get(e);if(!o){o=mkE(e,g.m.t);gb.add(o);EN.set(e,o)}const q=W(e.x,e.y),u=o.userData,dx=e.x-u.px,dy=e.y-u.py;if(dx||dy)u.b.rotation.y=Math.atan2(dx,dy);u.px=e.x;u.py=e.y;o.position.set(q[0],Math.abs(Math.sin(e.d/9))*.05,q[1]);u.hb.quaternion.copy(cm.quaternion);u.fg.scale.x=Math.max(.001,Math.max(0,Math.min(1,e.hp/e.mx))*.6);u.fg.material.color.set(e.st>0?'#ff0':e.sl>0?'#5cf':'#4d4');u.k=fr}
+for(const[e,o]of EN)if(o.userData.k!=fr){gb.remove(o);EN.delete(e)}
+for(const f of g.fx){let m=FX.get(f);if(!m){const q=W(f.x,f.y);
+if(f.k=='p'){m=new T.Mesh(sph,new T.MeshBasicMaterial({color:f.c,transparent:true}));m.scale.setScalar(.05);m.userData={h:.4,v:2+Math.random()*2}}
+else if(f.k=='r'){m=new T.Mesh(ringG,new T.MeshBasicMaterial({color:f.c,transparent:true,side:T.DoubleSide}));m.position.set(q[0],.08,q[1]);m.scale.setScalar(Math.max(.1,f.r/50))}
+else{m=new T.Mesh(cyl,new T.MeshBasicMaterial({color:f.c,transparent:true}));const c=W(f.x2,f.y2),A=new T.Vector3(q[0],1.1,q[1]),D=new T.Vector3(c[0],.45,c[1]).sub(A),L=D.length();m.position.copy(A).addScaledVector(D,.5);m.scale.set(.035,L,.035);m.quaternion.setFromUnitVectors(new T.Vector3(0,1,0),D.normalize())}
+gb.add(m);FX.set(f,m)}
+m.material.opacity=Math.min(1,f.l*4);if(f.k=='p'){const u=m.userData,q=W(f.x,f.y);u.v-=9*dt;u.h=Math.max(.02,u.h+u.v*dt);m.position.set(q[0],u.h,q[1])}m.userData.k=fr}
+for(const[f,m]of FX)if(m.userData.k!=fr){gb.remove(m);m.material.dispose();FX.delete(f)}
+rs.visible=fl2.visible=false;
+if(g.pk){const q=W(g.pk.x,g.pk.y);rs.visible=true;rs.position.set(q[0],.07,q[1]);rs.scale.setScalar(Rg(g.pk)/50);rs.material.color.set('#fff')}
+else if(g.pe&&g.pe.hp>0&&!g.sel){const q=W(g.pe.x,g.pe.y);rs.visible=true;rs.position.set(q[0],.07,q[1]);rs.scale.setScalar(.45);rs.material.color.set('#f55')}
+else if(g.sel&&g.hx>=0&&g.hx<800&&g.hy>=0&&g.hy<500){const gx=(g.hx/50|0)*50+25,gy=(g.hy/50|0)*50+25,ok=!onPath(gx,gy)&&!g.tw.some(t=>t.x==gx&&t.y==gy),q=W(gx,gy),c=ok?'#fff':'#f55';rs.visible=fl2.visible=true;rs.position.set(q[0],.07,q[1]);fl2.position.set(q[0],.04,q[1]);rs.scale.setScalar(FM[g.sel][7]/50);rs.material.color.set(c);fl2.material.color.set(c)}
+rn.render(sc,cm)}
+R3={el,r:r3,pick:e=>{const r=el.getBoundingClientRect(),v=new T.Vector3();ray.setFromCamera(new T.Vector2((e.clientX-r.left)/r.width*2-1,-((e.clientY-r.top)/r.height)*2+1),cm);return ray.ray.intersectPlane(pl,v)?[v.x*50+400,v.z*50+250]:[-99,-99]}};
+el.onpointermove=cv.onpointermove;el.onpointerdown=cv.onpointerdown;
+const vb=document.createElement('button');vb.id='vw';vb.textContent='View 1';vb.onclick=()=>{vi=(vi+1)%3;vb.textContent='View '+(vi+1)};$('#sp').after(vb);
+}catch(err){R3=null;cv.style.display='';console.warn('3D unavailable',err)}})();
+addEventListener('keydown',e=>{if(!G||tab!='b'||!$('#md').hidden||!$('#qd').hidden)return;const k=e.key.toLowerCase();
+if(k=='w')$('#wv').click();else if(k=='f')$('#sp').click();else if(k=='v'&&$('#vw'))$('#vw').click();else if(k=='u'&&$('#ug'))$('#ug').click();else if(k=='x'&&$('#sl'))$('#sl').click();
+else if(k=='escape'){G.sel=null;G.pk=null;hand();info()}else if(k>='1'&&k<='5'){const b=document.querySelectorAll('#hand button')[+k-1];if(b)b.click()}});
+function mkWave(w){const q=[];for(let i=0,n=5+(w*1.6|0);i<n;i++){const r=Math.random();let t='a';if(w>=2&&r<.3)t='b';if(w>=4&&r<.4)t='c';if(w>=7&&r<Math.min(.4,.15+Math.max(0,w-20)*.01))t='d';q.push(t)}if(w%10==0)for(let i=0;i<1+(w/40|0);i++)q.push('e');return q}
+function srt(t,ins){const m=t.tm||'First';ins.sort(m=='First'?(a,b)=>b.d-a.d:m=='Last'?(a,b)=>a.d-b.d:m=='Strong'?(a,b)=>b.hp-a.hp:m=='Weak'?(a,b)=>a.hp-b.hp:(a,b)=>Math.hypot(a.x-t.x,a.y-t.y)-Math.hypot(b.x-t.x,b.y-t.y))}
+const inf=$('#info');if(inf){const PN={a:'Spearmen',b:'Scouts',c:'Shieldbearers',d:'Brutes',e:'Warlords'},pv=document.createElement('div');pv.id='pv';pv.className='mu';inf.before(pv);
+setInterval(()=>{if(!G||G.over){pv.innerHTML='';return}if(!G.nx||G.nx.w!=G.w+1)G.nx={w:G.w+1,q:mkWave(G.w+1)};const c={};G.nx.q.forEach(t=>c[t]=(c[t]||0)+1);pv.innerHTML='<b>Next wave '+(G.w+1)+':</b> '+Object.keys(c).map(t=>c[t]+' '+PN[t]).join(', ')+'. Shieldbearers shrug off single-target hits (bring splash, chain or poison), Scouts dodge some, Brutes and Warlords resist stun and slow. Unspent gold earns interest.'},500);
+inf.onclick=e=>{if(e.target.id=='tg'&&G&&G.pk){const M=['First','Last','Strong','Weak','Close'];G.pk.tm=M[(M.indexOf(G.pk.tm||'First')+1)%5];info()}}}
+$('#wv').onclick=()=>{if(G.act||G.over)return;const w=++G.w,q=G.nx&&G.nx.w==w?G.nx.q:mkWave(w);G.nx=null;if(w%10==0)msg('A warlord marches with this wave!');else msg('Wave '+w+': '+G.m.f+' advance.');G.q=q;G.act=1;G.gap=Math.max(.3,.9-w*.02);G.sp=0;$('#wv').disabled=1};
+$('#sp').onclick=()=>{G.spd=G.spd%3+1;$('#sp').textContent='Speed '+G.spd+'x'};
+$('#rt').onclick=()=>{if(G.over){G=null;$('#game').hidden=1;$('#menu').hidden=0;ui()}else end('You retreated.')};
+function end(m,vic){G.over=1;if(window.LabSDK){window.LabSDK.recordScore('legends-defense',G.w).catch(e=>console.error('LabSDK scoring failed',e))}const rw=G.df.e?Math.floor((Math.min(G.w,30)*12+Math.max(0,G.w-30)*6+G.kills*.3)*G.df.r):Math.floor((G.w*12+G.kills*.5)*G.df.r)+(vic?Math.round(300*G.df.r):0);S.coins+=rw;if(G.df.e)S.bestE=Math.max(S.bestE||0,G.w);else S.best=Math.max(S.best,G.w);let rk='';if(G.df.e&&G.w>0){S.lb=S.lb||[];const en={n:S.name||'Player',w:G.w,k:G.kills,d:new Date().toLocaleDateString()};S.lb.push(en);S.lb.sort((a,b)=>b.w-a.w||b.k-a.k);S.lb=S.lb.slice(0,10);const x=S.lb.indexOf(en);if(x>=0)rk=` Leaderboard rank #${x+1}!`}save();msg(`${m} You reached wave ${G.w} and earned ${rw} coins.${rk}`);ui();$('#wv').disabled=1;$('#rt').textContent='Back to menu'}
+function fire(t,ins){t.sh=(t.sh||0)+1;const g=G,e=ins[0],d=D(t),k=t.f[9],id=t.f[0],col=RC[t.f[4]][1],dm=(o,x)=>{o.hp-=x*(o.t=='c'&&'single crit stun pierce'.includes(k)?.6:o.t=='b'&&'single crit'.includes(k)?.8:1)},near=(a,r)=>g.en.filter(o=>o.hp>0&&Math.hypot(o.x-a.x,o.y-a.y)<=r),
+beam=(a,b,c=col)=>g.fx.push({x:a.x,y:a.y,x2:b.x,y2:b.y,l:.12,c});
+if(k=='nuke'){ins.forEach(o=>dm(o,d));g.fx.push({x:t.x,y:t.y,r:Rg(t),l:.5,k:'r',c:col})}
+else if(k=='pierce')ins.slice(0,3).forEach(o=>{dm(o,d);beam(t,o)});
+else if(k=='chain'){let a=e,s=new Set([e]),m=1;dm(a,d);beam(t,e,'#fde047');for(let i=0;i<4;i++){const n=near(a,95).filter(o=>!s.has(o))[0];if(!n)break;s.add(n);m*=.75;dm(n,d*m);beam(a,n,'#fde047');a=n}}
+else if(k=='splash'||k=='slow'){const r=RAD[id]||(k=='slow'?38:45);beam(t,e);near(e,r).forEach(o=>{dm(o,d);if(k=='slow')o.sl=o.t=='e'?.8:2});g.fx.push({x:e.x,y:e.y,r,l:.25,k:'r',c:col})}
+else{beam(t,e);dm(e,k=='crit'&&Math.random()<.2?d*2.5:d);if(k=='stun'&&Math.random()<.25&&e.t!='d'&&e.t!='e')e.st=1;if(k=='poison'){e.po=5;e.pd=d*.6}}}
+function upd(dt){const g=G;g.tw.forEach(t=>t.b=1);
+g.tw.forEach(s=>{const v=BUF[s.f[0]];if(v)g.tw.forEach(t=>{if(t!=s&&Math.hypot(t.x-s.x,t.y-s.y)<=Rg(s))t.b=Math.max(t.b,1+v*(1+.2*(lv(s)-1)))})});
+g.sp-=dt;if(g.q.length&&g.sp<=0){const t=g.q.shift(),e=ET[t],m=HS(g.w)*g.df.h,[x,y]=pos(0);g.en.push({e,t,hp:e[1]*m,mx:e[1]*m,d:0,v:e[2]*g.df.v*(g.df.e?Math.min(1.5,1+Math.max(0,g.w-20)*.01):1),sl:0,st:0,po:0,pd:0,x,y});g.sp=g.gap}
+for(const e of g.en){if(g.df.nm&&e.hp>0)e.hp=Math.min(e.mx,e.hp+e.mx*.01*dt);if(e.po>0){e.hp-=e.pd*dt;e.po-=dt}if(e.st>0)e.st-=dt;else e.d+=e.v*(e.sl>0?(e.t=='d'||e.t=='e'?.75:.5):1)*dt;if(e.sl>0)e.sl-=dt;[e.x,e.y]=pos(Math.min(e.d,g.T-.01));if(e.d>=g.T){e.hp=-1e9;e.leak=1;g.lives-=e.t=='e'?5:1;g.sh=.25}}
+g.en=g.en.filter(e=>{if(e.hp>0)return 1;if(!e.leak){g.gold+=Math.round(e.e[3]*(1+g.w*.04));g.kills++;g.fx.push({x:e.x,y:e.y,r:10,l:.25,k:'r',c:'#fff'});for(let i=0;i<8;i++)g.fx.push({x:e.x,y:e.y,vx:(Math.random()-.5)*160,vy:(Math.random()-.5)*160,l:.5,k:'p',c:'#e8b04a'})}return 0});
+for(const t of g.tw){t.cd-=dt;if(t.cd>0)continue;const r=Rg(t),ins=g.en.filter(e=>Math.hypot(e.x-t.x,e.y-t.y)<=r);if(!ins.length)continue;srt(t,ins);t.cd=t.f[8];fire(t,ins)}
+g.fx.forEach(f=>{f.l-=dt;if(f.k=='p'){f.x+=f.vx*dt;f.y+=f.vy*dt}});g.fx=g.fx.filter(f=>f.l>0);
+if(g.act&&!g.q.length&&!g.en.length){g.act=0;const inc=g.tw.reduce((s,t)=>s+(t.f[9]=='income'?(t.f[0]=='qin'?45:30)*(1+t.up):0),0),b=25+g.w*3+Math.min(60,Math.floor(g.gold*.04));g.gold+=b+inc;$('#wv').disabled=0;$('#wv').textContent='Send wave '+(g.w+1);msg(`Wave ${g.w} cleared. +${b+inc} gold, including interest on your savings.`);if(g.w>=g.df.w)end('Victory! The realm is safe.',1)}
+if(g.lives<=0){g.lives=0;end('Your capital has fallen.')}}
+function draw(){const g=G,x=cx,path=()=>{x.beginPath();g.p.forEach((q,i)=>i?x.lineTo(q[0],q[1]):x.moveTo(q[0],q[1]));x.stroke()};
+x.drawImage(g.bg||(g.bg=BG2(g)),0,0);x.lineCap=x.lineJoin='round';x.strokeStyle='#5a4524';x.lineWidth=50;path();x.strokeStyle=g.m.pc;x.lineWidth=44;path();x.strokeStyle='rgba(120,90,40,.35)';x.lineWidth=30;x.setLineDash([2,14]);path();x.setLineDash([]);const tm=performance.now()/1000;for(let i=0;i<(g.m.t=='a'?80:30);i++){if(g.m.t=='a'){x.fillStyle='rgba(255,255,255,.8)';x.fillRect((i*97+Math.sin(tm+i)*20+800)%800,(i*53+tm*(40+i%5*10))%500,2.5,2.5)}else{x.fillStyle='rgba(255,240,200,.3)';x.fillRect((i*97+tm*(18+i%4*8))%800,(i*53+Math.sin(tm+i)*18+500)%500,2,2)}}for(let i=0;i<3;i++){x.fillStyle='rgba(0,0,0,.07)';x.beginPath();x.ellipse((tm*12+i*330)%1100-150,110+i*150,140,50,0,0,7);x.fill()}
+const ring=(a,b,r,c,f)=>{x.beginPath();x.arc(a,b,r,0,7);if(f){x.fillStyle=f;x.fill()}x.strokeStyle=c;x.lineWidth=2;x.stroke()};
+if(g.pk)ring(g.pk.x,g.pk.y,Rg(g.pk),'#fff','rgba(255,255,255,.18)');
+if(g.sel&&g.hx>=0){const gx=(g.hx/50|0)*50+25,gy=(g.hy/50|0)*50+25,ok=!onPath(gx,gy)&&!g.tw.some(t=>t.x==gx&&t.y==gy);ring(gx,gy,FM[g.sel][7],ok?'#fff':'#f55',ok?'rgba(255,255,255,.15)':'rgba(255,80,80,.2)')}
+x.textAlign='center';x.textBaseline='middle';
+for(const t of g.tw){x.fillStyle='rgba(0,0,0,.4)';x.beginPath();x.ellipse(t.x+3,t.y+19,20,7,0,0,7);x.fill();x.fillStyle='#8a8478';x.beginPath();x.ellipse(t.x,t.y+17,19,7,0,0,7);x.fill();x.fillStyle='#b5ae9e';x.beginPath();x.ellipse(t.x,t.y+15,17,6,0,0,7);x.fill();x.shadowColor=RC[t.f[4]][1];x.shadowBlur=14;ring(t.x,t.y,21,RC[t.f[4]][1],'#000');x.shadowBlur=0;x.save();x.beginPath();x.arc(t.x,t.y,19,0,7);x.clip();x.drawImage(PC(t.f),t.x-19,t.y-19,38,38);x.restore();x.fillStyle='#fff';for(let i=0;i<t.up;i++)x.fillRect(t.x-10+i*8,t.y+21,6,4)}
+for(const e of g.en){man(x,e,g.m.t);const mx=e.mx,w=e.t=='e'?36:24,yo=e.y-(e.t=='e'?42:e.t=='d'?32:26);x.fillStyle='#300';x.fillRect(e.x-w/2,yo,w,4);x.fillStyle=e.st>0?'#ff0':e.sl>0?'#5cf':'#4d4';x.fillRect(e.x-w/2,yo,w*Math.max(0,Math.min(1,e.hp/mx)),4)}
+for(const f of g.fx){x.globalAlpha=Math.min(1,f.l*4);if(f.k=='p'){x.fillStyle=f.c;x.beginPath();x.arc(f.x,f.y,2.5,0,7);x.fill()}else if(f.k=='r')ring(f.x,f.y,f.r,f.c,null);else{x.shadowColor=f.c;x.shadowBlur=14;x.strokeStyle=f.c;x.lineWidth=3;x.beginPath();x.moveTo(f.x,f.y);x.lineTo(f.x2,f.y2);x.stroke();x.shadowBlur=0}x.globalAlpha=1}}
+let last=0;function loop(ts){requestAnimationFrame(loop);hero(ts);const dt=Math.min(.05,(ts-last)/1000||0);last=ts;if(!G||tab!='b')return;if(!G.over)for(let i=0;i<G.spd;i++)upd(dt);(R3?R3.r(dt):draw());(R3?R3.el:cv).style.transform=G.sh>0?`translate(${(Math.random()-.5)*8}px,${(Math.random()-.5)*8}px)`:'';G.sh=(G.sh||0)-dt;$('#hud').textContent=`Lives ${G.lives}   Gold ${Math.floor(G.gold)}   Wave ${G.w}${G.df.e?'':'/'+G.df.w} ${G.df.n}   Defeated ${G.kills}`}
+setInterval(()=>{if(G&&(G.pk||G.pe)&&!G.over&&tab=='b')info()},800);
+const DF=[{n:'Easy',l:30,g:350,h:.8,v:.9,r:.6,w:15},{n:'Medium',l:20,g:250,h:1,v:1,r:1,w:25},{n:'Hard',l:10,g:200,h:1.4,v:1.12,r:1.6,w:35},{n:'Endless',l:15,g:300,h:1,v:1,r:1.2,w:Infinity,e:1},{n:'Nightmare',l:3,g:150,h:1.9,v:1.18,r:3,w:30,nm:1}];let di=1;
+const ddt=()=>{const d=DF[di];$('#dd').textContent=`${d.l} lives, ${d.g} starting gold, ${d.e?'survive as long as you can; enemies keep growing stronger and faster':'survive '+d.w+' waves'}. Enemies have ${Math.round(d.h*100)}% health and ${Math.round(d.v*100)}% speed. Coin rewards x${d.r}${d.e?'.':', plus a victory bonus.'}${d.nm?' Enemies also regenerate 1% health per second.':''}`};
+$('#dfs').innerHTML=DF.map((d,i)=>`<button data-d="${i}" class="${i==di?'on':''}">${d.n}</button>`).join('');
+document.querySelectorAll('#dfs button').forEach(b=>b.onclick=()=>{di=+b.dataset.d;document.querySelectorAll('#dfs button').forEach(x=>x.classList.toggle('on',x==b));ddt()});ddt();$('#mdsc').textContent=MP[0].d;
+function BG2(g){const k=document.createElement('canvas');k.width=800;k.height=500;const x=k.getContext('2d'),t=g.m.t,P={g:['#76a257','#3d6733','20,50,10'],n:['#dcb86e','#a8834a','90,60,20'],s:['#a3b862','#6f8a3a','50,70,10'],a:['#eef3f7','#a9b8c6','60,80,110']}[t],L=x.createLinearGradient(0,0,0,500);L.addColorStop(0,P[0]);L.addColorStop(1,P[1]);x.fillStyle=L;x.fillRect(0,0,800,500);
+for(let i=0;i<1600;i++){x.fillStyle=`rgba(${P[2]},${Math.random()*.13})`;x.fillRect(Math.random()*800,Math.random()*500,2+Math.random()*3,2)}
+const el=(a,b,w,h,c)=>{x.fillStyle=c;x.beginPath();x.ellipse(a,b,w,h,0,0,7);x.fill()};
+for(let i=0;i<28;i++){const a=Math.random()*800,b=Math.random()*500;
+if(t=='n'){el(a,b,60,12,'rgba(255,235,170,.22)');if(i%4==0){x.fillStyle='#3a5a2a';x.fillRect(a,b-26,3,26);for(let j=0;j<5;j++)el(a+1+Math.cos(j*1.3)*9,b-26+Math.sin(j*1.3)*4,9,2.5,'#3a5a2a')}}
+else if(t=='s'){el(a+4,b+9,16,5,'rgba(0,0,0,.25)');el(a,b,13,13,'#e9e2cf');el(a,b-2,6,6,'#8a3a2a')}
+else if(t=='a'){el(a+5,b+8,14,4,'rgba(0,40,80,.2)');x.fillStyle='#1f4a3a';x.beginPath();x.moveTo(a,b-24);x.lineTo(a+12,b+5);x.lineTo(a-12,b+5);x.fill();x.fillStyle='#fff';x.beginPath();x.moveTo(a,b-24);x.lineTo(a+6,b-11);x.lineTo(a-6,b-11);x.fill()}
+else{el(a+5,b+10,14,5,'rgba(0,0,0,.25)');el(a,b,13,13,'#2f5a2a');el(a-3,b-4,8,8,'#4d8a3d')}}
+const v=x.createRadialGradient(400,250,200,400,250,520);v.addColorStop(0,'rgba(0,0,0,0)');const sun=x.createLinearGradient(0,0,800,500);sun.addColorStop(0,'rgba(255,230,170,.18)');sun.addColorStop(1,'rgba(0,0,40,.18)');x.fillStyle=sun;x.fillRect(0,0,800,500);for(let i=0;i<70;i++){x.fillStyle='rgba(90,85,75,.55)';x.beginPath();x.ellipse(Math.random()*800,Math.random()*500,2+Math.random()*4,1.5+Math.random()*2,0,0,7);x.fill()}v.addColorStop(1,'rgba(0,0,0,.55)');x.fillStyle=v;x.fillRect(0,0,800,500);return k}
+let AC,mu=0,st=0,iv;const CH=[[110,131,165],[87.3,110,131],[98,123,147],[82.4,98,123]];
+function nt(f,t,d,ty,v){const o=AC.createOscillator(),g=AC.createGain();o.type=ty;o.frequency.value=f;g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.001,t+d);o.connect(g);g.connect(AC.destination);o.start(t);o.stop(t+d)}
+function beat(){const t=AC.currentTime+.05,b=st%16,c=CH[(st>>4)%4];if(b%4==0){const o=AC.createOscillator(),g=AC.createGain();o.frequency.setValueAtTime(120,t);o.frequency.exponentialRampToValueAtTime(40,t+.25);g.gain.setValueAtTime(.3,t);g.gain.exponentialRampToValueAtTime(.001,t+.3);o.connect(g);g.connect(AC.destination);o.start(t);o.stop(t+.3)}
+if(b==0){c.forEach(f=>nt(f,t,4,'sawtooth',.025));nt(c[0]/2,t,4,'sine',.2)}
+if(b%2==0&&Math.random()<.65)nt(c[Math.random()*3|0]*(Math.random()<.5?4:2),t,.6,'triangle',.07);st++}
+$('#mu').onclick=()=>{mu=!mu;$('#mu').textContent=mu?'Music on':'Music off';if(mu){AC=AC||new AudioContext();AC.resume();iv=setInterval(beat,240)}else clearInterval(iv)};
+const hx=$('#hb').getContext('2d'),EM=Array.from({length:40},()=>({x:Math.random()*880,y:Math.random()*200,s:20+Math.random()*30}));
+function hero(t){const x=hx,g=x.createLinearGradient(0,0,0,200);g.addColorStop(0,'#0e1230');g.addColorStop(.6,'#7a2e3a');g.addColorStop(1,'#e8a04a');x.fillStyle=g;x.fillRect(0,0,880,200);
+for(let i=0;i<60;i++){x.fillStyle=`rgba(255,255,255,${.35+.35*Math.sin(t/500+i)})`;x.fillRect(i*149%880,i*67%110,1.5,1.5)}
+x.fillStyle='#ffd98a';x.shadowColor='#ffb347';x.shadowBlur=30;x.beginPath();x.arc(690,70,24,0,7);x.fill();x.shadowBlur=0;
+x.fillStyle='#160d16';x.beginPath();x.moveTo(30,200);x.lineTo(130,115);x.lineTo(230,200);x.fill();x.beginPath();x.moveTo(170,200);x.lineTo(225,140);x.lineTo(280,200);x.fill();
+x.fillRect(320,120,150,10);for(let i=0;i<6;i++)x.fillRect(328+i*24,130,10,70);
+x.fillRect(560,125,100,75);for(let i=0;i<6;i++)x.fillRect(560+i*18,115,10,12);x.fillRect(600,85,24,45);x.beginPath();x.moveTo(596,85);x.lineTo(612,60);x.lineTo(628,85);x.fill();x.fillRect(730,150,150,50);x.fillRect(0,185,880,15);
+x.fillStyle='#ffcf6a';x.globalAlpha=.7;EM.forEach(e=>{e.y-=e.s*.016;e.x+=Math.sin(t/700+e.s)*.3;if(e.y<0)e.y=200;x.fillRect(e.x,e.y,2,2)});x.globalAlpha=1}
+ui();if(S.pend&&S.pend.length){if(!S.rs)S.rs=[];if(!S.tot)S.tot=S.pend.length+S.rs.length;quiz()}requestAnimationFrame(loop);
+</script>
+<script type="module" src="../../shared/lab-sdk.js"></script>
+</body></html>
