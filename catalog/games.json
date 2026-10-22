@@ -1,12 +1,18 @@
 [
- 
-  
   {
-  "slug": "bs-card-game",
-  "title": "BS Card Game",
-  "subject": "Other",
-  "grade": "N/A",
-  "thumbnail": "games/bs-card-game/icon.png",
-  "status": "live"
-}
+    "slug": "bs-card-game",
+    "title": "BS Card Game",
+    "subject": "Other",
+    "grade": "N/A",
+    "thumbnail": "games/bs-card-game/icon.png",
+    "status": "live"
+  },
+  {
+    "slug": "storm-island-3d",
+    "title": "Storm Island 3D",
+    "subject": "Math",
+    "grade": "N/A",
+    "thumbnail": "games/storm-island-3d/icon.png",
+    "status": "live"
+  }
 ]
