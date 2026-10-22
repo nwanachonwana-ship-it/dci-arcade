@@ -42,4 +42,13 @@
   "thumbnail": "games/math-opps/icon.png",
   "status": "live"
 }
+  ,
+{
+  "slug": "vector-range",
+  "title": "Vector Range",
+  "subject": "Math",
+  "grade": "N/A",
+  "thumbnail": "games/vector-range/icon.png",
+  "status": "live"
+}
 ]
