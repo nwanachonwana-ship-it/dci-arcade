@@ -1,12 +1,5 @@
 [
-  {
-    "slug": "bs-card-game",
-    "title": "BS Card Game",
-    "subject": "Other",
-    "grade": "N/A",
-    "thumbnail": "games/bs-card-game/icon.png",
-    "status": "live"
-  },
+  
   {
     "slug": "storm-island-3d",
     "title": "Storm Island 3D",
@@ -33,15 +26,7 @@
   "thumbnail": "games/legends-defense/icon.png",
   "status": "live"
 }
-  ,
-{
-  "slug": "math-opps",
-  "title": "Math Ops",
-  "subject": "Math",
-  "grade": "N/A",
-  "thumbnail": "games/math-opps/icon.png",
-  "status": "live"
-}
+ 
   ,
 {
   "slug": "vector-range",
@@ -62,10 +47,11 @@
 }
 
 ,
+  
 {
   "slug": "spooktackular",
   "title": "Director's Cut: Halloween Special",
-  "subject": "Other",
+  "subject": "Art",
   "grade": "N/A",
   "thumbnail": "games/spooktackular/icon.png",
   "status": "live"
@@ -75,7 +61,7 @@
 {
   "slug": "monarch-quest",
   "title": "Tiny Lives: Monarch Quest",
-  "subject": "Other",
+  "subject": "Science",
   "grade": "N/A",
   "thumbnail": "games/monarch-quest/icon.png",
   "status": "live"
