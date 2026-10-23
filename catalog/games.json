@@ -51,4 +51,13 @@
   "thumbnail": "games/vector-range/icon.png",
   "status": "live"
 }
+  ,
+{
+  "slug": "sky-math",
+  "title": "Sky Math",
+  "subject": "Math",
+  "grade": "N/A",
+  "thumbnail": "games/sky-math/icon.png",
+  "status": "live"
+}
 ]
