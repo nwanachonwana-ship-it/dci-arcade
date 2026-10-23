@@ -1,0 +1,1374 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spooktacular Studios: Horror Director's Cut</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Creepster&family=Fira+Code:wght@400;600&family=Inter:wght@300;400;500;600;700&family=Nosifer&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        spooky: {
+                            bg: '#0A0812',
+                            panel: '#130F22',
+                            border: '#2A1F45',
+                            accent: '#A855F7',
+                            slime: '#22C55E',
+                            blood: '#EF4444',
+                            pumpkin: '#F97316',
+                            glow: '#C084FC'
+                        }
+                    },
+                    fontFamily: {
+                        creepster: ['Creepster', 'cursive'],
+                        nosifer: ['Nosifer', 'cursive'],
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['Fira Code', 'monospace']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Custom Spooky Scrollbars */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #0A0812; }
+        ::-webkit-scrollbar-thumb { background: #2A1F45; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #EF4444; }
+
+        .grid-pattern {
+            background-size: 24px 24px;
+            background-image: linear-gradient(to right, rgba(168, 85, 247, 0.05) 1px, transparent 1px),
+                              linear-gradient(to bottom, rgba(168, 85, 247, 0.05) 1px, transparent 1px);
+        }
+
+        @keyframes pulse-slime {
+            0%, 100% { box-shadow: 0 0 15px rgba(34, 197, 94, 0.2); }
+            50% { box-shadow: 0 0 25px rgba(34, 197, 94, 0.5); }
+        }
+        .glow-slime { animation: pulse-slime 3s infinite; }
+
+        @keyframes pulse-blood {
+            0%, 100% { box-shadow: 0 0 15px rgba(239, 68, 68, 0.2); }
+            50% { box-shadow: 0 0 25px rgba(239, 68, 68, 0.6); }
+        }
+        .glow-blood { animation: pulse-blood 2s infinite; }
+    </style>
+</head>
+<body class="bg-spooky-bg text-slate-200 font-sans min-h-screen flex flex-col justify-between select-none overflow-x-hidden grid-pattern">
+
+    <!-- TOP HEADER / STUDIO STATS DASHBOARD -->
+    <header class="bg-spooky-panel border-b border-spooky-border sticky top-0 z-50 px-4 py-3 shadow-2xl">
+        <div class="max-w-7xl mx-auto flex flex-wrap justify-between items-center gap-4">
+            <!-- Studio Title & Level Badge -->
+            <div class="flex items-center space-x-3">
+                <div class="w-12 h-12 rounded-xl bg-gradient-to-tr from-purple-900 via-red-950 to-orange-600 flex items-center justify-center text-spooky-pumpkin text-2xl shadow-lg border border-spooky-border glow-blood">
+                    <i class="fa-solid fa-ghost"></i>
+                </div>
+                <div>
+                    <h1 class="font-creepster text-2xl tracking-widest text-spooky-pumpkin flex items-center gap-2 drop-shadow-[0_2px_8px_rgba(249,115,22,0.4)]">
+                        SPOOKTACULAR STUDIOS
+                        <span class="text-[10px] font-mono tracking-normal bg-red-950/80 text-red-400 border border-red-800 px-2 py-0.5 rounded font-bold">HORROR CUT</span>
+                    </h1>
+                    <p class="text-xs text-slate-400 flex items-center gap-2 font-mono">
+                        <span id="studio-tier-badge" class="text-spooky-slime font-semibold">Level 1: Haunted Garage</span> • Stage <span id="studio-level" class="text-spooky-pumpkin font-bold">1</span>
+                    </p>
+                </div>
+            </div>
+
+            <!-- Stats Bar -->
+            <div class="flex items-center gap-4 sm:gap-6 bg-spooky-bg/90 border border-spooky-border rounded-xl px-4 py-2 text-xs font-mono">
+                <div class="flex items-center gap-2" title="Studio Funds">
+                    <i class="fa-solid fa-sack-dollar text-emerald-400"></i>
+                    <span class="text-slate-400 hidden sm:inline">Cash:</span>
+                    <span id="stat-cash" class="font-bold text-emerald-400">$1,000</span>
+                </div>
+                <div class="h-4 w-px bg-spooky-border"></div>
+                <div class="flex items-center gap-2" title="Fear & Scare Rating">
+                    <i class="fa-solid fa-skull text-spooky-accent"></i>
+                    <span class="text-slate-400 hidden sm:inline">Scare Rating:</span>
+                    <span id="stat-scare" class="font-bold text-spooky-accent">0%</span>
+                </div>
+                <div class="h-4 w-px bg-spooky-border"></div>
+                <div class="flex items-center gap-2" title="Films Produced">
+                    <i class="fa-solid fa-tape text-spooky-pumpkin"></i>
+                    <span class="text-slate-400 hidden sm:inline">Films:</span>
+                    <span id="stat-films" class="font-bold text-spooky-pumpkin">0</span>
+                </div>
+            </div>
+
+            <!-- Level Goals & Sound Controls -->
+            <div class="flex items-center gap-2">
+                <button onclick="toggleGoalsModal()" class="px-3 py-2 bg-spooky-pumpkin/20 hover:bg-spooky-pumpkin/30 border border-spooky-pumpkin/50 rounded-lg text-spooky-pumpkin hover:text-white transition flex items-center gap-2 text-xs font-mono font-bold">
+                    <i class="fa-solid fa-bullseye"></i> <span class="hidden md:inline">Level Progression</span>
+                </button>
+                <button id="btn-sound-toggle" onclick="toggleSound()" class="px-3 py-2 bg-spooky-panel hover:bg-slate-900 border border-spooky-border rounded-lg text-slate-300 hover:text-spooky-accent transition flex items-center gap-2 text-xs font-mono">
+                    <i id="sound-icon" class="fa-solid fa-volume-high"></i> <span id="sound-label" class="hidden md:inline">Audio ON</span>
+                </button>
+                <button onclick="resetGamePrompt()" class="px-2.5 py-2 bg-spooky-panel hover:bg-red-950/40 border border-spooky-border hover:border-red-800/50 rounded-lg text-slate-400 hover:text-red-400 transition text-xs font-mono" title="Reset Horror Game">
+                    <i class="fa-solid fa-rotate-left"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN GAME WORKSPACE -->
+    <main class="max-w-7xl w-full mx-auto p-4 sm:p-6 flex-1 flex flex-col justify-center">
+
+        <!-- STEP STAGE TRACKER -->
+        <div class="mb-6 flex justify-between items-center max-w-3xl mx-auto w-full relative">
+            <div class="absolute top-1/2 left-0 right-0 h-0.5 bg-spooky-border -z-0 -translate-y-1/2"></div>
+            
+            <div id="step-node-1" class="step-node relative z-10 flex flex-col items-center gap-1">
+                <div class="w-10 h-10 rounded-full bg-spooky-pumpkin text-black font-bold flex items-center justify-center shadow-lg shadow-spooky-pumpkin/30 transition">1</div>
+                <span class="text-xs font-mono font-semibold text-spooky-pumpkin">Pre-Production</span>
+            </div>
+            <div id="step-node-2" class="step-node relative z-10 flex flex-col items-center gap-1 opacity-40">
+                <div class="w-10 h-10 rounded-full bg-spooky-panel border-2 border-spooky-border text-slate-400 font-bold flex items-center justify-center transition">2</div>
+                <span class="text-xs font-mono font-semibold text-slate-400">On-Set Shoot</span>
+            </div>
+            <div id="step-node-3" class="step-node relative z-10 flex flex-col items-center gap-1 opacity-40">
+                <div class="w-10 h-10 rounded-full bg-spooky-panel border-2 border-spooky-border text-slate-400 font-bold flex items-center justify-center transition">3</div>
+                <span class="text-xs font-mono font-semibold text-slate-400">Post & Grading</span>
+            </div>
+            <div id="step-node-4" class="step-node relative z-10 flex flex-col items-center gap-1 opacity-40">
+                <div class="w-10 h-10 rounded-full bg-spooky-panel border-2 border-spooky-border text-slate-400 font-bold flex items-center justify-center transition">4</div>
+                <span class="text-xs font-mono font-semibold text-slate-400">Premiere</span>
+            </div>
+        </div>
+
+        <!-- STAGE 1: PRE-PRODUCTION -->
+        <section id="stage-pre-production" class="stage-container space-y-6">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Horror Script Selection -->
+                <div class="bg-spooky-panel border border-spooky-border rounded-xl p-5 flex flex-col justify-between shadow-xl">
+                    <div>
+                        <div class="flex items-center justify-between mb-4 border-b border-spooky-border pb-3">
+                            <h2 class="font-creepster text-xl text-spooky-pumpkin tracking-wider flex items-center gap-2">
+                                <i class="fa-solid fa-scroll text-spooky-pumpkin"></i> 1. Cursed Script
+                            </h2>
+                            <span class="text-xs font-mono text-slate-400">Pick Story</span>
+                        </div>
+                        <p class="text-xs text-slate-400 mb-4">Choose a terrifying script suited for your current studio budget.</p>
+                        <div id="scripts-list" class="space-y-3 max-h-96 overflow-y-auto pr-1">
+                            <!-- Dynamic Script Cards -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Monstrous Talent & Crew -->
+                <div class="bg-spooky-panel border border-spooky-border rounded-xl p-5 shadow-xl flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between mb-4 border-b border-spooky-border pb-3">
+                            <h2 class="font-creepster text-xl text-spooky-accent tracking-wider flex items-center gap-2">
+                                <i class="fa-solid fa-spaghetti-monster-flying text-spooky-accent"></i> 2. Ghoul Crew & Actors
+                            </h2>
+                            <span class="text-xs font-mono text-slate-400">Hire Monsters</span>
+                        </div>
+                        
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-xs font-mono text-slate-400 mb-1">Director</label>
+                                <select id="select-director" onchange="updatePreProdStats()" class="w-full bg-spooky-bg border border-spooky-border rounded-lg p-2.5 text-xs font-mono text-slate-200 focus:border-spooky-accent outline-none">
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-mono text-slate-400 mb-1">Lead Actor / Monster</label>
+                                <select id="select-actor" onchange="updatePreProdStats()" class="w-full bg-spooky-bg border border-spooky-border rounded-lg p-2.5 text-xs font-mono text-slate-200 focus:border-spooky-accent outline-none">
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-mono text-slate-400 mb-1">Sound Tech</label>
+                                <select id="select-soundtech" onchange="updatePreProdStats()" class="w-full bg-spooky-bg border border-spooky-border rounded-lg p-2.5 text-xs font-mono text-slate-200 focus:border-spooky-accent outline-none">
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Selected Crew Summary -->
+                    <div id="crew-summary" class="mt-4 p-3 bg-spooky-bg rounded-lg border border-spooky-border/60 text-xs font-mono space-y-1">
+                        <div class="flex justify-between text-slate-400"><span>Haunt Power:</span><span id="team-skill-val" class="text-spooky-accent">0</span></div>
+                        <div class="flex justify-between text-slate-400"><span>Curse Risk:</span><span id="team-ego-val" class="text-spooky-pumpkin">Low</span></div>
+                    </div>
+                </div>
+
+                <!-- Cursed Gear & Budget Setup -->
+                <div class="bg-spooky-panel border border-spooky-border rounded-xl p-5 shadow-xl flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between mb-4 border-b border-spooky-border pb-3">
+                            <h2 class="font-creepster text-xl text-spooky-slime tracking-wider flex items-center gap-2">
+                                <i class="fa-solid fa-camera-retro text-spooky-slime"></i> 3. Cursed Gear
+                            </h2>
+                            <span class="text-xs font-mono text-slate-400">Gear Up</span>
+                        </div>
+
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-xs font-mono text-slate-400 mb-1">Camera Rig</label>
+                                <select id="select-camera" onchange="updatePreProdStats()" class="w-full bg-spooky-bg border border-spooky-border rounded-lg p-2.5 text-xs font-mono text-slate-200 focus:border-spooky-slime outline-none">
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-mono text-slate-400 mb-1">Audio Recording Setup</label>
+                                <select id="select-audio" onchange="updatePreProdStats()" class="w-full bg-spooky-bg border border-spooky-border rounded-lg p-2.5 text-xs font-mono text-slate-200 focus:border-spooky-slime outline-none">
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-mono text-slate-400 mb-1">Special Effects & Lens</label>
+                                <select id="select-lens" onchange="updatePreProdStats()" class="w-full bg-spooky-bg border border-spooky-border rounded-lg p-2.5 text-xs font-mono text-slate-200 focus:border-spooky-slime outline-none">
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Final Cost & Greenlight Button -->
+                    <div class="mt-6 pt-4 border-t border-spooky-border">
+                        <div class="flex justify-between items-center mb-4">
+                            <span class="text-xs font-mono text-slate-400">Budget Cost:</span>
+                            <span id="total-budget-cost" class="font-mono font-bold text-lg text-emerald-400">$0</span>
+                        </div>
+                        <button id="btn-start-production" onclick="startProduction()" class="w-full py-3.5 bg-gradient-to-r from-red-600 via-spooky-pumpkin to-purple-600 hover:from-red-500 hover:to-purple-500 text-black font-extrabold rounded-xl transition shadow-lg shadow-red-900/30 flex items-center justify-center gap-2 font-creepster tracking-widest text-lg uppercase">
+                            <i class="fa-solid fa-clapperboard"></i> Greenlight Horror
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- STAGE 2: ON-SET PRODUCTION (INTERACTIVE VIEWFINDER MINI-GAME) -->
+        <section id="stage-production" class="stage-container hidden space-y-6 max-w-5xl mx-auto w-full">
+            <div class="bg-spooky-panel border border-spooky-border rounded-2xl p-6 shadow-2xl relative overflow-hidden">
+                <!-- Film Slate Header -->
+                <div class="flex flex-wrap justify-between items-center border-b border-spooky-border pb-4 mb-4 gap-4">
+                    <div>
+                        <span id="prod-script-genre" class="text-xs font-mono text-spooky-pumpkin bg-orange-950 border border-orange-800 px-2.5 py-1 rounded-md uppercase">Slasher</span>
+                        <h2 id="prod-script-title" class="font-creepster text-2xl text-white mt-1 tracking-wider">The Slashing in Cabin 13</h2>
+                    </div>
+
+                    <!-- Live Horror Shoot Metrics -->
+                    <div class="flex items-center gap-6 font-mono text-xs">
+                        <div class="text-center">
+                            <div class="text-slate-400">SCARE TAKE</div>
+                            <div id="prod-take-num" class="text-lg font-bold text-spooky-pumpkin">1 / 3</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-slate-400">SANITY</div>
+                            <div id="prod-morale" class="text-lg font-bold text-emerald-400">100%</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-slate-400">SCARE RATING</div>
+                            <div id="prod-quality" class="text-lg font-bold text-spooky-accent">0 pts</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- VIEWFINDER CANVAS / HORROR SHOOTING AREA -->
+                <div class="relative bg-black rounded-xl border-2 border-spooky-border overflow-hidden aspect-video max-h-[420px] flex items-center justify-center shadow-inner group">
+                    <canvas id="viewfinder-canvas" width="800" height="450" class="w-full h-full object-cover"></canvas>
+
+                    <!-- Viewfinder Overlay Elements -->
+                    <div class="absolute inset-0 pointer-events-none p-4 flex flex-col justify-between border-2 border-dashed border-red-500/20 rounded-xl m-2">
+                        <div class="flex justify-between items-start font-mono text-xs text-red-500 font-bold tracking-widest">
+                            <div class="flex items-center gap-2 bg-black/70 px-2.5 py-1 rounded border border-red-900/50">
+                                <span class="w-3 h-3 rounded-full bg-red-600 animate-pulse"></span> SCARE REC
+                            </div>
+                            <div id="viewfinder-timer" class="bg-black/70 text-white px-2.5 py-1 rounded font-mono border border-spooky-border">00:15</div>
+                        </div>
+
+                        <!-- Spooky Rule of Thirds Crosshair -->
+                        <div class="absolute inset-0 grid grid-cols-3 grid-rows-3 pointer-events-none">
+                            <div class="border-r border-b border-red-500/10"></div>
+                            <div class="border-r border-b border-red-500/10"></div>
+                            <div class="border-b border-red-500/10"></div>
+                            <div class="border-r border-b border-red-500/10"></div>
+                            <div class="border-r border-b border-red-500/10"></div>
+                            <div class="border-b border-red-500/10"></div>
+                            <div class="border-r border-red-500/10"></div>
+                            <div class="border-r border-red-500/10"></div>
+                            <div></div>
+                        </div>
+
+                        <div class="flex justify-between items-end font-mono text-xs text-spooky-slime">
+                            <span class="bg-black/70 px-2 py-1 rounded border border-spooky-border">NIGHT-VISION • 24 FPS • INFRARED</span>
+                            <span id="framing-status-pill" class="bg-amber-500/20 text-amber-300 border border-amber-500/40 px-2 py-1 rounded">ALIGN MONSTER & LIGHTS</span>
+                        </div>
+                    </div>
+
+                    <!-- On-Set Spooky Crisis Popup -->
+                    <div id="set-event-overlay" class="absolute inset-0 bg-black/85 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center transition-all duration-300 hidden z-20">
+                        <div class="w-14 h-14 rounded-full bg-red-950/80 text-red-500 border border-red-600/50 flex items-center justify-center text-2xl mb-3 glow-blood">
+                            <i class="fa-solid fa-ghost"></i>
+                        </div>
+                        <h3 id="event-title" class="font-creepster text-2xl text-red-500 mb-2 tracking-wider">Real Ghost Haunts the Set!</h3>
+                        <p id="event-desc" class="text-xs text-slate-300 max-w-md mb-6 font-mono">A genuine ghost manifested on set during the sequence. How do you respond?</p>
+                        <div id="event-choices" class="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full max-w-md">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- DYNAMIC INTERACTIVE CONTROLS -->
+                <div class="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <!-- Jumpscare Timing Slider -->
+                    <div class="bg-spooky-bg p-3.5 rounded-xl border border-spooky-border">
+                        <div class="flex justify-between items-center text-xs font-mono mb-2">
+                            <span class="text-slate-400"><i class="fa-solid fa-skull text-spooky-pumpkin"></i> Jumpscare Timing</span>
+                            <span id="val-framing" class="text-spooky-pumpkin">50%</span>
+                        </div>
+                        <input id="slider-framing" type="range" min="0" max="100" value="50" oninput="onShootControlsChange()" class="w-full accent-spooky-pumpkin bg-spooky-panel h-2 rounded-lg cursor-pointer">
+                    </div>
+
+                    <!-- Spooky Lighting Slider -->
+                    <div class="bg-spooky-bg p-3.5 rounded-xl border border-spooky-border">
+                        <div class="flex justify-between items-center text-xs font-mono mb-2">
+                            <span class="text-slate-400"><i class="fa-solid fa-smog text-spooky-slime"></i> Spooky Lighting</span>
+                            <span id="val-lighting" class="text-spooky-slime">50%</span>
+                        </div>
+                        <input id="slider-lighting" type="range" min="0" max="100" value="50" oninput="onShootControlsChange()" class="w-full accent-spooky-slime bg-spooky-panel h-2 rounded-lg cursor-pointer">
+                    </div>
+
+                    <!-- Audio Creepiness Slider -->
+                    <div class="bg-spooky-bg p-3.5 rounded-xl border border-spooky-border">
+                        <div class="flex justify-between items-center text-xs font-mono mb-2">
+                            <span class="text-slate-400"><i class="fa-solid fa-volume-high text-spooky-accent"></i> Audio Creepiness</span>
+                            <span id="val-audio" class="text-spooky-accent">50%</span>
+                        </div>
+                        <input id="slider-audio" type="range" min="0" max="100" value="50" oninput="onShootControlsChange()" class="w-full accent-spooky-accent bg-spooky-panel h-2 rounded-lg cursor-pointer">
+                    </div>
+
+                    <!-- Blood / Monster FX Button & Slider -->
+                    <div class="bg-spooky-bg p-3.5 rounded-xl border border-spooky-border flex flex-col justify-between">
+                        <div class="flex justify-between items-center text-xs font-mono mb-1">
+                            <span class="text-slate-400"><i class="fa-solid fa-droplet text-red-500"></i> Blood / Monster FX</span>
+                            <span id="val-blood" class="text-red-500">50%</span>
+                        </div>
+                        <input id="slider-blood" type="range" min="0" max="100" value="50" oninput="onShootControlsChange()" class="w-full accent-red-500 bg-spooky-panel h-2 rounded-lg cursor-pointer mb-2">
+                        <button onclick="triggerBloodSprayFX()" class="w-full py-1 bg-red-950/80 hover:bg-red-900 border border-red-800 text-red-400 font-mono text-[10px] rounded transition flex items-center justify-center gap-1">
+                            <i class="fa-solid fa-spray-can"></i> Spray Blood FX!
+                        </button>
+                    </div>
+                </div>
+
+                <!-- ACTION BUTTON -->
+                <div class="mt-6 flex justify-end">
+                    <button id="btn-capture-take" onclick="captureTake()" class="w-full sm:w-auto px-8 py-3.5 bg-gradient-to-r from-red-600 to-spooky-pumpkin hover:from-red-500 hover:to-spooky-pumpkin text-white font-extrabold rounded-xl transition shadow-lg shadow-red-900/40 font-creepster flex items-center justify-center gap-2 text-lg tracking-widest uppercase">
+                        <i class="fa-solid fa-video"></i> Capture Take
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- STAGE 3: POST-PRODUCTION & COLOR GRADING -->
+        <section id="stage-post-production" class="stage-container hidden space-y-6 max-w-5xl mx-auto w-full">
+            <div class="bg-spooky-panel border border-spooky-border rounded-2xl p-6 shadow-2xl">
+                <div class="flex justify-between items-center border-b border-spooky-border pb-4 mb-6">
+                    <div>
+                        <h2 class="font-creepster text-2xl text-spooky-accent flex items-center gap-2 tracking-wider">
+                            <i class="fa-solid fa-wand-magic-sparkles text-spooky-accent"></i> Post-Production & Color Grading
+                        </h2>
+                        <p class="text-xs text-slate-400">Balance cut timing vs gore, apply scary color presets, and pick haunted soundtracks.</p>
+                    </div>
+                    <span class="text-xs font-mono text-spooky-slime bg-emerald-950 border border-emerald-800 px-3 py-1 rounded-full">RAW Horror Clips Ready</span>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <!-- Canvas Video Preview Screen -->
+                    <div class="lg:col-span-2 space-y-4">
+                        <div class="relative bg-black rounded-xl border border-spooky-border aspect-video overflow-hidden shadow-inner flex items-center justify-center">
+                            <canvas id="edit-preview-canvas" width="640" height="360" class="w-full h-full object-cover"></canvas>
+                            <div class="absolute bottom-3 left-3 bg-black/80 px-3 py-1 rounded text-xs font-mono text-spooky-slime border border-spooky-border">
+                                FILTER: <span id="preset-label-display">BLOOD RED SLASHER</span>
+                            </div>
+                        </div>
+
+                        <!-- Cut Timing Mini-Game Slider -->
+                        <div class="bg-spooky-bg p-4 rounded-xl border border-spooky-border space-y-2">
+                            <div class="flex justify-between text-xs font-mono text-slate-400">
+                                <span><i class="fa-solid fa-scissors text-red-400"></i> Cut Timing (Pacing vs Gore)</span>
+                                <span id="trim-precision-text">Pacing: 80%</span>
+                            </div>
+                            <input id="slider-edit-trim" type="range" min="10" max="100" value="80" oninput="updatePostProdPreview()" class="w-full accent-spooky-accent bg-spooky-panel h-2 rounded-lg cursor-pointer">
+                            <div class="flex justify-between text-[10px] font-mono text-slate-500">
+                                <span>Fast Jumpscares</span>
+                                <span>Balanced Tension</span>
+                                <span>Slow Atmospheric Gore</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Grading & Sound Controls -->
+                    <div class="space-y-6">
+                        <!-- Color Grading Presets -->
+                        <div class="bg-spooky-bg p-4 rounded-xl border border-spooky-border space-y-3">
+                            <label class="block text-xs font-mono text-slate-400 flex items-center gap-2">
+                                <i class="fa-solid fa-palette text-spooky-pumpkin"></i> Color Grading Filters
+                            </label>
+                            <div class="grid grid-cols-2 gap-2">
+                                <button onclick="setColorPreset('blood')" class="preset-btn px-3 py-2 bg-spooky-panel border border-spooky-border rounded-lg text-xs font-mono text-red-400 hover:border-red-500 transition text-left">Blood Red Slasher</button>
+                                <button onclick="setColorPreset('green')" class="preset-btn px-3 py-2 bg-spooky-panel border border-spooky-border rounded-lg text-xs font-mono text-spooky-slime hover:border-spooky-slime transition text-left">Night-Vision Green</button>
+                                <button onclick="setColorPreset('gothic')" class="preset-btn px-3 py-2 bg-spooky-panel border border-spooky-border rounded-lg text-xs font-mono text-slate-300 hover:border-slate-400 transition text-left">1930s Gothic Monochrome</button>
+                                <button onclick="setColorPreset('witch')" class="preset-btn px-3 py-2 bg-spooky-panel border border-spooky-border rounded-lg text-xs font-mono text-spooky-accent hover:border-spooky-accent transition text-left">Witchcraft Spectral Violet</button>
+                            </div>
+                        </div>
+
+                        <!-- Soundtrack Picker -->
+                        <div class="bg-spooky-bg p-4 rounded-xl border border-spooky-border space-y-3">
+                            <label class="block text-xs font-mono text-slate-400 flex items-center gap-2">
+                                <i class="fa-solid fa-music text-spooky-accent"></i> Haunted Soundtrack
+                            </label>
+                            <select id="select-soundtrack" onchange="updatePostProdPreview()" class="w-full bg-spooky-panel border border-spooky-border rounded-lg p-2.5 text-xs font-mono text-slate-200 outline-none">
+                                <option value="synth">Slasher Synthwave</option>
+                                <option value="organ">Haunted Pipe Organ</option>
+                                <option value="box">Eerie Music Box</option>
+                            </select>
+                        </div>
+
+                        <!-- Final Export Button -->
+                        <button onclick="finishPostProduction()" class="w-full py-4 bg-gradient-to-r from-emerald-600 via-spooky-slime to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-black font-extrabold rounded-xl transition shadow-lg shadow-emerald-900/30 font-creepster flex items-center justify-center gap-2 text-xl tracking-widest uppercase">
+                            <i class="fa-solid fa-film"></i> Render & Premiere
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- STAGE 4: PREMIERE & "ROTTEN PUMPKINS" REVIEWS -->
+        <section id="stage-premiere" class="stage-container hidden space-y-6 max-w-4xl mx-auto w-full">
+            <div class="bg-spooky-panel border border-spooky-border rounded-2xl p-6 sm:p-8 shadow-2xl space-y-8">
+                <!-- Movie Title Banner -->
+                <div class="text-center space-y-2 border-b border-spooky-border pb-6">
+                    <span id="review-genre-tag" class="text-xs font-mono text-spooky-pumpkin bg-orange-950 border border-orange-800 px-3 py-1 rounded-full uppercase">Slasher Classic</span>
+                    <h2 id="review-film-title" class="font-creepster text-3xl sm:text-5xl text-red-500 tracking-wider">THE SLASHING IN CABIN 13</h2>
+                    <p id="review-tagline" class="text-xs text-slate-400 font-mono italic">"In space, no one can hear you scream on livestream..."</p>
+                </div>
+
+                <!-- Rotten Pumpkins Score & Box Office Metrics Grid -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-center">
+                    <div class="bg-spooky-bg p-4 rounded-xl border border-spooky-border">
+                        <div class="text-xs font-mono text-slate-400 mb-1">ROTTEN PUMPKINS RATING</div>
+                        <div id="review-score" class="font-creepster text-4xl text-spooky-pumpkin">88%</div>
+                        <div id="review-score-badge" class="text-[10px] font-mono text-emerald-400 mt-1">CERTIFIED FRESH SCARE</div>
+                    </div>
+                    <div class="bg-spooky-bg p-4 rounded-xl border border-spooky-border">
+                        <div class="text-xs font-mono text-slate-400 mb-1">BOX OFFICE REVENUE</div>
+                        <div id="review-box-office" class="font-mono font-bold text-3xl text-emerald-400">$3,500</div>
+                        <div id="review-profit-margin" class="text-[10px] font-mono text-emerald-400 mt-1">+250% Profit</div>
+                    </div>
+                    <div class="bg-spooky-bg p-4 rounded-xl border border-spooky-border">
+                        <div class="text-xs font-mono text-slate-400 mb-1">SCARE RATING GAINED</div>
+                        <div id="review-fame" class="font-mono font-bold text-3xl text-spooky-accent">+25%</div>
+                        <div class="text-[10px] font-mono text-spooky-accent mt-1">Horror Reputation</div>
+                    </div>
+                </div>
+
+                <!-- Dynamic Critic Reviews -->
+                <div class="space-y-3">
+                    <h3 class="font-creepster text-lg text-slate-300 tracking-wider flex items-center gap-2">
+                        <i class="fa-solid fa-newspaper text-spooky-pumpkin"></i> Horror Critic Reactions
+                    </h3>
+                    <div id="critics-container" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <!-- Dynamic Critic Quotes -->
+                    </div>
+                </div>
+
+                <!-- Halloween Awards Section -->
+                <div id="awards-container" class="bg-spooky-bg p-4 rounded-xl border border-spooky-border space-y-2">
+                    <h3 class="font-creepster text-md text-amber-400 tracking-wider flex items-center gap-2">
+                        <i class="fa-solid fa-trophy"></i> Halloween Film Festival Awards
+                    </h3>
+                    <div id="awards-list" class="flex flex-wrap gap-3">
+                        <!-- Dynamic Awards -->
+                    </div>
+                </div>
+
+                <!-- Next Production Action -->
+                <div class="pt-4 border-t border-spooky-border flex justify-between items-center">
+                    <button onclick="toggleGoalsModal()" class="px-5 py-3 bg-spooky-bg hover:bg-slate-900 border border-spooky-border rounded-xl text-xs font-mono text-slate-300 flex items-center gap-2">
+                        <i class="fa-solid fa-list-check text-spooky-pumpkin"></i> Check Level Progression
+                    </button>
+                    <button onclick="returnToPreProduction()" class="px-8 py-3.5 bg-gradient-to-r from-spooky-pumpkin to-purple-600 hover:from-orange-500 hover:to-purple-500 text-black font-extrabold rounded-xl transition shadow-lg shadow-purple-950/40 font-creepster flex items-center justify-center gap-2 text-lg tracking-widest uppercase">
+                        Next Film <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="bg-spooky-panel border-t border-spooky-border py-4 px-6 text-center text-xs font-mono text-slate-500">
+        <div class="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-2">
+            <span class="text-spooky-pumpkin font-creepster tracking-wider text-sm">Spooktacular Studios • Halloween Director's Cut</span>
+            <span class="text-slate-500">Complete level objectives to unlock higher horror studios & legendary monsters!</span>
+        </div>
+    </footer>
+
+    <!-- LEVEL GOALS & PROGRESSION CHECKLIST MODAL -->
+    <div id="goals-modal" class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-spooky-panel border-2 border-spooky-border rounded-2xl max-w-xl w-full p-6 space-y-6 shadow-2xl relative">
+            <button onclick="toggleGoalsModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white text-lg">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            
+            <div class="border-b border-spooky-border pb-3">
+                <span id="modal-stage-subtitle" class="text-xs font-mono text-spooky-slime">LEVEL PROGRESSION CHECKLIST</span>
+                <h2 id="modal-stage-title" class="font-creepster text-3xl text-spooky-pumpkin tracking-wider">LEVEL 1: HAUNTED GARAGE</h2>
+            </div>
+
+            <div class="space-y-4 font-mono text-xs">
+                <p class="text-slate-300">Complete all required criteria to level up your horror studio and greenlight bigger budget films!</p>
+
+                <div id="goals-list-container" class="space-y-3">
+                    <!-- Dynamic Level Goals -->
+                </div>
+            </div>
+
+            <!-- Level Select Preview -->
+            <div class="border-t border-spooky-border pt-4">
+                <h3 class="text-xs font-mono text-slate-400 mb-2">Studio Level Select / Unlocks:</h3>
+                <div id="level-select-grid" class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center text-[11px] font-mono">
+                    <!-- Level Badges -->
+                </div>
+            </div>
+
+            <button id="btn-claim-levelup" onclick="claimLevelUp()" class="w-full py-3.5 bg-emerald-600 hover:bg-emerald-500 text-black font-bold font-creepster text-lg tracking-widest rounded-xl transition shadow-lg shadow-emerald-900/30 hidden uppercase">
+                <i class="fa-solid fa-skull"></i> Level Up Studio!
+            </button>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT LOGIC -->
+    <script>
+        /* ==========================================================================
+           WEB AUDIO API SYNTHESIZER (HORROR AUDIO GENERATOR)
+           ========================================================================== */
+
+        const AudioFX = {
+            enabled: true,
+            ctx: null,
+            init() {
+                if (!this.ctx) {
+                    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+            },
+            playClick() {
+                if (!this.enabled) return;
+                this.init();
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(300, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(100, this.ctx.currentTime + 0.08);
+                gain.gain.setValueAtTime(0.15, this.ctx.currentTime);
+                gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.08);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.08);
+            },
+            playScreamStinger() {
+                if (!this.enabled) return;
+                this.init();
+                const freqs = [587.33, 622.25, 880.00]; // Disorienting dissonance cluster
+                freqs.forEach(f => {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(f, this.ctx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(f * 1.5, this.ctx.currentTime + 0.3);
+                    gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
+                    gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.4);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start();
+                    osc.stop(this.ctx.currentTime + 0.4);
+                });
+            },
+            playThunder() {
+                if (!this.enabled) return;
+                this.init();
+                const bufferSize = this.ctx.sampleRate * 0.8;
+                const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+                const data = buffer.getChannelData(0);
+                for (let i = 0; i < bufferSize; i++) {
+                    data[i] = Math.random() * 2 - 1;
+                }
+                const noise = this.ctx.createBufferSource();
+                noise.buffer = buffer;
+
+                const filter = this.ctx.createBiquadFilter();
+                filter.type = 'lowpass';
+                filter.frequency.setValueAtTime(200, this.ctx.currentTime);
+                filter.frequency.linearRampToValueAtTime(50, this.ctx.currentTime + 0.8);
+
+                const gain = this.ctx.createGain();
+                gain.gain.setValueAtTime(0.4, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.8);
+
+                noise.connect(filter);
+                filter.connect(gain);
+                gain.connect(this.ctx.destination);
+                noise.start();
+            },
+            playOrganSting() {
+                if (!this.enabled) return;
+                this.init();
+                const freqs = [130.81, 164.81, 196.00, 246.94]; // Low organ chord
+                freqs.forEach(f => {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'square';
+                    osc.frequency.setValueAtTime(f, this.ctx.currentTime);
+                    gain.gain.setValueAtTime(0.1, this.ctx.currentTime);
+                    gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.6);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start();
+                    osc.stop(this.ctx.currentTime + 0.6);
+                });
+            },
+            playVictoryFanfare() {
+                if (!this.enabled) return;
+                this.init();
+                const notes = [261.63, 329.63, 392.00, 523.25];
+                notes.forEach((f, idx) => {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(f, this.ctx.currentTime + idx * 0.12);
+                    gain.gain.setValueAtTime(0.2, this.ctx.currentTime + idx * 0.12);
+                    gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + idx * 0.12 + 0.3);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start(this.ctx.currentTime + idx * 0.12);
+                    osc.stop(this.ctx.currentTime + idx * 0.12 + 0.3);
+                });
+            }
+        };
+
+        /* ==========================================================================
+           HALLOWEEN LEVEL & DATABASE DEFINITIONS
+           ========================================================================== */
+
+        const LEVEL_CONFIGS = {
+            1: {
+                name: "Level 1: Haunted Garage",
+                reqFilms: 1,
+                reqCash: 1000,
+                reqScare: 70
+            },
+            2: {
+                name: "Level 2: Abandoned Asylum",
+                reqFilms: 3,
+                reqCash: 5000,
+                reqScare: 80
+            },
+            3: {
+                name: "Level 3: Cursed Mansion Studio",
+                reqFilms: 5,
+                reqCash: 20000,
+                reqScare: 88
+            },
+            4: {
+                name: "Level 4: Crypt of Hollywood Horrors",
+                reqFilms: 8,
+                reqCash: 100000,
+                reqScare: 95
+            }
+        };
+
+        const DB = {
+            scripts: [
+                { id: 's1', minLevel: 1, title: 'The Slashing in Cabin 13', genre: 'Slasher', budgetReq: 300, difficulty: 'Easy', desc: 'A masked slasher stalks teens staying in a remote cursed cabin.' },
+                { id: 's2', minLevel: 1, title: 'Curse of the Pumpkin King', genre: 'Folk Horror', budgetReq: 500, difficulty: 'Easy', desc: 'A small town pumpkin patch harvest unleashes an ancient pumpkin demon.' },
+                { id: 's3', minLevel: 2, title: 'Poltergeist Streamer', genre: 'Found Footage', budgetReq: 1200, difficulty: 'Medium', desc: 'A vlogger stays overnight in an asylum and accidentally streams real specters.' },
+                { id: 's4', minLevel: 3, title: 'Nightmare on Elm Street (Bootleg)', genre: 'Dream Horror', budgetReq: 4000, difficulty: 'Hard', desc: 'A burned killer haunts moviegoers inside their own dreams.' },
+                { id: 's5', minLevel: 4, title: 'Dracula Unleashed IMAX', genre: 'Gothic Horror', budgetReq: 15000, difficulty: 'Expert', desc: 'The vampire lord takes over Hollywood to turn movie stars into thralls.' }
+            ],
+            directors: [
+                { id: 'd1', minLevel: 1, name: 'Rookie Slasher Director', skill: 10, ego: 5, cost: 200 },
+                { id: 'd2', minLevel: 2, name: 'Vampire Director Vlad', skill: 25, ego: 15, cost: 800 },
+                { id: 'd3', minLevel: 3, name: 'Lady Morticia (Visionary)', skill: 50, ego: 30, cost: 3000 }
+            ],
+            actors: [
+                { id: 'a1', minLevel: 1, name: 'Scream Queen Lead', skill: 12, ego: 5, cost: 150 },
+                { id: 'a2', minLevel: 1, name: 'Serial Killer Stunt Double', skill: 18, ego: 10, cost: 300 },
+                { id: 'a3', minLevel: 2, name: 'Werewolf Actor', skill: 30, ego: 20, cost: 800 },
+                { id: 'a4', minLevel: 3, name: 'Ancient Ghoul Veteran', skill: 55, ego: 35, cost: 2500 }
+            ],
+            soundtechs: [
+                { id: 'st1', minLevel: 1, name: 'Banshee Sound Tech', skill: 10, ego: 5, cost: 100 },
+                { id: 'st2', minLevel: 2, name: 'EVP Whisper Audio Engineer', skill: 28, ego: 15, cost: 600 }
+            ],
+            cameras: [
+                { id: 'cam1', minLevel: 1, name: 'Haunted VHS Cam', bonus: 5, cost: 100 },
+                { id: 'cam2', minLevel: 2, name: 'Phantom Drone 4K', bonus: 20, cost: 600 },
+                { id: 'cam3', minLevel: 3, name: 'Necronomicon Rig IMAX', bonus: 45, cost: 2000 }
+            ],
+            audios: [
+                { id: 'aud1', minLevel: 1, name: 'EVP Tape Recorder', bonus: 5, cost: 50 },
+                { id: 'aud2', minLevel: 2, name: 'Banshee Scream Array', bonus: 20, cost: 400 }
+            ],
+            lenses: [
+                { id: 'len1', minLevel: 1, name: 'Standard Fog Lens', bonus: 5, cost: 50 },
+                { id: 'len2', minLevel: 2, name: 'Blood-Splattered Anamorphic Lens', bonus: 22, cost: 500 }
+            ]
+        };
+
+        const CrisisEvents = [
+            {
+                title: 'Real Ghost Haunts the Set!',
+                desc: 'A genuine spectral entity manifested right in front of the lens during the scene.',
+                choices: [
+                    { text: 'Keep filming the ghost!', morale: -10, quality: +30 },
+                    { text: 'Call an Exorcist', morale: +10, quality: +5 }
+                ]
+            },
+            {
+                title: 'Actor turns into actual Werewolf!',
+                desc: 'The full moon shone through the set roof and your lead sprouted fur and fangs.',
+                choices: [
+                    { text: 'Shoot the scene anyway!', morale: -15, quality: +35 },
+                    { text: 'Feed raw meat to calm down (-$100)', morale: +10, quality: +10, cost: 100 }
+                ]
+            },
+            {
+                title: 'Power Outage during Slasher scene!',
+                desc: 'All studio lights cut out right at the climax sequence.',
+                choices: [
+                    { text: 'Use candle lighting!', morale: +5, quality: +20 },
+                    { text: 'Wait for power repair', morale: -5, quality: 0 }
+                ]
+            }
+        ];
+
+        /* ==========================================================================
+           GAME STATE
+           ========================================================================== */
+
+        let gameState = {
+            level: 1,
+            cash: 1000,
+            scareRating: 0,
+            filmsCount: 0,
+            highestReviewScore: 0,
+            currentScript: null,
+            activeProduction: null
+        };
+
+        /* ==========================================================================
+           INITIALIZATION & LOCAL STORAGE
+           ========================================================================== */
+
+        window.onload = function() {
+            loadGameData();
+            renderPreProductionData();
+            updateUIStats();
+            startViewfinderAnimation();
+        };
+
+        function saveGameData() {
+            localStorage.setItem('spooktacular_studios_save', JSON.stringify({
+                level: gameState.level,
+                cash: gameState.cash,
+                scareRating: gameState.scareRating,
+                filmsCount: gameState.filmsCount,
+                highestReviewScore: gameState.highestReviewScore
+            }));
+        }
+
+        function loadGameData() {
+            const saved = localStorage.getItem('spooktacular_studios_save');
+            if (saved) {
+                try {
+                    const parsed = JSON.parse(saved);
+                    gameState.level = parsed.level ?? 1;
+                    gameState.cash = parsed.cash ?? 1000;
+                    gameState.scareRating = parsed.scareRating ?? 0;
+                    gameState.filmsCount = parsed.filmsCount ?? 0;
+                    gameState.highestReviewScore = parsed.highestReviewScore ?? 0;
+                } catch(e) { console.error('Save parsing error', e); }
+            }
+        }
+
+        function resetGamePrompt() {
+            if (confirm("Reset Spooktacular Studios horror progress?")) {
+                localStorage.removeItem('spooktacular_studios_save');
+                location.reload();
+            }
+        }
+
+        function toggleSound() {
+            AudioFX.enabled = !AudioFX.enabled;
+            const label = document.getElementById('sound-label');
+            const icon = document.getElementById('sound-icon');
+            if (AudioFX.enabled) {
+                label.innerText = 'Audio ON';
+                icon.className = 'fa-solid fa-volume-high';
+                AudioFX.playClick();
+            } else {
+                label.innerText = 'Audio OFF';
+                icon.className = 'fa-solid fa-volume-xmark';
+            }
+        }
+
+        function updateUIStats() {
+            document.getElementById('stat-cash').innerText = `$${gameState.cash.toLocaleString()}`;
+            document.getElementById('stat-scare').innerText = `${gameState.scareRating}%`;
+            document.getElementById('stat-films').innerText = gameState.filmsCount;
+
+            const lvlConfig = LEVEL_CONFIGS[gameState.level] || LEVEL_CONFIGS[4];
+            document.getElementById('studio-level').innerText = gameState.level;
+            document.getElementById('studio-tier-badge').innerText = lvlConfig.name;
+
+            saveGameData();
+        }
+
+        /* ==========================================================================
+           LEVEL GOALS & PROGRESSION MODAL
+           ========================================================================== */
+
+        function toggleGoalsModal() {
+            AudioFX.playClick();
+            const modal = document.getElementById('goals-modal');
+            modal.classList.toggle('hidden');
+
+            if (!modal.classList.contains('hidden')) {
+                const config = LEVEL_CONFIGS[gameState.level];
+                document.getElementById('modal-stage-subtitle').innerText = `LEVEL ${gameState.level} PROGRESSION CHECKLIST`;
+                document.getElementById('modal-stage-title').innerText = config.name.toUpperCase();
+
+                const container = document.getElementById('goals-list-container');
+                container.innerHTML = '';
+
+                // Objective checks
+                const objFilms = { text: `Produce Films: ${gameState.filmsCount} / ${config.reqFilms}`, met: gameState.filmsCount >= config.reqFilms };
+                const objCash = { text: `Earn Studio Cash: $${gameState.cash.toLocaleString()} / $${config.reqCash.toLocaleString()}`, met: gameState.cash >= config.reqCash };
+                const objScare = { text: `Scare Rating Target: ${gameState.highestReviewScore}% / ${config.reqScare}%`, met: gameState.highestReviewScore >= config.reqScare };
+
+                [objFilms, objCash, objScare].forEach(obj => {
+                    const row = document.createElement('div');
+                    row.className = `p-3 rounded-lg border flex justify-between items-center ${obj.met ? 'bg-emerald-950/40 border-emerald-800 text-emerald-300' : 'bg-spooky-bg border-spooky-border text-slate-400'}`;
+                    row.innerHTML = `
+                        <span>${obj.text}</span>
+                        <i class="fa-solid ${obj.met ? 'fa-circle-check text-emerald-400' : 'fa-circle-notch text-slate-600'}"></i>
+                    `;
+                    container.appendChild(row);
+                });
+
+                // Render Level Badges
+                const grid = document.getElementById('level-select-grid');
+                grid.innerHTML = '';
+                for (let i = 1; i <= 4; i++) {
+                    const isUnlocked = i <= gameState.level;
+                    const b = document.createElement('div');
+                    b.className = `p-2 rounded border ${isUnlocked ? 'bg-purple-950/40 border-spooky-accent text-spooky-accent font-bold' : 'bg-spooky-bg border-spooky-border text-slate-600'}`;
+                    b.innerHTML = `
+                        <i class="fa-solid ${isUnlocked ? 'fa-ghost' : 'fa-lock'} mb-1"></i>
+                        <div>Lvl ${i}</div>
+                    `;
+                    grid.appendChild(b);
+                }
+
+                const allMet = objFilms.met && objCash.met && objScare.met;
+                const claimBtn = document.getElementById('btn-claim-levelup');
+                if (allMet && gameState.level < 4) {
+                    claimBtn.classList.remove('hidden');
+                } else {
+                    claimBtn.classList.add('hidden');
+                }
+            }
+        }
+
+        function claimLevelUp() {
+            if (gameState.level < 4) {
+                AudioFX.playVictoryFanfare();
+                gameState.level++;
+                updateUIStats();
+                renderPreProductionData();
+                toggleGoalsModal();
+                alert(`CONGRATULATIONS! You leveled up to ${LEVEL_CONFIGS[gameState.level].name}! New scripts and gear unlocked!`);
+            }
+        }
+
+        /* ==========================================================================
+           STAGE 1: PRE-PRODUCTION LOGIC
+           ========================================================================== */
+
+        function renderPreProductionData() {
+            const scriptsContainer = document.getElementById('scripts-list');
+            scriptsContainer.innerHTML = '';
+
+            const availableScripts = DB.scripts.filter(s => s.minLevel <= gameState.level);
+            availableScripts.forEach((script, idx) => {
+                const isSelected = gameState.currentScript?.id === script.id || idx === 0;
+                if (idx === 0 && (!gameState.currentScript || gameState.currentScript.minLevel > gameState.level)) {
+                    gameState.currentScript = script;
+                }
+
+                const card = document.createElement('div');
+                card.className = `p-3 rounded-xl border cursor-pointer transition flex flex-col justify-between ${
+                    isSelected ? 'bg-orange-950/30 border-spooky-pumpkin' : 'bg-spooky-bg border-spooky-border hover:border-slate-600'
+                }`;
+                card.onclick = () => selectScript(script, card);
+                card.innerHTML = `
+                    <div class="flex justify-between items-start mb-1">
+                        <span class="font-bold text-xs text-white">${script.title}</span>
+                        <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-spooky-panel border border-spooky-border text-spooky-pumpkin">${script.genre}</span>
+                    </div>
+                    <p class="text-[11px] text-slate-400 mb-2">${script.desc}</p>
+                    <div class="flex justify-between items-center text-[10px] font-mono">
+                        <span class="text-emerald-400">Req: $${script.budgetReq.toLocaleString()}</span>
+                        <span class="text-slate-500">${script.difficulty}</span>
+                    </div>
+                `;
+                scriptsContainer.appendChild(card);
+            });
+
+            // Populate Select Dropdowns
+            populateSelect('select-director', DB.directors);
+            populateSelect('select-actor', DB.actors);
+            populateSelect('select-soundtech', DB.soundtechs);
+            populateSelect('select-camera', DB.cameras);
+            populateSelect('select-audio', DB.audios);
+            populateSelect('select-lens', DB.lenses);
+
+            updatePreProdStats();
+        }
+
+        function populateSelect(elemId, list) {
+            const select = document.getElementById(elemId);
+            select.innerHTML = '';
+            const filtered = list.filter(item => item.minLevel <= gameState.level);
+            filtered.forEach(item => {
+                const opt = document.createElement('option');
+                opt.value = item.id;
+                opt.innerText = `${item.name} (${item.cost ? '$'+item.cost : '+'+item.bonus+' Scare'})`;
+                select.appendChild(opt);
+            });
+        }
+
+        function selectScript(script, element) {
+            AudioFX.playClick();
+            gameState.currentScript = script;
+            document.querySelectorAll('#scripts-list > div').forEach(el => {
+                el.classList.remove('bg-orange-950/30', 'border-spooky-pumpkin');
+                el.classList.add('bg-spooky-bg', 'border-spooky-border');
+            });
+            element.classList.remove('bg-spooky-bg', 'border-spooky-border');
+            element.classList.add('bg-orange-950/30', 'border-spooky-pumpkin');
+            updatePreProdStats();
+        }
+
+        function getSelectedObject(list, elemId) {
+            const val = document.getElementById(elemId).value;
+            return list.find(x => x.id === val);
+        }
+
+        function updatePreProdStats() {
+            const director = getSelectedObject(DB.directors, 'select-director');
+            const actor = getSelectedObject(DB.actors, 'select-actor');
+            const st = getSelectedObject(DB.soundtechs, 'select-soundtech');
+            const camera = getSelectedObject(DB.cameras, 'select-camera');
+            const audio = getSelectedObject(DB.audios, 'select-audio');
+            const lens = getSelectedObject(DB.lenses, 'select-lens');
+
+            const totalSkill = (director?.skill || 0) + (actor?.skill || 0) + (st?.skill || 0);
+            const totalEgo = (director?.ego || 0) + (actor?.ego || 0);
+
+            const scriptReq = gameState.currentScript?.budgetReq || 0;
+            const crewCost = (director?.cost || 0) + (actor?.cost || 0) + (st?.cost || 0);
+            const gearCost = (camera?.cost || 0) + (audio?.cost || 0) + (lens?.cost || 0);
+            const totalCost = scriptReq + crewCost + gearCost;
+
+            document.getElementById('team-skill-val').innerText = `${totalSkill} Haunt Pts`;
+            document.getElementById('team-ego-val').innerText = totalEgo > 40 ? 'Severe Curse' : totalEgo > 20 ? 'Moderate' : 'Safe';
+            
+            const costElem = document.getElementById('total-budget-cost');
+            costElem.innerText = `$${totalCost.toLocaleString()}`;
+            if (totalCost > gameState.cash) {
+                costElem.className = 'font-mono font-bold text-lg text-red-400';
+            } else {
+                costElem.className = 'font-mono font-bold text-lg text-emerald-400';
+            }
+        }
+
+        function startProduction() {
+            AudioFX.playThunder();
+            const director = getSelectedObject(DB.directors, 'select-director');
+            const actor = getSelectedObject(DB.actors, 'select-actor');
+            const st = getSelectedObject(DB.soundtechs, 'select-soundtech');
+            const camera = getSelectedObject(DB.cameras, 'select-camera');
+            const audio = getSelectedObject(DB.audios, 'select-audio');
+            const lens = getSelectedObject(DB.lenses, 'select-lens');
+
+            const scriptReq = gameState.currentScript.budgetReq;
+            const crewCost = director.cost + actor.cost + st.cost;
+            const gearCost = camera.cost + audio.cost + lens.cost;
+            const totalCost = scriptReq + crewCost + gearCost;
+
+            if (totalCost > gameState.cash) {
+                alert("Not enough Studio Cash! Hire cheaper crew or gear.");
+                return;
+            }
+
+            gameState.cash -= totalCost;
+            updateUIStats();
+
+            gameState.activeProduction = {
+                script: gameState.currentScript,
+                crew: { director, actor, st },
+                gear: { camera, audio, lens },
+                currentTake: 1,
+                maxTakes: 3,
+                morale: 100,
+                accumulatedQuality: (camera.bonus + audio.bonus + lens.bonus),
+                targetFraming: Math.floor(Math.random() * 60) + 20,
+                targetLighting: Math.floor(Math.random() * 60) + 20,
+                targetAudio: Math.floor(Math.random() * 60) + 20,
+                bloodSprayBonus: 0,
+                colorPreset: 'blood',
+                trimPacing: 80,
+                soundtrack: 'synth'
+            };
+
+            setStage(2);
+            initProductionStage();
+        }
+
+        /* ==========================================================================
+           STAGE 2: ON-SET PRODUCTION (INTERACTIVE VIEWFINDER MINI-GAME)
+           ========================================================================== */
+
+        let viewfinderTimerInterval = null;
+        let viewfinderTimeLeft = 15;
+
+        function initProductionStage() {
+            const prod = gameState.activeProduction;
+            document.getElementById('prod-script-title').innerText = prod.script.title;
+            document.getElementById('prod-script-genre').innerText = prod.script.genre;
+            document.getElementById('prod-take-num').innerText = `${prod.currentTake} / ${prod.maxTakes}`;
+            document.getElementById('prod-morale').innerText = `${prod.morale}%`;
+            document.getElementById('prod-quality').innerText = `${prod.accumulatedQuality} pts`;
+
+            document.getElementById('slider-framing').value = 50;
+            document.getElementById('slider-lighting').value = 50;
+            document.getElementById('slider-audio').value = 50;
+            document.getElementById('slider-blood').value = 50;
+            onShootControlsChange();
+
+            viewfinderTimeLeft = 15;
+            if (viewfinderTimerInterval) clearInterval(viewfinderTimerInterval);
+            viewfinderTimerInterval = setInterval(() => {
+                viewfinderTimeLeft--;
+                document.getElementById('viewfinder-timer').innerText = `00:${viewfinderTimeLeft < 10 ? '0' : ''}${viewfinderTimeLeft}`;
+                
+                if (viewfinderTimeLeft === 8 && prod.currentTake === 2) {
+                    triggerSetEvent();
+                }
+
+                if (viewfinderTimeLeft <= 0) {
+                    captureTake();
+                }
+            }, 1000);
+        }
+
+        function triggerBloodSprayFX() {
+            AudioFX.playScreamStinger();
+            if (gameState.activeProduction) {
+                gameState.activeProduction.bloodSprayBonus += 10;
+                document.getElementById('val-blood').innerText = `${parseInt(document.getElementById('slider-blood').value) + gameState.activeProduction.bloodSprayBonus}%`;
+            }
+        }
+
+        function onShootControlsChange() {
+            const fVal = parseInt(document.getElementById('slider-framing').value);
+            const lVal = parseInt(document.getElementById('slider-lighting').value);
+            const aVal = parseInt(document.getElementById('slider-audio').value);
+            const bVal = parseInt(document.getElementById('slider-blood').value);
+
+            document.getElementById('val-framing').innerText = `${fVal}%`;
+            document.getElementById('val-lighting').innerText = `${lVal}%`;
+            document.getElementById('val-audio').innerText = `${aVal}%`;
+            document.getElementById('val-blood').innerText = `${bVal + (gameState.activeProduction?.bloodSprayBonus || 0)}%`;
+
+            const prod = gameState.activeProduction;
+            if (!prod) return;
+
+            const diff = Math.abs(fVal - prod.targetFraming) + Math.abs(lVal - prod.targetLighting) + Math.abs(aVal - prod.targetAudio);
+            const statusPill = document.getElementById('framing-status-pill');
+            
+            if (diff < 20) {
+                statusPill.innerText = "PERFECT HORROR ALIGNMENT";
+                statusPill.className = "bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 px-2 py-1 rounded font-mono";
+            } else if (diff < 50) {
+                statusPill.innerText = "ACCEPTABLE SCARE SHOT";
+                statusPill.className = "bg-amber-500/20 text-amber-300 border border-amber-500/40 px-2 py-1 rounded font-mono";
+            } else {
+                statusPill.innerText = "TOO BRIGHT / NO MONSTER FOCUS";
+                statusPill.className = "bg-red-500/20 text-red-300 border border-red-500/40 px-2 py-1 rounded font-mono";
+            }
+        }
+
+        function captureTake() {
+            AudioFX.playScreamStinger();
+            const prod = gameState.activeProduction;
+            if (!prod) return;
+
+            const fVal = parseInt(document.getElementById('slider-framing').value);
+            const lVal = parseInt(document.getElementById('slider-lighting').value);
+            const aVal = parseInt(document.getElementById('slider-audio').value);
+
+            const diff = Math.abs(fVal - prod.targetFraming) + Math.abs(lVal - prod.targetLighting) + Math.abs(aVal - prod.targetAudio);
+            let takeScore = Math.max(10, 100 - diff) + prod.bloodSprayBonus;
+            prod.accumulatedQuality += Math.floor(takeScore / 2);
+
+            if (prod.currentTake < prod.maxTakes) {
+                prod.currentTake++;
+                prod.targetFraming = Math.floor(Math.random() * 70) + 15;
+                prod.targetLighting = Math.floor(Math.random() * 70) + 15;
+                prod.targetAudio = Math.floor(Math.random() * 70) + 15;
+                initProductionStage();
+            } else {
+                if (viewfinderTimerInterval) clearInterval(viewfinderTimerInterval);
+                setStage(3);
+                initPostProductionStage();
+            }
+        }
+
+        function triggerSetEvent() {
+            const overlay = document.getElementById('set-event-overlay');
+            const event = CrisisEvents[Math.floor(Math.random() * CrisisEvents.length)];
+            
+            document.getElementById('event-title').innerText = event.title;
+            document.getElementById('event-desc').innerText = event.desc;
+
+            const choicesContainer = document.getElementById('event-choices');
+            choicesContainer.innerHTML = '';
+            event.choices.forEach(choice => {
+                const btn = document.createElement('button');
+                btn.className = "px-4 py-2 bg-spooky-panel hover:bg-slate-900 border border-spooky-border rounded-lg text-xs font-mono text-slate-200 transition";
+                btn.innerText = choice.text;
+                btn.onclick = () => {
+                    AudioFX.playClick();
+                    if (choice.cost && gameState.cash >= choice.cost) gameState.cash -= choice.cost;
+                    gameState.activeProduction.morale += choice.morale;
+                    gameState.activeProduction.accumulatedQuality += choice.quality;
+                    overlay.classList.add('hidden');
+                    updateProductionMetricsDisplay();
+                };
+                choicesContainer.appendChild(btn);
+            });
+
+            overlay.classList.remove('hidden');
+        }
+
+        function updateProductionMetricsDisplay() {
+            const prod = gameState.activeProduction;
+            document.getElementById('prod-morale').innerText = `${Math.max(0, prod.morale)}%`;
+            document.getElementById('prod-quality').innerText = `${prod.accumulatedQuality} pts`;
+        }
+
+        // Viewfinder Canvas Graphic Loop
+        function startViewfinderAnimation() {
+            const canvas = document.getElementById('viewfinder-canvas');
+            const ctx = canvas.getContext('2d');
+            let frame = 0;
+
+            function render() {
+                frame++;
+                ctx.fillStyle = '#05040A';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                const fVal = parseInt(document.getElementById('slider-framing')?.value || 50);
+                const lVal = parseInt(document.getElementById('slider-lighting')?.value || 50);
+                const xPos = (fVal / 100) * canvas.width;
+
+                // Creepy fog overlay
+                const fogAlpha = (100 - lVal) / 100;
+                ctx.fillStyle = `rgba(34, 197, 94, ${fogAlpha * 0.25})`;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                // Monster / Slasher Silhouette
+                ctx.fillStyle = '#180202';
+                ctx.beginPath();
+                ctx.arc(xPos, 180 + Math.sin(frame * 0.08) * 8, 50, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Glowing Eyes
+                ctx.fillStyle = '#EF4444';
+                ctx.fillRect(xPos - 15, 175, 8, 8);
+                ctx.fillRect(xPos + 10, 175, 8, 8);
+
+                ctx.fillRect(xPos - 60, 230, 120, 160);
+
+                requestAnimationFrame(render);
+            }
+            render();
+        }
+
+        /* ==========================================================================
+           STAGE 3: POST-PRODUCTION & COLOR GRADING
+           ========================================================================== */
+
+        function initPostProductionStage() {
+            updatePostProdPreview();
+        }
+
+        function setColorPreset(presetKey) {
+            AudioFX.playClick();
+            gameState.activeProduction.colorPreset = presetKey;
+            document.getElementById('preset-label-display').innerText = presetKey.toUpperCase();
+            updatePostProdPreview();
+        }
+
+        function updatePostProdPreview() {
+            const canvas = document.getElementById('edit-preview-canvas');
+            const ctx = canvas.getContext('2d');
+            const trimVal = parseInt(document.getElementById('slider-edit-trim').value);
+            gameState.activeProduction.trimPacing = trimVal;
+
+            document.getElementById('trim-precision-text').innerText = `Pacing: ${trimVal}%`;
+
+            ctx.fillStyle = '#05040A';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            const preset = gameState.activeProduction.colorPreset;
+            if (preset === 'blood') {
+                ctx.fillStyle = 'rgba(239, 68, 68, 0.25)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+            } else if (preset === 'green') {
+                ctx.fillStyle = 'rgba(34, 197, 94, 0.25)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+            } else if (preset === 'witch') {
+                ctx.fillStyle = 'rgba(168, 85, 247, 0.25)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+            } else if (preset === 'gothic') {
+                ctx.fillStyle = 'rgba(148, 163, 184, 0.15)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+            }
+
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 18px Creepster';
+            ctx.textAlign = 'center';
+            ctx.fillText(`SCARE PACING ${trimVal}% • HALLOWEEN EDIT`, canvas.width/2, canvas.height/2);
+        }
+
+        function finishPostProduction() {
+            AudioFX.playOrganSting();
+            const prod = gameState.activeProduction;
+            prod.soundtrack = document.getElementById('select-soundtrack').value;
+
+            // Calculate Box Office & Scare Rating
+            let levelMult = gameState.level * 1.5;
+            let totalScore = Math.min(100, Math.floor((prod.accumulatedQuality / 2.2) + (prod.morale / 5)));
+            let revenue = Math.floor((totalScore * 80 + (gameState.scareRating * 20)) * levelMult);
+            let scareGained = Math.floor(totalScore / 10);
+
+            gameState.cash += revenue;
+            gameState.scareRating = Math.min(100, gameState.scareRating + scareGained);
+            gameState.filmsCount++;
+            if (totalScore > gameState.highestReviewScore) gameState.highestReviewScore = totalScore;
+            if (window.LabSDK) { window.LabSDK.recordScore('spooktackular', totalScore).catch(e => console.error('LabSDK scoring failed', e)); }
+
+            updateUIStats();
+            renderPremiereResults(totalScore, revenue, scareGained);
+            setStage(4);
+        }
+
+        /* ==========================================================================
+           STAGE 4: PREMIERE & "ROTTEN PUMPKINS" REVIEWS
+           ========================================================================== */
+
+        function renderPremiereResults(score, revenue, scare) {
+            const prod = gameState.activeProduction;
+            document.getElementById('review-film-title').innerText = prod.script.title;
+            document.getElementById('review-genre-tag').innerText = `${prod.script.genre} RELEASE`;
+            document.getElementById('review-score').innerText = `${score}%`;
+            document.getElementById('review-box-office').innerText = `$${revenue.toLocaleString()}`;
+            document.getElementById('review-fame').innerText = `+${scare}%`;
+
+            const scoreBadge = document.getElementById('review-score-badge');
+            if (score >= 75) {
+                scoreBadge.innerText = "CERTIFIED FRESH SCARE";
+                scoreBadge.className = "text-[10px] font-mono text-emerald-400 mt-1";
+            } else if (score >= 50) {
+                scoreBadge.innerText = "MIXED AUDIENCE SCREAMS";
+                scoreBadge.className = "text-[10px] font-mono text-amber-400 mt-1";
+            } else {
+                scoreBadge.innerText = "ROTTEN PUMPKIN FLOP";
+                scoreBadge.className = "text-[10px] font-mono text-red-400 mt-1";
+            }
+
+            // Dynamic Critics Quotes
+            const criticsContainer = document.getElementById('critics-container');
+            criticsContainer.innerHTML = '';
+
+            const quotes = [
+                { critic: 'The Horror Crypt Gazette', text: score > 70 ? 'An absolute masterclass in terror and jumpscares!' : 'Felt like a cheap student film with weak fake blood.' },
+                { critic: 'Rotten Pumpkins Weekly', text: score > 60 ? 'The monstrous sound design kept me sleeping with the lights on.' : 'Uninspired pacing and non-frightening lighting.' }
+            ];
+
+            quotes.forEach(q => {
+                const card = document.createElement('div');
+                card.className = "bg-spooky-bg p-4 rounded-xl border border-spooky-border text-left";
+                card.innerHTML = `
+                    <div class="text-xs font-bold text-spooky-pumpkin font-mono mb-1">${q.critic}</div>
+                    <p class="text-xs text-slate-300 italic">"${q.text}"</p>
+                `;
+                criticsContainer.appendChild(card);
+            });
+
+            // Halloween Awards
+            const awardsList = document.getElementById('awards-list');
+            awardsList.innerHTML = '';
+            if (score >= 80) {
+                awardsList.innerHTML += `<span class="px-3 py-1 bg-amber-950 border border-amber-600 text-amber-300 rounded-lg text-xs font-mono"><i class="fa-solid fa-trophy text-amber-400"></i> Golden Pumpkin Trophy</span>`;
+            }
+            if (score >= 90) {
+                awardsList.innerHTML += `<span class="px-3 py-1 bg-red-950 border border-red-600 text-red-300 rounded-lg text-xs font-mono"><i class="fa-solid fa-screwdriver text-red-400"></i> Crimson Chainsaw Award</span>`;
+            }
+            if (awardsList.innerHTML === '') {
+                awardsList.innerHTML = `<span class="text-xs font-mono text-slate-500">No festival awards earned for this release.</span>`;
+            }
+        }
+
+        function returnToPreProduction() {
+            AudioFX.playClick();
+            gameState.activeProduction = null;
+            renderPreProductionData();
+            setStage(1);
+        }
+
+        function setStage(stageNum) {
+            document.querySelectorAll('.stage-container').forEach(el => el.classList.add('hidden'));
+
+            if (stageNum === 1) document.getElementById('stage-pre-production').classList.remove('hidden');
+            if (stageNum === 2) document.getElementById('stage-production').classList.remove('hidden');
+            if (stageNum === 3) document.getElementById('stage-post-production').classList.remove('hidden');
+            if (stageNum === 4) document.getElementById('stage-premiere').classList.remove('hidden');
+
+            for (let i = 1; i <= 4; i++) {
+                const node = document.getElementById(`step-node-${i}`);
+                if (i <= stageNum) {
+                    node.classList.remove('opacity-40');
+                } else {
+                    node.classList.add('opacity-40');
+                }
+            }
+        }
+    </script>
+<script type="module" src="../../shared/lab-sdk.js"></script>
+</body>
+</html>
