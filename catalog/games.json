@@ -70,4 +70,14 @@
   "thumbnail": "games/spooktackular/icon.png",
   "status": "live"
 }
+
+  ,
+{
+  "slug": "monarch-quest",
+  "title": "Tiny Lives: Monarch Quest",
+  "subject": "Other",
+  "grade": "N/A",
+  "thumbnail": "games/monarch-quest/icon.png",
+  "status": "live"
+}
 ]
