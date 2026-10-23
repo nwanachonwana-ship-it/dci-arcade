@@ -60,4 +60,14 @@
   "thumbnail": "games/sky-math/icon.png",
   "status": "live"
 }
+
+,
+{
+  "slug": "spooktackular",
+  "title": "Director's Cut: Halloween Special",
+  "subject": "Other",
+  "grade": "N/A",
+  "thumbnail": "games/spooktackular/icon.png",
+  "status": "live"
+}
 ]
