@@ -80,4 +80,14 @@
   "thumbnail": "games/monarch-quest/icon.png",
   "status": "live"
 }
+
+  ,
+{
+  "slug": "power-blade",
+  "title": "Power Blade",
+  "subject": "Math",
+  "grade": "N/A",
+  "thumbnail": "games/power-blade/icon.png",
+  "status": "live"
+}
 ]
