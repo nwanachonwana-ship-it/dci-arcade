@@ -76,4 +76,14 @@
   "thumbnail": "games/power-blade/icon.png",
   "status": "live"
 }
+
+  ,
+{
+  "slug": "chemdefenders",
+  "title": "ChemDefenders",
+  "subject": "Science",
+  "grade": "N/A",
+  "thumbnail": "games/chemdefenders/icon.png",
+  "status": "live"
+}
 ]
