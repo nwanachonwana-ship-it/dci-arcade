@@ -34,7 +34,6 @@
     overflow-x: hidden;
   }
 
-  /* Floating bats drifting across the background */
   .bat {
     position: fixed;
     top: -40px;
@@ -51,7 +50,6 @@
     100% { transform: translate(2vw, 115vh) rotate(-6deg); }
   }
 
-  /* Top bar */
   .topbar {
     background: linear-gradient(90deg, var(--accent), var(--purple));
     height: 6px;
@@ -79,17 +77,20 @@
     color: var(--muted);
     font-size: 1.05rem;
   }
-  header .stats-link {
+  header .links {
     margin-top: 10px;
-    display: inline-block;
+    display: flex;
+    gap: 18px;
+    flex-wrap: wrap;
+  }
+  header .links a {
     color: var(--accent);
     font-weight: 600;
     text-decoration: none;
     font-size: 0.9rem;
   }
-  header .stats-link:hover { text-decoration: underline; }
+  header .links a:hover { text-decoration: underline; }
 
-  /* Category pills */
   .pills {
     display: flex;
     gap: 10px;
@@ -123,7 +124,6 @@
   }
   .pill.inactive:hover { background: #352352; }
 
-  /* Section header */
   .section-title {
     max-width: 1100px;
     margin: 0 auto;
@@ -140,7 +140,6 @@
     border-bottom: 3px solid var(--accent);
   }
 
-  /* Grid */
   .grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
@@ -240,7 +239,10 @@
 <header>
   <h1>🎃 DCI <span>Arcade</span></h1>
   <p class="tagline">Games built by students, for students.</p>
-  <a class="stats-link" href="my-stats.html">📊 View My Stats &rarr;</a>
+  <div class="links">
+    <a href="my-stats.html">📊 My Stats</a>
+    <a href="leaderboard.html">🏆 Leaderboards</a>
+  </div>
 </header>
 
 <div class="pills" id="filter-pills">
