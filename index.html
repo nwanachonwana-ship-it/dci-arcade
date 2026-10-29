@@ -225,6 +225,28 @@
     padding: 60px 24px;
     grid-column: 1 / -1;
   }
+
+  .music-toggle {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    color: var(--text);
+    font-size: 1.3rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+    z-index: 1000;
+    transition: transform 0.15s ease, border-color 0.15s ease;
+  }
+  .music-toggle:hover { transform: scale(1.08); border-color: var(--accent); }
+  .music-toggle.playing { border-color: var(--accent); box-shadow: 0 0 16px rgba(255,122,26,0.4); }
 </style>
 </head>
 <body>
@@ -256,6 +278,44 @@
 <div class="grid" id="game-grid">
   <p class="empty">Loading games…</p>
 </div>
+
+<audio id="bg-music" src="shared/halloween-theme.mp3" loop preload="none"></audio>
+<button id="music-toggle" class="music-toggle" aria-label="Toggle background music" title="Play spooky music">🔇</button>
+
+<script>
+  const music = document.getElementById("bg-music");
+  const musicBtn = document.getElementById("music-toggle");
+  const MUSIC_PREF_KEY = "dci_arcade_music_on";
+
+  function setMusicState(playing) {
+    musicBtn.textContent = playing ? "🔊" : "🔇";
+    musicBtn.classList.toggle("playing", playing);
+    musicBtn.title = playing ? "Mute music" : "Play spooky music";
+  }
+
+  musicBtn.addEventListener("click", () => {
+    if (music.paused) {
+      music.volume = 0.35;
+      music.play().then(() => {
+        setMusicState(true);
+        localStorage.setItem(MUSIC_PREF_KEY, "on");
+      }).catch(err => console.error("Playback failed", err));
+    } else {
+      music.pause();
+      setMusicState(false);
+      localStorage.setItem(MUSIC_PREF_KEY, "off");
+    }
+  });
+
+  // If the visitor had music on last time, try to resume automatically.
+  // Browsers block this until they've interacted with the page at least
+  // once this session, so it silently falls back to showing the muted
+  // icon if that fails — no error, just waits for a click.
+  if (localStorage.getItem(MUSIC_PREF_KEY) === "on") {
+    music.volume = 0.35;
+    music.play().then(() => setMusicState(true)).catch(() => setMusicState(false));
+  }
+</script>
 
 <script>
   const grid = document.getElementById("game-grid");
