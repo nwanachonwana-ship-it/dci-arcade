@@ -4,40 +4,74 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>DCI Arcade</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Creepster&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #ffffff;
-    --text: #1a1a1a;
-    --muted: #6b7280;
-    --accent: #e4002b;
-    --accent-dark: #b8001f;
-    --card-bg: #ffffff;
-    --card-border: #e2e4e8;
-    --label-bg: #f4f5f7;
+    --bg: #150f24;
+    --bg2: #1f1533;
+    --text: #f4ecff;
+    --muted: #b7a9d9;
+    --accent: #ff7a1a;
+    --accent-dark: #e8640a;
+    --purple: #7b2ff7;
+    --card-bg: #211636;
+    --card-border: #3a2a5c;
+    --label-bg: #2a1d45;
   }
   * { box-sizing: border-box; }
   body {
     margin: 0;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
-    background: var(--bg);
+    background:
+      radial-gradient(ellipse 700px 400px at 20% -5%, rgba(255,122,26,0.18), transparent 60%),
+      radial-gradient(ellipse 600px 400px at 85% 10%, rgba(123,47,247,0.22), transparent 60%),
+      var(--bg);
     color: var(--text);
+    min-height: 100vh;
+    position: relative;
+    overflow-x: hidden;
+  }
+
+  /* Floating bats drifting across the background */
+  .bat {
+    position: fixed;
+    top: -40px;
+    font-size: 1.6rem;
+    opacity: 0.55;
+    animation: drift linear infinite;
+    pointer-events: none;
+    z-index: 0;
+    filter: drop-shadow(0 0 6px rgba(0,0,0,0.5));
+  }
+  @keyframes drift {
+    0%   { transform: translate(0, -10vh) rotate(-6deg); }
+    50%  { transform: translate(-6vw, 55vh) rotate(6deg); }
+    100% { transform: translate(2vw, 115vh) rotate(-6deg); }
   }
 
   /* Top bar */
   .topbar {
-    background: var(--accent);
+    background: linear-gradient(90deg, var(--accent), var(--purple));
     height: 6px;
+    position: relative;
+    z-index: 1;
   }
   header {
     padding: 36px 24px 20px;
     max-width: 1100px;
     margin: 0 auto;
+    position: relative;
+    z-index: 1;
   }
   header h1 {
-    font-size: 2.4rem;
-    font-weight: 800;
-    margin: 0 0 4px;
-    letter-spacing: -0.5px;
+    font-family: 'Creepster', cursive;
+    font-size: 3rem;
+    font-weight: 400;
+    margin: 0 0 6px;
+    letter-spacing: 1px;
+    text-shadow: 0 0 18px rgba(255,122,26,0.5), 0 0 4px rgba(255,122,26,0.8);
   }
   header h1 span { color: var(--accent); }
   header p.tagline {
@@ -63,10 +97,12 @@
     max-width: 1100px;
     margin: 0 auto;
     padding: 4px 24px 28px;
+    position: relative;
+    z-index: 1;
   }
   .pill {
     background: var(--accent);
-    color: #fff;
+    color: #1a1026;
     border: none;
     border-radius: 999px;
     padding: 12px 20px;
@@ -85,13 +121,15 @@
     background: var(--label-bg);
     color: var(--text);
   }
-  .pill.inactive:hover { background: #e9ebef; }
+  .pill.inactive:hover { background: #352352; }
 
   /* Section header */
   .section-title {
     max-width: 1100px;
     margin: 0 auto;
     padding: 8px 24px 0;
+    position: relative;
+    z-index: 1;
   }
   .section-title h2 {
     font-size: 1.4rem;
@@ -110,6 +148,8 @@
     max-width: 1100px;
     margin: 0 auto;
     padding: 20px 24px 60px;
+    position: relative;
+    z-index: 1;
   }
   .card {
     background: var(--card-bg);
@@ -120,17 +160,18 @@
     color: var(--text);
     display: flex;
     flex-direction: column;
-    transition: box-shadow 0.15s ease, transform 0.15s ease;
+    transition: box-shadow 0.15s ease, transform 0.15s ease, border-color 0.15s ease;
     position: relative;
   }
   .card:hover {
-    box-shadow: 0 6px 18px rgba(0,0,0,0.1);
+    box-shadow: 0 6px 22px rgba(255,122,26,0.25);
     transform: translateY(-2px);
+    border-color: var(--accent);
   }
   .card .thumb {
     width: 100%;
     aspect-ratio: 1 / 1;
-    background: linear-gradient(135deg, #f4f5f7, #e9ebef);
+    background: linear-gradient(135deg, #2a1d45, #1a1130);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -147,7 +188,7 @@
     top: 8px;
     left: 8px;
     background: var(--accent);
-    color: #fff;
+    color: #1a1026;
     font-size: 0.68rem;
     font-weight: 800;
     padding: 3px 8px;
@@ -189,10 +230,15 @@
 </head>
 <body>
 
+<span class="bat" style="left:8%; animation-duration:16s; animation-delay:0s;">🦇</span>
+<span class="bat" style="left:35%; animation-duration:21s; animation-delay:3s; font-size:1.1rem;">🦇</span>
+<span class="bat" style="left:62%; animation-duration:18s; animation-delay:7s;">🦇</span>
+<span class="bat" style="left:85%; animation-duration:24s; animation-delay:1s; font-size:1.2rem;">🦇</span>
+
 <div class="topbar"></div>
 
 <header>
-  <h1>🕹️ DCI <span>Arcade</span></h1>
+  <h1>🎃 DCI <span>Arcade</span></h1>
   <p class="tagline">Games built by students, for students.</p>
   <a class="stats-link" href="my-stats.html">📊 View My Stats &rarr;</a>
 </header>
