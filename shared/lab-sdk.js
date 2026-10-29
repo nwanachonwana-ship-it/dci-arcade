@@ -7,6 +7,10 @@
 //   LabSDK.getGameLeaderboard(gameId)   — top N players for one game
 //   LabSDK.getMyRank(gameId)            — this player's rank in one game
 //   LabSDK.getMyStats()                 — this player's rank across EVERY game they've played
+//   LabSDK.getArcadePoints()            — this player's total placement-based points across all games
+//   LabSDK.getGlobalLeaderboard()       — top players site-wide, ranked by total Arcade Points
+// recordScore() also shows a brief on-screen toast with the result, so
+// players get instant feedback without needing to visit a stats page.
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
 import {
@@ -171,11 +175,36 @@ async function getHandle() {
   }
 }
 
+// ---- On-screen toast (so a score never records silently) ----
+
+function showToast(message) {
+  const el = document.createElement("div");
+  el.style.cssText = `
+    position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-20px);
+    background: #1a1d24; color: #fff; padding: 14px 22px; border-radius: 10px;
+    font-family: -apple-system, sans-serif; font-size: 14px; font-weight: 600;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.35); z-index: 999999;
+    opacity: 0; transition: opacity 0.25s ease, transform 0.25s ease;
+    max-width: 90vw; text-align: center; pointer-events: none;
+  `;
+  el.textContent = message;
+  document.body.appendChild(el);
+  requestAnimationFrame(() => {
+    el.style.opacity = "1";
+    el.style.transform = "translateX(-50%) translateY(0)";
+  });
+  setTimeout(() => {
+    el.style.opacity = "0";
+    el.style.transform = "translateX(-50%) translateY(-20px)";
+    setTimeout(() => el.remove(), 300);
+  }, 3800);
+}
+
 // Records a play in the permanent log, AND updates the student's
 // best-score row for this game if this score beats their previous best.
 // `meta` is optional — any extra JSON you want attached to this one play
 // (level reached, time taken, etc.) for later analysis. Only `score`
-// drives ranking.
+// drives ranking. Shows an on-screen toast with the result automatically.
 async function recordScore(gameId, score, meta = {}) {
   const user = await waitForAuth();
   const handle = await getHandle();
@@ -192,9 +221,11 @@ async function recordScore(gameId, score, meta = {}) {
 
   // 2. Best-score row — upsert only if this beats their prior best.
   const lbRef = doc(db, "leaderboards", `${gameId}_${user.uid}`);
+  let isNewBest = false;
   await runTransaction(db, async (tx) => {
     const snap = await tx.get(lbRef);
     if (!snap.exists() || score > snap.data().best_score) {
+      isNewBest = true;
       tx.set(lbRef, {
         game_id: gameId,
         uid: user.uid,
@@ -204,6 +235,19 @@ async function recordScore(gameId, score, meta = {}) {
       });
     }
   });
+
+  // 3. Immediate feedback — fetch rank right after and show it on screen.
+  try {
+    const rank = await getMyRank(gameId);
+    const totalQuery = query(collection(db, "leaderboards"), where("game_id", "==", gameId));
+    const totalSnap = await getCountFromServer(totalQuery);
+    const total = totalSnap.data().count;
+    const prefix = isNewBest ? "🏆 New best!" : "Score saved.";
+    showToast(`${prefix} Rank #${rank} of ${total} — ${score} pts`);
+  } catch (e) {
+    console.error("LabSDK: toast feedback failed", e);
+    showToast(`Score saved: ${score} pts`);
+  }
 }
 
 // Top N players for one game, by best score.
@@ -297,11 +341,50 @@ async function getArcadePoints() {
   return { total, breakdown };
 }
 
+// Top players site-wide, ranked by total Arcade Points across every
+// game. Pulls the whole leaderboards collection once (fine at classroom
+// scale) and computes ranks/points for every game and every player
+// client-side, so this is a handful of reads regardless of player count.
+// Returns: [{ uid, handle, total_points, games_played }, ...]
+async function getGlobalLeaderboard(max = 20) {
+  const snap = await getDocs(collection(db, "leaderboards"));
+  const allEntries = snap.docs.map((d) => d.data());
+
+  // Group by game, so we can rank within each game
+  const byGame = {};
+  allEntries.forEach((e) => {
+    if (!byGame[e.game_id]) byGame[e.game_id] = [];
+    byGame[e.game_id].push(e);
+  });
+
+  // Accumulate points per uid across every game
+  const totals = {}; // uid -> { handle, total_points, games_played }
+  Object.values(byGame).forEach((entries) => {
+    entries.sort((a, b) => b.best_score - a.best_score);
+    const totalPlayers = entries.length;
+    entries.forEach((entry, idx) => {
+      const rank = idx + 1;
+      const points = pointsForRank(rank, totalPlayers);
+      if (!totals[entry.uid]) {
+        totals[entry.uid] = { uid: entry.uid, handle: entry.handle, total_points: 0, games_played: 0 };
+      }
+      totals[entry.uid].total_points += points;
+      totals[entry.uid].games_played += 1;
+      totals[entry.uid].handle = entry.handle; // keep freshest handle
+    });
+  });
+
+  return Object.values(totals)
+    .sort((a, b) => b.total_points - a.total_points)
+    .slice(0, max);
+}
+
 window.LabSDK = {
   getHandle,
   recordScore,
   getGameLeaderboard,
   getMyRank,
   getMyStats,
-  getArcadePoints
+  getArcadePoints,
+  getGlobalLeaderboard
 };
