@@ -77,4 +77,14 @@
   "status": "live"
 }
 
+  ,
+{
+  "slug": "art-studio",
+  "title": "Art Studio",
+  "subject": "Other",
+  "grade": "N/A",
+  "thumbnail": "games/art-studio/icon.png",
+  "status": "live"
+}
+
 ]
