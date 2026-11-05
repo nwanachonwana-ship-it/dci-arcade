@@ -1,0 +1,793 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Slide Lab</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Creepster&family=Gabarito:wght@500;700;800;900&family=Figtree:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+/* Layout: one column "bench". A field-of-view scope sits beside the title, each mission is a glass slide with a stain-colored label end, and play happens on a single card with feedback below. */
+/* Halloween edition: one deliberate dark look. Pumpkin, slime, candy and witch are the four slide accents on aubergine night; bone is the text color. */
+:root{
+  --bg:#130B1F; --surface:#1E1233; --surface-2:#291A47; --ink:#F4ECDD; --muted:#B5A6CC; --line:#3C2A5C;
+  --field:#0D0716; --ring:#FF8A1F;
+  --pumpkin:#FF8A1F; --slime:#8EE23C; --candy:#FFD23F; --witch:#B882FF;
+  --good:#4ADE80; --bad:#FF5A5F; --on-accent:#1A0D05;
+  --mc:var(--pumpkin);
+  --f-display:'Gabarito',system-ui,sans-serif;
+  --f-spooky:'Creepster','Gabarito',system-ui,cursive;
+  --f-body:'Figtree',system-ui,sans-serif;
+  --f-mono:'IBM Plex Mono',ui-monospace,Menlo,monospace;
+  color-scheme:dark;
+}
+[data-m="cells"]{--mc:var(--pumpkin)}
+[data-m="eco"]{--mc:var(--slime)}
+[data-m="energy"]{--mc:var(--candy)}
+[data-m="body"]{--mc:var(--witch)}
+
+*{box-sizing:border-box}
+body{
+  background-color:var(--bg);
+  background-image:radial-gradient(60% 38% at 92% 0%,color-mix(in srgb,var(--pumpkin) 18%,transparent),transparent 70%),radial-gradient(55% 30% at 0% 100%,color-mix(in srgb,var(--witch) 14%,transparent),transparent 70%);
+  color:var(--ink);
+  font-family:var(--f-body); font-size:16px; line-height:1.5;
+  padding-block:20px 48px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));
+  padding-right:max(16px,env(safe-area-inset-right,0px));
+}
+.wrap{max-width:600px;margin:0 auto}
+button{font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent}
+button:disabled{cursor:default}
+:focus-visible{outline:3px solid var(--mc);outline-offset:2px}
+.mono{font:600 12px/1.2 var(--f-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+
+/* Hub */
+.hero{display:grid;grid-template-columns:1fr 150px;gap:16px;align-items:center}
+.eyebrow{font:600 12px/1 var(--f-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+h1{font-family:var(--f-spooky);font-weight:400;font-size:clamp(54px,16vw,84px);line-height:.9;letter-spacing:.01em;color:var(--pumpkin);text-shadow:0 0 26px color-mix(in srgb,var(--pumpkin) 45%,transparent);margin:12px 0 14px}
+.lead{margin:0;color:var(--muted);max-width:32ch}
+.scope{width:100%;height:auto;display:block}
+.scope .ring{fill:var(--ring)}
+.scope .field{fill:var(--field)}
+.scope .reticle{stroke:var(--ink);opacity:.14;stroke-width:1}
+.scope .membrane{fill:color-mix(in srgb,var(--pumpkin) 12%,var(--field));stroke:var(--pumpkin);stroke-width:3}
+.scope .nuc{fill:color-mix(in srgb,var(--witch) 28%,var(--field));stroke:var(--witch);stroke-width:2.5}
+.scope .nucleolus{fill:var(--witch)}
+.scope .mito{fill:color-mix(in srgb,var(--candy) 30%,var(--field));stroke:var(--candy);stroke-width:2}
+.scope .mitoin{fill:none;stroke:var(--candy);stroke-width:1.5;stroke-linecap:round}
+.scope .vac{fill:var(--field);stroke:var(--pumpkin);stroke-width:1.5}
+.scope .dot{fill:var(--ink);opacity:.45}
+.scope .rod{fill:color-mix(in srgb,var(--slime) 40%,var(--field));stroke:var(--slime);stroke-width:1.5}
+.scope .sb{stroke:var(--ink);stroke-width:2}
+.scope .st{font:600 9px var(--f-mono);fill:var(--ink)}
+.hero{position:relative}
+.bat{position:absolute;pointer-events:none;fill:var(--witch);opacity:.9;animation:flap 3.2s ease-in-out infinite}
+.bat1{width:30px;top:-8px;left:52%}
+.bat2{width:20px;top:64%;left:46%;animation-duration:4.1s;animation-delay:-1.4s}
+@keyframes flap{0%,100%{transform:translate(0,0) scaleY(1)}50%{transform:translate(8px,-6px) scaleY(.7)}}
+.bug{animation:drift 7s ease-in-out infinite alternate}
+.bug.b2{animation-duration:9s;animation-delay:-3s}
+@keyframes drift{from{transform:translate(0,0)}to{transform:translate(6px,-5px)}}
+
+.rank{margin-top:24px;padding:14px 16px;background:var(--surface);border:1px solid var(--line);border-radius:10px;display:grid;gap:10px}
+.rank-top{display:flex;justify-content:space-between;align-items:baseline;gap:4px 12px;flex-wrap:wrap}
+.rank-name{font:800 22px/1.1 var(--f-display)}
+.meter{height:8px;border-radius:99px;background:var(--surface-2);border:1px solid var(--line);overflow:hidden}
+.meter i{display:block;height:100%;width:0;background:var(--pumpkin);transition:width .5s ease}
+
+.slides{display:grid;gap:12px;margin-top:18px}
+.slide{display:grid;grid-template-columns:72px 1fr;width:100%;padding:0;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:10px;overflow:hidden;transition:transform .15s,border-color .15s,box-shadow .15s}
+.slide:hover{transform:translateY(-2px);border-color:var(--mc);box-shadow:0 8px 20px -12px var(--mc)}
+.slide:active{transform:scale(.99)}
+.slide .lab{background:var(--mc);background-image:linear-gradient(160deg,rgba(255,255,255,.22),rgba(255,255,255,0) 60%);color:var(--on-accent);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px}
+.slide .lab span{font:600 9px/1 var(--f-mono);letter-spacing:.16em;text-transform:uppercase;opacity:.85}
+.slide .lab b{font:400 42px/1 var(--f-spooky)}
+.slide .sbody{padding:14px 16px;display:grid;gap:6px;min-width:0}
+.slide h3{font:800 21px/1.1 var(--f-display);margin:0}
+.slide p{margin:0;color:var(--muted);font-size:14px;line-height:1.4}
+.slide .foot{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:2px}
+.stars{display:inline-flex;gap:2px}
+.stars svg{width:22px;height:22px;display:block}
+.stars path,.rstars path{stroke-linejoin:round;stroke-linecap:round}
+.stars .on .b,.rstars .on .b{fill:var(--pumpkin);stroke:var(--pumpkin);stroke-width:1.2}
+.stars .on .r,.rstars .on .r{fill:none;stroke:var(--on-accent);stroke-width:1.2;opacity:.35}
+.stars .on .s,.rstars .on .s{fill:none;stroke:var(--slime);stroke-width:2}
+.stars .off .b,.stars .off .r,.stars .off .s,.rstars .off .b,.rstars .off .r,.rstars .off .s{fill:none;stroke:var(--line);stroke-width:1.6}
+
+.how{margin-top:28px;border-top:1px solid var(--line)}
+.how div{display:grid;grid-template-columns:76px 1fr;gap:12px;padding:12px 0;border-bottom:1px solid var(--line);align-items:baseline}
+.how p{margin:0;font-size:15px}
+.fine{margin:16px 0 0;color:var(--muted);font-size:13px}
+
+/* Play */
+.playbar{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.ghost{background:none;border:1px solid var(--line);border-radius:99px;padding:8px 14px;font:600 14px var(--f-body);color:var(--ink)}
+.ghost:hover{border-color:var(--ink)}
+.pname{display:flex;align-items:center;gap:8px;font:800 16px var(--f-display);min-width:0}
+.pname::before{content:"";width:12px;height:12px;border-radius:50%;background:var(--mc);flex:none}
+.score{font:800 20px var(--f-display);font-variant-numeric:tabular-nums;min-width:64px;text-align:right}
+.score small{font:600 11px var(--f-mono);color:var(--muted);letter-spacing:.08em}
+.seg{display:flex;gap:4px;margin:14px 0 8px}
+.seg i{flex:1;height:8px;border-radius:99px;background:var(--surface);border:1px solid var(--line);transition:background .2s}
+.seg i.cur{border-color:var(--mc);background:color-mix(in srgb,var(--mc) 35%,var(--surface))}
+.seg i.ok{background:var(--mc);border-color:var(--mc)}
+.seg i.miss{background:var(--bad);border-color:var(--bad)}
+.seg i.retry{border-style:dashed}
+.meta{display:flex;justify-content:space-between;gap:12px}
+.card{margin-top:12px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px 16px 16px;display:grid;gap:14px}
+.tag{display:flex;align-items:center;gap:8px;font:600 11px/1 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.tag::before{content:"";width:10px;height:10px;border-radius:50%;background:var(--mc)}
+.q{font:800 clamp(21px,5.6vw,26px)/1.2 var(--f-display);margin:0;text-wrap:balance}
+
+.opts{display:grid;gap:10px}
+.opt{display:grid;grid-template-columns:28px 1fr;gap:12px;align-items:center;text-align:left;width:100%;min-height:54px;padding:12px 14px;background:var(--surface);color:var(--ink);border:1.5px solid var(--line);border-radius:10px;font:600 16px/1.3 var(--f-body);transition:border-color .15s,background .15s,opacity .2s}
+.opt .k{width:26px;height:26px;display:grid;place-items:center;border:1px solid var(--line);border-radius:6px;font:600 12px var(--f-mono);color:var(--muted)}
+.opt:hover:not(:disabled){border-color:var(--mc);background:color-mix(in srgb,var(--mc) 8%,var(--surface))}
+.opt.good{border-color:var(--good);background:color-mix(in srgb,var(--good) 16%,var(--surface))}
+.opt.bad{border-color:var(--bad);background:color-mix(in srgb,var(--bad) 14%,var(--surface))}
+.opt.gone{opacity:.35;text-decoration:line-through}
+.opt:disabled{color:var(--ink)}
+
+.slots{display:grid;gap:8px}
+.slot{display:grid;grid-template-columns:28px 1fr;gap:10px;align-items:center;min-height:52px;padding:6px 8px;border:1.5px dashed var(--line);border-radius:10px}
+.slot.filled{border-style:solid;border-color:var(--mc)}
+.slot.good{border-color:var(--good);background:color-mix(in srgb,var(--good) 12%,var(--surface))}
+.slot.bad{border-color:var(--bad);background:color-mix(in srgb,var(--bad) 10%,var(--surface))}
+.slot .n{font:600 12px var(--f-mono);color:var(--muted);text-align:center}
+.chip{padding:9px 13px;border-radius:99px;border:1.5px solid var(--line);background:var(--surface-2);color:var(--ink);font:600 15px/1.2 var(--f-body)}
+.chip:hover:not(:disabled){border-color:var(--mc)}
+.slot .chip{width:100%;text-align:left;border-radius:8px;border-color:transparent;background:color-mix(in srgb,var(--mc) 14%,var(--surface))}
+.pool{display:flex;flex-wrap:wrap;gap:8px;min-height:44px}
+.hint{margin:0}
+
+.match{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.mcol{display:grid;gap:8px;align-content:start}
+.mitem{min-height:58px;padding:10px 12px;text-align:left;background:var(--surface);color:var(--ink);border:1.5px solid var(--line);border-radius:10px;font:600 14px/1.3 var(--f-body);transition:border-color .15s,background .15s}
+.mitem.term{font:800 16px/1.2 var(--f-display)}
+.mitem:hover:not(:disabled){border-color:var(--mc)}
+.mitem.sel{border-color:var(--mc);background:color-mix(in srgb,var(--mc) 16%,var(--surface));box-shadow:0 0 0 2px color-mix(in srgb,var(--mc) 35%,transparent)}
+.mitem.done{border-color:var(--good);background:color-mix(in srgb,var(--good) 14%,var(--surface))}
+.mitem.shake{border-color:var(--bad);animation:shake .38s}
+.mitem:disabled{color:var(--ink)}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+
+.tools{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:12px;flex-wrap:wrap}
+.lens{display:inline-flex;align-items:center;gap:8px;padding:9px 14px;border:1.5px solid var(--line);border-radius:99px;background:var(--surface);color:var(--ink);font:600 14px var(--f-body)}
+.lens svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round}
+.lens:hover:not(:disabled){border-color:var(--mc)}
+.lens:disabled{opacity:.45}
+
+.fb{margin-top:14px;padding:16px;border-radius:14px;border:1.5px solid var(--line);background:var(--surface);display:grid;gap:10px;animation:rise .25s ease}
+.fb.good{border-color:var(--good);background:color-mix(in srgb,var(--good) 10%,var(--surface))}
+.fb.bad{border-color:var(--bad);background:color-mix(in srgb,var(--bad) 8%,var(--surface))}
+.fb h3{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:0;font:800 21px/1.1 var(--f-display)}
+.fb.good h3{color:var(--good)}
+.fb.bad h3{color:var(--bad)}
+.pts{font:600 13px var(--f-mono);padding:3px 9px;border:1px solid currentColor;border-radius:99px}
+.fb p{margin:0}
+.ans{white-space:pre-line;font-weight:600}
+@keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+.btn{width:100%;padding:14px 18px;border:2px solid var(--pumpkin);border-radius:12px;background:var(--pumpkin);color:var(--on-accent);font:800 16px var(--f-display)}
+.btn:hover:not(:disabled){transform:translateY(-1px)}
+.btn:disabled{opacity:.35}
+.btn.alt{background:transparent;color:var(--ink);border-color:var(--line)}
+
+/* Results */
+.rtitle{font:400 clamp(40px,12vw,60px)/1 var(--f-spooky);letter-spacing:.01em;color:var(--mc);margin:10px 0 16px}
+.rstars{display:flex;gap:8px;margin-bottom:14px}
+.rstars svg{width:64px;height:64px}
+.rstars .on{animation:pop .5s cubic-bezier(.2,1.5,.4,1) both;animation-delay:var(--d)}
+@keyframes pop{from{transform:scale(.2) rotate(-25deg);opacity:0}to{transform:none;opacity:1}}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:0;margin:20px 0;border:1px solid var(--line);border-radius:10px;background:var(--surface);overflow:hidden}
+.stats div{padding:12px 14px;display:grid;gap:4px;border-left:1px solid var(--line);min-width:0}
+.stats div:first-child{border-left:0}
+.stats b{font:800 26px/1 var(--f-display);font-variant-numeric:tabular-nums}
+.newbest{display:inline-block;margin-left:8px;padding:2px 8px;border-radius:99px;background:var(--mc);color:var(--on-accent);font:600 11px var(--f-mono);letter-spacing:.06em;text-transform:uppercase;vertical-align:middle}
+.review{display:grid;gap:10px;margin-bottom:20px}
+.rev{padding:14px 16px;background:var(--surface);border:1px solid var(--line);border-radius:10px;display:grid;gap:6px}
+.rev p{margin:0;font-size:15px}
+.rev .rq{font:800 17px/1.25 var(--f-display)}
+.rev .ra{font-weight:600;white-space:pre-line}
+.rev .rw{color:var(--muted)}
+.actions{display:grid;gap:10px}
+
+@media (max-width:420px){
+  .hero{grid-template-columns:1fr 118px}
+  .slide{grid-template-columns:60px 1fr}
+  .stats b{font-size:22px}
+}
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{animation:none!important;transition:none!important}
+}
+html{color-scheme:dark}
+body{margin:0}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+
+
+<main class="wrap" id="app">
+
+  <!-- Hub -->
+  <section id="hub">
+    <div class="hero">
+      <svg class="bat bat1" viewBox="0 0 24 12" aria-hidden="true"><path d="M12 11 L10.5 8.5 Q9 10 8 8 Q6 9.5 4 7 Q2.5 5 0 4.5 Q3 3 5 1.5 Q6.5 3.5 9 3 Q10 1 11 .5 L12 2.5 L13 .5 Q14 1 15 3 Q17.5 3.5 19 1.5 Q21 3 24 4.5 Q21.5 5 20 7 Q18 9.5 16 8 Q15 10 13.5 8.5 Z"/></svg>
+      <svg class="bat bat2" viewBox="0 0 24 12" aria-hidden="true"><path d="M12 11 L10.5 8.5 Q9 10 8 8 Q6 9.5 4 7 Q2.5 5 0 4.5 Q3 3 5 1.5 Q6.5 3.5 9 3 Q10 1 11 .5 L12 2.5 L13 .5 Q14 1 15 3 Q17.5 3.5 19 1.5 Q21 3 24 4.5 Q21.5 5 20 7 Q18 9.5 16 8 Q15 10 13.5 8.5 Z"/></svg>
+      <div>
+        <div class="eyebrow">Grade 6 &middot; Life science &middot; Halloween edition</div>
+        <h1>Slide Lab</h1>
+        <p class="lead">Four specimen slides from the creepiest shelf in the lab. Answer the rounds and earn up to three pumpkins on each.</p>
+      </div>
+      <svg class="scope" viewBox="0 0 200 200" role="img" aria-label="An animal cell seen through a microscope">
+        <defs><clipPath id="fov"><circle cx="100" cy="100" r="90"/></clipPath></defs>
+        <circle class="ring" cx="100" cy="100" r="97"/>
+        <circle class="field" cx="100" cy="100" r="90"/>
+        <g clip-path="url(#fov)">
+          <line class="reticle" x1="100" y1="10" x2="100" y2="190"/>
+          <line class="reticle" x1="10" y1="100" x2="190" y2="100"/>
+          <circle class="reticle" cx="100" cy="100" r="60" fill="none"/>
+          <g transform="rotate(-14 100 98)">
+            <ellipse class="membrane" cx="100" cy="98" rx="64" ry="50"/>
+            <circle class="nuc" cx="94" cy="94" r="19"/>
+            <circle class="nucleolus" cx="98" cy="90" r="6"/>
+            <g transform="rotate(28 130 108)"><ellipse class="mito" cx="130" cy="108" rx="12" ry="6"/><path class="mitoin" d="M121 108q3-4 5 0t5 0 5 0"/></g>
+            <g transform="rotate(-20 66 116)"><ellipse class="mito" cx="66" cy="116" rx="12" ry="6"/><path class="mitoin" d="M57 116q3-4 5 0t5 0 5 0"/></g>
+            <circle class="vac" cx="118" cy="82" r="7"/>
+            <circle class="dot" cx="80" cy="124" r="1.8"/><circle class="dot" cx="104" cy="120" r="1.8"/>
+            <circle class="dot" cx="122" cy="100" r="1.8"/><circle class="dot" cx="74" cy="78" r="1.8"/>
+            <circle class="dot" cx="88" cy="70" r="1.8"/><circle class="dot" cx="136" cy="90" r="1.8"/>
+            <circle class="dot" cx="62" cy="100" r="1.8"/><circle class="dot" cx="108" cy="72" r="1.8"/>
+          </g>
+          <g class="bug"><rect class="rod" x="32" y="44" width="18" height="7" rx="3.5" transform="rotate(30 41 47)"/></g>
+          <g class="bug b2"><rect class="rod" x="150" y="146" width="18" height="7" rx="3.5" transform="rotate(-40 159 149)"/></g>
+          <g class="bug"><rect class="rod" x="40" y="146" width="18" height="7" rx="3.5" transform="rotate(70 49 149)"/></g>
+        </g>
+        <text class="st" x="100" y="160" text-anchor="middle">20 &micro;m</text>
+        <line class="sb" x1="72" y1="167" x2="128" y2="167"/>
+        <line class="sb" x1="72" y1="163" x2="72" y2="171"/>
+        <line class="sb" x1="128" y1="163" x2="128" y2="171"/>
+      </svg>
+    </div>
+
+    <div class="rank">
+      <div class="rank-top">
+        <div>
+          <div class="mono">Lab rank</div>
+          <div class="rank-name" id="rankName">Lab Igor</div>
+        </div>
+        <div class="mono" id="rankStars">0 / 12 pumpkins</div>
+      </div>
+      <div class="meter"><i id="meter"></i></div>
+      <div class="mono" id="rankNext"></div>
+    </div>
+
+    <div class="slides" id="slides"></div>
+
+    <div class="how">
+      <div><span class="mono">Tap</span><p>Pick the best answer. Some rounds ask you to put steps in order or match pairs.</p></div>
+      <div><span class="mono">Zoom</span><p>The zoom lens crosses out two wrong answers. You get two per slide, but the round is worth fewer points.</p></div>
+      <div><span class="mono">Retry</span><p>Missed rounds come back once at the end. Pumpkins count first tries only.</p></div>
+    </div>
+    <p class="fine">Pumpkins and best scores are saved on this device.</p>
+  </section>
+
+  <!-- Play -->
+  <section id="play" hidden>
+    <header class="playbar">
+      <button class="ghost" id="quit" type="button">Exit</button>
+      <div class="pname" id="pName"></div>
+      <div class="score"><span id="pScore">0</span> <small>PTS</small></div>
+    </header>
+    <div class="seg" id="seg" aria-hidden="true"></div>
+    <div class="meta"><span class="mono" id="pRound"></span><span class="mono" id="pStreak"></span></div>
+
+    <article class="card">
+      <div class="tag" id="qTag"></div>
+      <h2 class="q" id="qText"></h2>
+      <div id="qBody"></div>
+    </article>
+
+    <div class="tools">
+      <button class="lens" id="lens" type="button">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/></svg>
+        <span>Zoom lens</span><span class="mono" id="lensN">&times;2</span>
+      </button>
+    </div>
+
+    <div class="fb" id="fb" role="status" aria-live="polite" hidden>
+      <h3><span id="fbTitle"></span><span class="pts" id="fbPts"></span></h3>
+      <p class="ans" id="fbAns"></p>
+      <p id="fbWhy"></p>
+      <button class="btn" id="next" type="button">Next round</button>
+    </div>
+  </section>
+
+  <!-- Results -->
+  <section id="result" hidden>
+    <div class="mono" id="rKicker">Slide complete</div>
+    <h2 class="rtitle" id="rTitle"></h2>
+    <div class="rstars" id="rStars"></div>
+    <p class="lead" id="rLine" style="max-width:44ch"></p>
+    <div class="stats">
+      <div><span class="mono">Score</span><b id="rScore">0</b></div>
+      <div><span class="mono">First try</span><b id="rFirst">0</b></div>
+      <div><span class="mono">Best streak</span><b id="rStreak">0</b></div>
+    </div>
+    <div class="review" id="rReview"></div>
+    <div class="actions">
+      <button class="btn" id="again" type="button">Play this slide again</button>
+      <button class="btn alt" id="nextSlide" type="button">Next slide</button>
+      <button class="btn alt" id="toHub" type="button">All slides</button>
+    </div>
+  </section>
+
+</main>
+
+<script>
+(function(){
+"use strict";
+
+/* ---------- Content ---------- */
+/* mc: o[0] is the correct answer (shuffled at play time). order: items are listed in the correct order. match: pairs are [term, meaning]. */
+var MISSIONS = [
+  {id:"cells", letter:"A", name:"Cell Parts",
+   blurb:"Organelles, the cell theory, and how cells stack up into organisms.",
+   qs:[
+    {t:"mc", q:"Which organelle is the control center of the cell and holds its DNA?",
+     o:["Nucleus","Vacuole","Ribosome","Cell wall"],
+     why:"The nucleus stores DNA, the instructions that tell the cell how to grow, work, and make proteins."},
+    {t:"mc", q:"Which organelles release usable energy from glucose (sugar)?",
+     o:["Mitochondria","Ribosomes","Vacuoles","Cell membranes"],
+     why:"Mitochondria carry out cellular respiration. Cells that need a lot of energy, like muscle cells, have many of them."},
+    {t:"mc", q:"Which structure do plant cells have that animal cells do not?",
+     o:["Cell wall","Cell membrane","Cytoplasm","Nucleus"],
+     why:"A stiff cell wall surrounds the membrane of a plant cell. Plant cells also have chloroplasts and a large central vacuole."},
+    {t:"match", q:"Match each organelle to its job.",
+     pairs:[["Cell membrane","Controls what enters and leaves"],["Ribosome","Builds proteins"],["Chloroplast","Captures sunlight to make sugar"],["Vacuole","Stores water and nutrients"]],
+     why:"Each organelle has a specialized job, and the cell works because they all do their parts."},
+    {t:"mc", q:"In 1665, who looked at thin slices of cork and named the tiny boxes \"cells\"?",
+     o:["Robert Hooke","Charles Darwin","Gregor Mendel","Louis Pasteur"],
+     why:"Robert Hooke saw the empty walls of dead plant cells. Anton van Leeuwenhoek later saw living microorganisms with his own microscopes."},
+    {t:"mc", q:"Which statement is part of the cell theory?",
+     o:["All living things are made of one or more cells.","Only plants and animals have cells.","Cells can form from nonliving matter.","Cells are always big enough to see without a microscope."],
+     why:"The cell theory says all living things are made of cells, the cell is the basic unit of life, and new cells come from existing cells."},
+    {t:"mc", q:"An amoeba is one single cell that eats, moves, and reproduces. What kind of organism is it?",
+     o:["Unicellular","Multicellular","A tissue","An organ system"],
+     why:"Unicellular means one cell. A single cell can carry out every life process."},
+    {t:"order", q:"Put the levels of organization in order, from smallest to largest.",
+     items:["Cell","Tissue","Organ","Organ system","Organism"],
+     why:"Similar cells form a tissue, different tissues form an organ, organs work together as an organ system, and organ systems make up an organism."}
+   ]},
+  {id:"eco", letter:"B", name:"Ecosystems",
+   blurb:"Food chains, energy flow, and how living things depend on each other.",
+   qs:[
+    {t:"mc", q:"What do producers, like plants and algae, do in an ecosystem?",
+     o:["Make their own food using sunlight","Eat plants for energy","Eat other animals","Break down dead organisms"],
+     why:"Producers make food by photosynthesis. Nearly every food chain starts with them."},
+    {t:"mc", q:"A rabbit eats clover. What is the rabbit's role in the food chain?",
+     o:["Primary consumer","Producer","Secondary consumer","Decomposer"],
+     why:"A primary consumer eats producers. A plant-eater like a rabbit is a primary consumer."},
+    {t:"order", q:"Build the food chain. Start with the energy source and end with the top predator.",
+     items:["Sun","Grass","Grasshopper","Frog","Snake"],
+     why:"Arrows in a food chain point in the direction energy flows, from the food to the one that eats it."},
+    {t:"mc", q:"Fungi and bacteria break down dead plants and animals. What are they called?",
+     o:["Decomposers","Producers","Herbivores","Predators"],
+     why:"Decomposers return nutrients to the soil, where producers can use them again."},
+    {t:"match", q:"Match each ecology term to its meaning.",
+     pairs:[["Habitat","The place where an organism lives"],["Population","One species living in the same area"],["Community","All the populations in an area"],["Ecosystem","Living things plus their nonliving surroundings"]],
+     why:"A population is one species. A community is all the populations in an area. An ecosystem adds the nonliving parts, like water, soil, and sunlight."},
+    {t:"mc", q:"About how much energy moves from one level of a food chain to the next?",
+     o:["About 10%","About 50%","About 90%","All of it"],
+     why:"Most energy is used for life processes or lost as heat. That is why there are far fewer top predators than plants."},
+    {t:"mc", q:"Wolves disappear from a forest. What will most likely happen to the deer population first?",
+     o:["It will grow","It will shrink","It will stay exactly the same","It will disappear"],
+     why:"With fewer predators, more deer survive. Later the deer may eat too much of their food supply and crash, which shows how connected an ecosystem is."},
+    {t:"mc", q:"Which of these is an abiotic factor, meaning a nonliving part of an ecosystem?",
+     o:["Sunlight","Moss","Earthworms","Fungi"],
+     why:"Biotic factors are living or once-living things. Abiotic factors are nonliving, like sunlight, water, temperature, and soil minerals."}
+   ]},
+  {id:"energy", letter:"C", name:"Plants & Energy",
+   blurb:"Photosynthesis, cellular respiration, and how plants are built.",
+   qs:[
+    {t:"mc", q:"What is the main job of photosynthesis?",
+     o:["Make sugar from light, water, and carbon dioxide","Break down sugar to release energy","Absorb minerals from the soil","Make seeds"],
+     why:"Photosynthesis turns light energy into chemical energy stored in glucose, a sugar."},
+    {t:"mc", q:"Which two raw materials does a plant take in for photosynthesis?",
+     o:["Carbon dioxide and water","Oxygen and sugar","Oxygen and water","Nitrogen and sugar"],
+     why:"Leaves take in carbon dioxide through tiny pores called stomata, and roots take in water."},
+    {t:"mc", q:"Which gas do plants release during photosynthesis?",
+     o:["Oxygen","Carbon dioxide","Nitrogen","Hydrogen"],
+     why:"Oxygen is a by-product. Much of the oxygen we breathe comes from photosynthesis by plants and algae."},
+    {t:"match", q:"Match each plant part to its job.",
+     pairs:[["Roots","Absorb water and minerals"],["Stem","Carries water and sugar, and supports the plant"],["Leaf","Main site of photosynthesis"],["Flower","Helps the plant reproduce"]],
+     why:"Each plant part is built for a job, and together they keep the plant alive."},
+    {t:"mc", q:"Photosynthesis takes place inside which organelle?",
+     o:["Chloroplast","Mitochondrion","Nucleus","Ribosome"],
+     why:"Chloroplasts hold chlorophyll, the green pigment that captures light energy."},
+    {t:"mc", q:"Which process uses oxygen to release energy from sugar inside cells?",
+     o:["Cellular respiration","Photosynthesis","Evaporation","Pollination"],
+     why:"Cellular respiration happens in mitochondria. It releases energy from glucose and gives off carbon dioxide and water."},
+    {t:"mc", q:"Which statement about plants is true?",
+     o:["Plants do both photosynthesis and cellular respiration","Plants do photosynthesis but never cellular respiration","Plants do cellular respiration only at night","Only animals use cellular respiration"],
+     why:"Plants need energy too. They respire day and night, and they photosynthesize when there is light."},
+    {t:"order", q:"Follow the energy from sunlight to a hungry student.",
+     items:["Sunlight hits a leaf","Chloroplasts make glucose","A student eats the plant","Mitochondria release the energy"],
+     why:"Light energy becomes chemical energy in glucose. When someone eats the plant, their cells release that energy by cellular respiration."}
+   ]},
+  {id:"body", letter:"D", name:"Body Systems",
+   blurb:"Organs and systems that keep your body working.",
+   qs:[
+    {t:"mc", q:"Which body system carries blood to every part of the body?",
+     o:["Circulatory system","Digestive system","Skeletal system","Nervous system"],
+     why:"The heart, blood vessels, and blood deliver oxygen and nutrients and carry away wastes."},
+    {t:"match", q:"Match each organ to its job.",
+     pairs:[["Heart","Pumps blood"],["Lungs","Take in oxygen and release carbon dioxide"],["Stomach","Churns food and starts digesting it"],["Brain","Processes information and controls the body"]],
+     why:"Organs are made of different tissues that work together on one main job."},
+    {t:"mc", q:"Which system uses the brain, spinal cord, and nerves to send signals?",
+     o:["Nervous system","Muscular system","Respiratory system","Excretory system"],
+     why:"Nerve signals travel fast, so your body can react quickly, like pulling your hand away from something hot."},
+    {t:"mc", q:"Where does most nutrient absorption happen during digestion?",
+     o:["Small intestine","Stomach","Esophagus","Large intestine"],
+     why:"The small intestine is lined with tiny folds called villi that pass nutrients into the blood. The large intestine mostly absorbs water."},
+    {t:"mc", q:"How do the respiratory and circulatory systems work together?",
+     o:["Lungs bring in oxygen and blood delivers it to cells","The heart digests food and the lungs pump blood","Blood sends signals while nerves carry oxygen","The lungs make red blood cells from food"],
+     why:"Oxygen moves from the lungs into the blood, and the blood carries it to cells. On the way back, blood carries carbon dioxide to the lungs."},
+    {t:"order", q:"Trace a bite of food through the digestive system.",
+     items:["Mouth","Esophagus","Stomach","Small intestine","Large intestine"],
+     why:"Food is chewed, swallowed, churned, and broken down. Nutrients are absorbed in the small intestine, then water is absorbed in the large intestine."},
+    {t:"mc", q:"Which system gives the body its shape and protects organs like the brain and heart?",
+     o:["Skeletal system","Circulatory system","Immune system","Digestive system"],
+     why:"Bones form a frame. The skull protects the brain, and the rib cage protects the heart and lungs."},
+    {t:"mc", q:"You exercise, get hot, and start to sweat. Sweating helps keep your body temperature steady. What is this called?",
+     o:["Homeostasis","Photosynthesis","Adaptation","Metamorphosis"],
+     why:"Homeostasis means keeping conditions inside the body stable, even when the outside world changes."}
+   ]}
+];
+
+var RANKS = [[0,"Lab Igor"],[3,"Junior Biologist"],[6,"Biologist"],[9,"Mad Biologist"],[12,"Lead Scientist"]];
+var TOTAL_STARS = MISSIONS.length * 3;
+
+/* ---------- Helpers ---------- */
+function $(s){ return document.querySelector(s); }
+function el(tag, cls, text){ var e=document.createElement(tag); if(cls) e.className=cls; if(text!=null) e.textContent=text; return e; }
+function shuffle(a){ a=a.slice(); for(var i=a.length-1;i>0;i--){ var j=Math.floor(Math.random()*(i+1)); var t=a[i]; a[i]=a[j]; a[j]=t; } return a; }
+var reduceMotion = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+var PUMPKIN_BODY = "M12 7c-1.3-.9-3-1.2-4.6-.7C4.8 7.1 3 9.5 3 12.5c0 3.5 2.4 6.5 5.6 6.7 1.2.1 2.4-.2 3.4-.8 1 .6 2.2.9 3.4.8 3.2-.2 5.6-3.2 5.6-6.7 0-3-1.8-5.4-4.4-6.2C15 5.8 13.3 6.1 12 7z";
+var PUMPKIN_RIBS = "M9.5 7.5c-1.2 2.8-1.2 8.5 0 11M14.5 7.5c1.2 2.8 1.2 8.5 0 11";
+var PUMPKIN_STEM = "M12 7c0-1.6.6-2.9 1.9-3.8";
+function starsHTML(n, delays){
+  var h="";
+  for(var i=0;i<3;i++){
+    var on = i<n;
+    h += '<svg class="'+(on?"on":"off")+'" viewBox="0 0 24 24"'+(on&&delays?' style="--d:'+(i*0.18+0.1)+'s"':"")+' aria-hidden="true"><path class="b" d="'+PUMPKIN_BODY+'"/><path class="r" d="'+PUMPKIN_RIBS+'"/><path class="s" d="'+PUMPKIN_STEM+'"/></svg>';
+  }
+  return h;
+}
+
+/* ---------- Saved progress ---------- */
+var KEY = "slide-lab-v1";
+var store = {};
+try { store = JSON.parse(localStorage.getItem(KEY)) || {}; } catch(e){ store = {}; }
+function save(){ try { localStorage.setItem(KEY, JSON.stringify(store)); } catch(e){} }
+
+/* ---------- Views ---------- */
+var app = $("#app");
+function showView(name){
+  ["hub","play","result"].forEach(function(v){ $("#"+v).hidden = (v!==name); });
+  window.scrollTo(0,0);
+}
+
+function renderHub(){
+  app.removeAttribute("data-m");
+  var list = $("#slides"); list.replaceChildren();
+  var total = 0;
+  MISSIONS.forEach(function(m){
+    var s = store[m.id] || {stars:0,best:0};
+    total += s.stars;
+    var b = el("button","slide"); b.type="button"; b.dataset.m = m.id;
+    var lab = el("div","lab"); lab.append(el("span","","Slide"), el("b","",m.letter));
+    var body = el("div","sbody");
+    body.append(el("h3","",m.name), el("p","",m.blurb));
+    var foot = el("div","foot");
+    var st = el("span","stars"); st.innerHTML = starsHTML(s.stars);
+    foot.append(st, el("span","mono", m.qs.length+" rounds"+(s.best?" · best "+s.best:"")));
+    body.append(foot);
+    b.append(lab, body);
+    b.addEventListener("click", function(){ startMission(m.id); });
+    list.append(b);
+  });
+  var ri=0; RANKS.forEach(function(r,i){ if(total>=r[0]) ri=i; });
+  $("#rankName").textContent = RANKS[ri][1];
+  $("#rankStars").textContent = total+" / "+TOTAL_STARS+" pumpkins";
+  $("#meter").style.width = Math.round(total/TOTAL_STARS*100)+"%";
+  var nx = RANKS[ri+1];
+  $("#rankNext").textContent = nx ? (nx[0]-total)+" more "+((nx[0]-total)===1?"pumpkin":"pumpkins")+" to "+nx[1] : "Top rank reached";
+}
+
+/* ---------- Game ---------- */
+var G = null;
+
+function startMission(id){
+  var m = MISSIONS.filter(function(x){ return x.id===id; })[0];
+  G = {
+    m:m, queue:shuffle(m.qs).map(function(q){ return {q:q, retry:false}; }),
+    idx:0, score:0, streak:0, bestStreak:0, first:0, missed:[],
+    lens:2, lensUsed:false, answered:false, cur:null,
+    segs:m.qs.map(function(){ return "pending"; })
+  };
+  app.dataset.m = id;
+  $("#pName").textContent = m.name;
+  $("#pScore").textContent = "0";
+  showView("play");
+  renderQuestion();
+}
+
+function renderSegs(){
+  var seg = $("#seg"); seg.replaceChildren();
+  var base = G.m.qs.length;
+  G.segs.forEach(function(state,i){
+    var s = document.createElement("i");
+    var cls = [];
+    if(i>=base) cls.push("retry");
+    if(i===G.idx && !G.answered) cls.push("cur");
+    else if(state==="ok") cls.push("ok");
+    else if(state==="miss") cls.push("miss");
+    if(i===G.idx && G.answered && state==="pending") cls.push("cur");
+    s.className = cls.join(" ");
+    seg.append(s);
+  });
+}
+
+function updateLens(){
+  var isMc = G.cur && G.cur.q.t==="mc";
+  var b = $("#lens");
+  b.disabled = !isMc || G.lens<=0 || G.answered || G.lensUsed;
+  $("#lensN").textContent = "×"+G.lens;
+}
+
+function updateStreak(){
+  $("#pStreak").textContent = G.streak>=2 ? "Streak ×"+G.streak : "";
+}
+
+var TAGS = {mc:"Multiple choice", order:"Put in order", match:"Match the pairs"};
+
+function renderQuestion(){
+  var item = G.queue[G.idx], q = item.q;
+  G.cur = item; G.cur.q = q; G.answered = false; G.lensUsed = false;
+  var base = G.m.qs.length;
+  $("#pRound").textContent = G.idx<base ? "Round "+(G.idx+1)+" / "+base : "Second look "+(G.idx-base+1)+" / "+(G.queue.length-base);
+  $("#qTag").textContent = TAGS[q.t] + (item.retry ? " · second look" : "");
+  $("#qText").textContent = q.q;
+  $("#fb").hidden = true;
+  var body = $("#qBody"); body.replaceChildren();
+  if(q.t==="mc") renderMC(body,q);
+  else if(q.t==="order") renderOrder(body,q);
+  else renderMatch(body,q);
+  renderSegs(); updateLens(); updateStreak();
+}
+
+function renderMC(body,q){
+  var correct = q.o[0];
+  var wrap = el("div","opts");
+  shuffle(q.o).forEach(function(text,i){
+    var b = el("button","opt"); b.type="button";
+    if(text===correct) b.dataset.ok="1";
+    b.append(el("span","k",String(i+1)), el("span","",text));
+    b.addEventListener("click", function(){
+      if(G.answered) return;
+      var ok = (text===correct);
+      Array.prototype.forEach.call(wrap.children, function(o){
+        o.disabled = true;
+        if(o.dataset.ok==="1") o.classList.add("good");
+      });
+      if(!ok) b.classList.add("bad");
+      resolve(ok, correct);
+    });
+    wrap.append(b);
+  });
+  body.append(wrap);
+}
+
+function renderOrder(body,q){
+  var n = q.items.length;
+  var slots = []; for(var i=0;i<n;i++) slots.push(null);
+  var base = shuffle(q.items);
+  var checked = false;
+  var slotsEl = el("div","slots"), poolEl = el("div","pool");
+  var hint = el("div","mono hint","Tap an item to place it. Tap a placed item to take it back.");
+  var check = el("button","btn","Check order"); check.type="button"; check.disabled = true; check.style.marginTop="4px";
+  function draw(){
+    slotsEl.replaceChildren(); poolEl.replaceChildren();
+    slots.forEach(function(t,i){
+      var cls = "slot"+(t?" filled":"");
+      if(checked) cls += (t===q.items[i]) ? " good" : " bad";
+      var s = el("div",cls);
+      s.append(el("span","n",String(i+1)));
+      if(t){
+        var c = el("button","chip",t); c.type="button"; c.disabled = checked;
+        c.addEventListener("click", function(){ if(G.answered) return; slots[i]=null; draw(); });
+        s.append(c);
+      } else s.append(el("span"));
+      slotsEl.append(s);
+    });
+    base.filter(function(t){ return slots.indexOf(t)===-1; }).forEach(function(t){
+      var c = el("button","chip",t); c.type="button"; c.disabled = checked;
+      c.addEventListener("click", function(){
+        if(G.answered) return;
+        var k = slots.indexOf(null); if(k===-1) return;
+        slots[k]=t; draw();
+      });
+      poolEl.append(c);
+    });
+    check.disabled = checked || slots.indexOf(null)!==-1;
+    hint.hidden = checked;
+  }
+  check.addEventListener("click", function(){
+    if(G.answered || slots.indexOf(null)!==-1) return;
+    checked = true; check.hidden = true; draw();
+    var ok = slots.every(function(t,i){ return t===q.items[i]; });
+    resolve(ok, q.items.join(" → "));
+  });
+  body.style.display="grid"; body.style.gap="14px";
+  body.append(slotsEl, poolEl, hint, check);
+  draw();
+}
+
+function renderMatch(body,q){
+  var n = q.pairs.length, mistakes = 0, matched = 0, selL = null, selR = null;
+  var L = shuffle(q.pairs.map(function(p,i){ return {id:i,text:p[0]}; }));
+  var R = shuffle(q.pairs.map(function(p,i){ return {id:i,text:p[1]}; }));
+  var wrap = el("div","match"), cl = el("div","mcol"), cr = el("div","mcol");
+  function build(item, col, side){
+    var b = el("button","mitem"+(side==="L"?" term":""), item.text); b.type="button";
+    b.addEventListener("click", function(){
+      if(G.answered || b.classList.contains("done")) return;
+      if(side==="L"){
+        if(selL && selL.b===b){ b.classList.remove("sel"); selL=null; return; }
+        if(selL) selL.b.classList.remove("sel");
+        selL = {item:item,b:b};
+      } else {
+        if(selR && selR.b===b){ b.classList.remove("sel"); selR=null; return; }
+        if(selR) selR.b.classList.remove("sel");
+        selR = {item:item,b:b};
+      }
+      b.classList.add("sel");
+      if(selL && selR) judge();
+    });
+    col.append(b);
+  }
+  function judge(){
+    var a=selL, c=selR; selL=null; selR=null;
+    if(a.item.id===c.item.id){
+      [a.b,c.b].forEach(function(x){ x.classList.remove("sel"); x.classList.add("done"); x.disabled=true; });
+      matched++;
+      if(matched===n){
+        resolve(mistakes===0, null, mistakes>0 ? "You found every pair, with "+mistakes+(mistakes===1?" mix-up.":" mix-ups.") : "");
+      }
+    } else {
+      mistakes++;
+      [a.b,c.b].forEach(function(x){
+        x.classList.remove("sel"); x.classList.add("shake");
+        setTimeout(function(){ x.classList.remove("shake"); }, 420);
+      });
+    }
+  }
+  L.forEach(function(it){ build(it,cl,"L"); });
+  R.forEach(function(it){ build(it,cr,"R"); });
+  wrap.append(cl,cr); body.append(wrap);
+}
+
+var PRAISE = ["Correct","Spook-tacular","Right on","Ghoulishly good"];
+
+function resolve(ok, answerText, noteOverride){
+  var item = G.cur, q = item.q, pts = 0;
+  G.answered = true;
+  if(item.retry){
+    pts = ok ? 40 : 0;
+    G.segs[G.idx] = ok ? "ok" : "miss";
+  } else if(ok){
+    G.streak++; G.bestStreak = Math.max(G.bestStreak, G.streak); G.first++;
+    pts = G.lensUsed ? 60 : 100 + 25*Math.min(G.streak-1,4);
+    G.segs[G.idx] = "ok";
+  } else {
+    G.streak = 0; G.segs[G.idx] = "miss";
+    if(G.missed.indexOf(q)===-1) G.missed.push(q);
+    G.queue.push({q:q, retry:true}); G.segs.push("pending");
+  }
+  G.score += pts;
+  $("#pScore").textContent = G.score;
+  renderSegs(); updateLens(); updateStreak();
+
+  var fb = $("#fb");
+  fb.className = "fb "+(ok?"good":"bad");
+  $("#fbTitle").textContent = ok ? (item.retry ? "Got it this time" : PRAISE[Math.floor(Math.random()*PRAISE.length)]) : "Not quite";
+  var p = $("#fbPts"); p.textContent = pts ? "+"+pts : ""; p.hidden = !pts;
+  var ans = $("#fbAns");
+  if(noteOverride){ ans.textContent = noteOverride; ans.hidden = false; }
+  else if(!ok && answerText){ ans.textContent = "Answer: "+answerText; ans.hidden = false; }
+  else { ans.textContent = ""; ans.hidden = true; }
+  $("#fbWhy").textContent = q.why;
+  var last = G.idx >= G.queue.length-1;
+  var nextIsRetry = !last && G.queue[G.idx+1].retry && !item.retry;
+  $("#next").textContent = last ? "See results" : (nextIsRetry ? "Start second look" : "Next round");
+  fb.hidden = false;
+  try { $("#next").focus({preventScroll:true}); } catch(e){}
+  fb.scrollIntoView({block:"nearest", behavior: reduceMotion ? "auto" : "smooth"});
+}
+
+function answerText(q){
+  if(q.t==="mc") return q.o[0];
+  if(q.t==="order") return q.items.join(" → ");
+  return q.pairs.map(function(p){ return p[0]+": "+p[1]; }).join("\n");
+}
+
+function finish(){
+  var N = G.m.qs.length;
+  var ratio = G.first / N;
+  var stars = ratio>=0.85 ? 3 : ratio>=0.6 ? 2 : 1;
+  var prev = store[G.m.id] || {stars:0,best:0};
+  var newBest = G.score > prev.best;
+  store[G.m.id] = {stars:Math.max(prev.stars,stars), best:Math.max(prev.best,G.score)};
+  save();
+  if(window.LabSDK){window.LabSDK.recordScore('slide-lab',G.score).catch(function(e){console.error('LabSDK scoring failed',e)})}
+  $("#rTitle").textContent = G.m.name;
+  $("#rStars").innerHTML = starsHTML(stars, true);
+  $("#rLine").textContent = stars===3 ? "Spook-tacular. Nearly everything was right on the first try."
+    : stars===2 ? "Solid. Read the notes below, then go for three pumpkins."
+    : "Slide finished. Read the notes below and run it again.";
+  var sc = $("#rScore"); sc.textContent = G.score;
+  if(newBest && prev.best>0){ sc.append(el("span","newbest","New best")); }
+  $("#rFirst").textContent = G.first+" / "+N;
+  $("#rStreak").textContent = G.bestStreak;
+  var rv = $("#rReview"); rv.replaceChildren();
+  if(G.missed.length){
+    var h = el("div","mono","Review notes"); rv.append(h);
+    G.missed.forEach(function(q){
+      var d = el("div","rev");
+      d.append(el("p","rq",q.q), el("p","ra",answerText(q)), el("p","rw",q.why));
+      rv.append(d);
+    });
+  }
+  var idx = MISSIONS.indexOf(G.m);
+  $("#nextSlide").textContent = "Next slide: "+MISSIONS[(idx+1)%MISSIONS.length].name;
+  showView("result");
+}
+
+/* ---------- Events ---------- */
+$("#next").addEventListener("click", function(){
+  G.idx++;
+  if(G.idx >= G.queue.length) finish(); else renderQuestion();
+});
+$("#lens").addEventListener("click", function(){
+  if(!G || G.answered || G.lens<=0 || G.lensUsed || G.cur.q.t!=="mc") return;
+  var wrongs = Array.prototype.filter.call(document.querySelectorAll(".opt"), function(b){ return b.dataset.ok!=="1" && !b.disabled; });
+  shuffle(wrongs).slice(0,2).forEach(function(b){ b.classList.add("gone"); b.disabled = true; });
+  G.lens--; G.lensUsed = true; updateLens();
+});
+$("#quit").addEventListener("click", function(){ G=null; renderHub(); showView("hub"); });
+$("#again").addEventListener("click", function(){ startMission(G.m.id); });
+$("#toHub").addEventListener("click", function(){ G=null; renderHub(); showView("hub"); });
+$("#nextSlide").addEventListener("click", function(){
+  var idx = MISSIONS.indexOf(G.m);
+  startMission(MISSIONS[(idx+1)%MISSIONS.length].id);
+});
+document.addEventListener("keydown", function(e){
+  if(!G || $("#play").hidden || G.answered || G.cur.q.t!=="mc") return;
+  var k = parseInt(e.key,10);
+  if(k>=1 && k<=4){
+    var opts = document.querySelectorAll(".opt");
+    if(opts[k-1] && !opts[k-1].disabled) opts[k-1].click();
+  }
+});
+
+renderHub();
+})();
+</script>
+<script type="module" src="../../shared/lab-sdk.js"></script>
+</body>
+</html>
