@@ -67,5 +67,14 @@
   "thumbnail": "games/power-blade/icon.png",
   "status": "live"
 }
+ ,
+{
+  "slug": "slide-lab",
+  "title": "Slide Lab",
+  "subject": "Science",
+  "grade": "6",
+  "thumbnail": "games/slide-lab/icon.png",
+  "status": "live"
+}
 
 ]
