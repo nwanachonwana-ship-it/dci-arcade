@@ -1,0 +1,1430 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>EcoFactorio</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.24.7/babel.min.js"></script>
+<style>
+  html, body, #root { height: 100%; margin: 0; overflow: hidden; }
+  body { background: #000; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<!-- Original component source, embedded verbatim and transpiled in-browser below.
+     This script tag never executes directly (type="text/plain"); its raw text
+     is read out and run through Babel at load time. -->
+<script id="app-src" type="text/plain">
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { 
+  Pickaxe, ArrowRight, ArrowDown, ArrowLeft, ArrowUp, Factory, 
+  Building, Fan, Sun, Settings, Hexagon, Circle, Leaf, FlaskConical,
+  Activity, Globe, Cpu, Wrench, TreePine, Droplets, BookOpen, Trash2, User,
+  Store, CircleDollarSign, Microscope, HeartHandshake, Zap, ShieldAlert,
+  Flame, Battery, RadioTower, Box
+} from 'lucide-react';
+
+// --- CONFIGURATION & CONSTANTS ---
+const MAP_SIZE = 100;
+const TILE_SIZE = 64;
+const TICK_RATE = 100; // ms per simulation tick (10 TPS)
+const PLAYER_SPEED = 300; // pixels per second
+
+const RESOURCES = {
+  GRASS: 0, WATER: 1, IRON: 2, COPPER: 3, COAL: 4, STONE: 5, URANIUM: 6, BIOMASS: 7
+};
+
+const RESOURCE_COLORS = {
+  [RESOURCES.GRASS]: '#2f4f2f',
+  [RESOURCES.WATER]: '#1e3a8a',
+  [RESOURCES.IRON]: '#9ca3af',
+  [RESOURCES.COPPER]: '#b45309',
+  [RESOURCES.COAL]: '#18181b',
+  [RESOURCES.STONE]: '#d6d3d1',
+  [RESOURCES.URANIUM]: '#22c55e',
+  [RESOURCES.BIOMASS]: '#065f46'
+};
+
+const RESOURCE_TO_ITEM = {
+  'IRON': 'iron_ore',
+  'COPPER': 'copper_ore',
+  'COAL': 'coal',
+  'STONE': 'stone',
+  'URANIUM': 'uranium',
+  'BIOMASS': 'biomass'
+};
+
+const ITEMS = {
+  iron_ore: { name: 'Iron Ore', color: '#9ca3af', value: 2 },
+  copper_ore: { name: 'Copper Ore', color: '#b45309', value: 3 },
+  coal: { name: 'Coal', color: '#18181b', value: 2 },
+  stone: { name: 'Stone', color: '#d6d3d1', value: 1 },
+  uranium: { name: 'Uranium', color: '#22c55e', value: 20 },
+  iron_plate: { name: 'Iron Plate', color: '#f3f4f6', value: 5 },
+  copper_plate: { name: 'Copper Plate', color: '#fb923c', value: 6 },
+  stone_brick: { name: 'Stone Brick', color: '#a8a29e', value: 4 },
+  iron_gear: { name: 'Iron Gear', color: '#d1d5db', value: 10 },
+  copper_wire: { name: 'Copper Wire', color: '#fcd34d', value: 12 },
+  electronic_circuit: { name: 'Electronic Circuit', color: '#4ade80', value: 25 },
+  advanced_circuit: { name: 'Advanced Circuit', color: '#ef4444', value: 60 },
+  steel_plate: { name: 'Steel Plate', color: '#cbd5e1', value: 30 },
+  eco_science: { name: 'Eco-Science Pack', color: '#06b6d4', value: 50 },
+};
+
+const RECIPES = {
+  iron_plate: { id: 'iron_plate', name: 'Smelt Iron', inputs: { iron_ore: 1, coal: 1 }, output: 'iron_plate', outputAmount: 1, time: 20 },
+  copper_plate: { id: 'copper_plate', name: 'Smelt Copper', inputs: { copper_ore: 1, coal: 1 }, output: 'copper_plate', outputAmount: 1, time: 20 },
+  stone_brick: { id: 'stone_brick', name: 'Smelt Stone', inputs: { stone: 2, coal: 1 }, output: 'stone_brick', outputAmount: 1, time: 20 },
+  iron_gear: { id: 'iron_gear', name: 'Iron Gear', inputs: { iron_plate: 2 }, output: 'iron_gear', outputAmount: 1, time: 10 },
+  copper_wire: { id: 'copper_wire', name: 'Copper Wire', inputs: { copper_plate: 1 }, output: 'copper_wire', outputAmount: 2, time: 10 },
+  electronic_circuit: { id: 'electronic_circuit', name: 'Electronic Circuit', inputs: { iron_plate: 1, copper_wire: 3 }, output: 'electronic_circuit', outputAmount: 1, time: 15 },
+  steel_plate: { id: 'steel_plate', name: 'Steel Plate', inputs: { iron_plate: 5 }, output: 'steel_plate', outputAmount: 1, time: 40 },
+  advanced_circuit: { id: 'advanced_circuit', name: 'Advanced Circuit', inputs: { electronic_circuit: 2, copper_wire: 4 }, output: 'advanced_circuit', outputAmount: 1, time: 30 },
+};
+
+const BUILDINGS = {
+  belt: { id: 'belt', name: 'Conveyor Belt', cost: { money: 2 }, pollution: 0, powerDraw: 0 },
+  miner: { id: 'miner', name: 'Burner Miner', cost: { money: 10 }, pollution: 2, powerDraw: 0 },
+  electric_miner: { id: 'electric_miner', name: 'Electric Miner', cost: { money: 50 }, pollution: 1, powerDraw: 20 },
+  furnace: { id: 'furnace', name: 'Stone Furnace', cost: { money: 20 }, pollution: 3, powerDraw: 0 },
+  assembler: { id: 'assembler', name: 'Assembler', cost: { money: 40 }, pollution: 1, powerDraw: 30 },
+  market: { id: 'market', name: 'Market', cost: { money: 100 }, pollution: 0, powerDraw: 10 },
+  eco_lab: { id: 'eco_lab', name: 'Eco-Lab', cost: { money: 150 }, pollution: 0, powerDraw: 40 },
+  coal_generator: { id: 'coal_generator', name: 'Coal Generator', cost: { money: 80 }, pollution: 5, powerDraw: 0, powerGen: 100 },
+  power_pole: { id: 'power_pole', name: 'Power Pole', cost: { money: 10 }, pollution: 0, powerDraw: 0, radius: 4 },
+  scrubber: { id: 'scrubber', name: 'Eco-Scrubber', cost: { money: 200 }, pollution: -10, powerDraw: 50 },
+  solar: { id: 'solar', name: 'Solar Panel', cost: { money: 300 }, pollution: 0, powerDraw: 0, powerGen: 20 },
+  storage: { id: 'storage', name: 'Storage Unit', cost: { money: 20 }, pollution: 0, powerDraw: 0 },
+};
+
+const TECH_TREE = {
+  // Hidden defaults (Granted at start, hidden from UI)
+  logistics_1: { id: 'logistics_1', name: 'Basic Logistics', cost: 10, req: [], desc: 'Unlocks Conveyor Belts and Burner Miners.', hidden: true, gridX: 0, gridY: 0 },
+  market_econ: { id: 'market_econ', name: 'Market Economy', cost: 30, req: [], desc: 'Unlocks Market to sell goods for Money.', hidden: true, gridX: 0, gridY: 0 },
+  eco_awareness: { id: 'eco_awareness', name: 'Eco-Awareness', cost: 50, req: [], desc: 'Unlocks Eco-Lab to generate Research points.', hidden: true, gridX: 0, gridY: 0 },
+  power_gen: { id: 'power_gen', name: 'Electricity', cost: 100, req: [], desc: 'Unlocks Coal Generators and Power Poles.', hidden: true, gridX: 0, gridY: 0 },
+
+  // Automation & Production Branch (Y: 0)
+  automation_1: { id: 'automation_1', name: 'Automation', cost: 20, req: ['logistics_1'], desc: 'Unlocks the Assembler to craft items automatically.', gridX: 0, gridY: 0 },
+  automation_2: { id: 'automation_2', name: 'Advanced Automation', cost: 250, req: ['automation_1'], desc: 'Faster assembling speeds.', gridX: 1, gridY: 0 },
+  automation_3: { id: 'automation_3', name: 'Elite Automation', cost: 800, req: ['automation_2'], desc: 'Maximum assembling speeds.', gridX: 2, gridY: 0 },
+  robotics: { id: 'robotics', name: 'Robotics', cost: 1500, req: ['automation_3'], desc: 'Automated logistics and construction bots.', gridX: 3, gridY: 0 },
+  quantum_manufacturing: { id: 'quantum_manufacturing', name: 'Quantum Manufacturing', cost: 5000, req: ['robotics'], desc: 'Instantly assembles complex parts.', gridX: 4, gridY: 0 },
+
+  // Electronics Branch (Y: 1)
+  copper_proc: { id: 'copper_proc', name: 'Copper Processing', cost: 40, req: ['automation_1', 'smelting_1'], desc: 'Learn to make Copper Wires.', gridX: 0, gridY: 1 },
+  electronics: { id: 'electronics', name: 'Electronics', cost: 80, req: ['copper_proc'], desc: 'Unlocks Electronic Circuits.', gridX: 1, gridY: 1 },
+  adv_electronics: { id: 'adv_electronics', name: 'Advanced Electronics', cost: 300, req: ['electronics', 'steel_proc'], desc: 'Unlocks Advanced Circuits.', gridX: 2, gridY: 1 },
+  ai_processors: { id: 'ai_processors', name: 'AI Processors', cost: 1000, req: ['adv_electronics'], desc: 'Self-optimizing computer chips.', gridX: 3, gridY: 1 },
+  quantum_computing: { id: 'quantum_computing', name: 'Quantum Computing', cost: 4000, req: ['ai_processors', 'quantum_manufacturing'], desc: 'Unfathomable processing power.', gridX: 4, gridY: 1 },
+
+  // Smelting & Materials Branch (Y: 2)
+  smelting_1: { id: 'smelting_1', name: 'Basic Smelting', cost: 20, req: ['logistics_1'], desc: 'Unlocks Stone Furnace for processing ores.', gridX: 0, gridY: 2 },
+  steel_proc: { id: 'steel_proc', name: 'Steel Processing', cost: 150, req: ['smelting_1'], desc: 'Allows forging Steel Plates from Iron.', gridX: 1, gridY: 2 },
+  alloy_smelting: { id: 'alloy_smelting', name: 'Alloy Smelting', cost: 400, req: ['steel_proc'], desc: 'Combines metals for extreme durability.', gridX: 2, gridY: 2 },
+  nano_materials: { id: 'nano_materials', name: 'Nano-Materials', cost: 1200, req: ['alloy_smelting', 'plastics'], desc: 'Atomic-scale building blocks.', gridX: 3, gridY: 2 },
+  superconductors: { id: 'superconductors', name: 'Superconductors', cost: 3000, req: ['nano_materials'], desc: 'Zero-resistance electrical components.', gridX: 4, gridY: 2 },
+
+  // Chemistry Branch (Y: 3)
+  oil_processing: { id: 'oil_processing', name: 'Oil Processing', cost: 200, req: ['steel_proc'], desc: 'Extract and refine crude oil.', gridX: 1, gridY: 3 },
+  plastics: { id: 'plastics', name: 'Plastics', cost: 450, req: ['oil_processing'], desc: 'Synthesize versatile polymers.', gridX: 2, gridY: 3 },
+  advanced_composites: { id: 'advanced_composites', name: 'Advanced Composites', cost: 1500, req: ['plastics'], desc: 'Lightweight, ultra-strong materials.', gridX: 3, gridY: 3 },
+
+  // Logistics Branch (Y: 4)
+  logistics_2: { id: 'logistics_2', name: 'Advanced Logistics', cost: 200, req: ['steel_proc'], desc: 'Unlocks faster belts (passive upgrade).', gridX: 1, gridY: 4 },
+  logistics_3: { id: 'logistics_3', name: 'Express Logistics', cost: 600, req: ['logistics_2'], desc: 'Maximum belt speed.', gridX: 2, gridY: 4 },
+  smart_splitters: { id: 'smart_splitters', name: 'Smart Splitters', cost: 1200, req: ['logistics_3', 'adv_electronics'], desc: 'Intelligently route specific items.', gridX: 3, gridY: 4 },
+  maglev_belts: { id: 'maglev_belts', name: 'Mag-Lev Belts', cost: 3500, req: ['smart_splitters', 'superconductors'], desc: 'Frictionless, lightning-fast transport.', gridX: 4, gridY: 4 },
+
+  // Storage & Networking Branch (Y: 5)
+  storage_tech: { id: 'storage_tech', name: 'Advanced Storage', cost: 300, req: ['logistics_2'], desc: 'High-capacity storage solutions.', gridX: 2, gridY: 5 },
+  logistics_network: { id: 'logistics_network', name: 'Logistics Network', cost: 2000, req: ['storage_tech', 'robotics'], desc: 'Wireless item requesting and providing.', gridX: 3, gridY: 5 },
+  matter_teleportation: { id: 'matter_teleportation', name: 'Matter Teleportation', cost: 10000, req: ['logistics_network', 'quantum_computing'], desc: 'Instantaneous item movement.', gridX: 5, gridY: 5 },
+
+  // Power & Mining Branch (Y: 6)
+  elec_mining: { id: 'elec_mining', name: 'Electric Mining', cost: 120, req: ['power_gen'], desc: 'Unlocks faster, cleaner Electric Miners.', gridX: 0, gridY: 6 },
+  deep_core: { id: 'deep_core', name: 'Deep Core Mining', cost: 500, req: ['elec_mining'], desc: 'Allows extraction of Uranium.', gridX: 1, gridY: 6 },
+  solar_power: { id: 'solar_power', name: 'Solar Energy', cost: 500, req: ['electronics'], desc: 'Clean, free energy via Solar Panels.', gridX: 2, gridY: 6 },
+  battery_storage: { id: 'battery_storage', name: 'Battery Storage', cost: 900, req: ['solar_power'], desc: 'Store excess daytime solar energy.', gridX: 3, gridY: 6 },
+  nuclear_power: { id: 'nuclear_power', name: 'Nuclear Power', cost: 2500, req: ['deep_core', 'adv_electronics'], desc: 'Massive power generation from Uranium.', gridX: 4, gridY: 6 },
+  fusion_power: { id: 'fusion_power', name: 'Fusion Power', cost: 8000, req: ['nuclear_power', 'superconductors'], desc: 'Limitless, perfectly clean energy.', gridX: 5, gridY: 6 },
+
+  // Eco-Science Branch (Y: 7)
+  eco_filtration: { id: 'eco_filtration', name: 'Eco-Filtration', cost: 400, req: ['eco_awareness'], desc: 'Unlocks Eco-Scrubber to reduce pollution.', gridX: 0, gridY: 7 },
+  eco_restoration: { id: 'eco_restoration', name: 'Eco-Restoration', cost: 800, req: ['eco_filtration'], desc: 'Enhances scrubber efficiency.', gridX: 1, gridY: 7 },
+  water_purification: { id: 'water_purification', name: 'Water Purification', cost: 1500, req: ['eco_restoration'], desc: 'Cleans polluted water sources.', gridX: 2, gridY: 7 },
+  animal_conserv: { id: 'animal_conserv', name: 'Animal Conservation', cost: 3000, req: ['water_purification'], desc: 'Automatically heals the environment over time.', gridX: 3, gridY: 7 },
+  biodome: { id: 'biodome', name: 'Biodome Tech', cost: 6000, req: ['animal_conserv'], desc: 'Create perfect, pollution-proof ecosystems.', gridX: 4, gridY: 7 },
+  planetary_restoration: { id: 'planetary_restoration', name: 'Planetary Restoration', cost: 15000, req: ['biodome', 'fusion_power'], desc: 'Return the planet to its pristine, natural state.', gridX: 5, gridY: 7 }
+};
+
+// --- TUTORIAL STEPS ---
+const TUTORIAL_STEPS = [
+  { title: "Welcome & Movement", text: "Welcome to EcoFactorio! Use WASD or Arrow keys to move the player and camera." },
+  { title: "Mining Resources", text: "Select a Burn Miner from the bottom hotbar, and place it on an Iron or Coal patch." },
+  { title: "Power Generation", text: "Miners need electricity! Build a Coal Generator nearby. It comes pre-unlocked. Note that generators produce pollution!" },
+  { title: "Making Money", text: "Use the Belt tool by clicking a start tile and an end tile to create a straight line. Route your mined ore into a Market to earn Money." },
+  { title: "Research", text: "Build an Eco-Lab and route ore into it to generate Research points." },
+  { title: "Tech Tree", text: "Click the Tech Tree button to spend your Research points and unlock new buildings like the Assembler or eco-tech." },
+  { title: "Eco-Science", text: "Watch your pollution levels. High pollution hurts nature. Use your Money to fund Eco-Restoration from the top bar, or research Scrubbers to clean the air. Good luck!" }
+];
+
+// --- MAP GENERATOR ---
+function generateNoiseMap() {
+  const map = new Array(MAP_SIZE).fill(0).map(() => new Array(MAP_SIZE).fill(RESOURCES.GRASS));
+  
+  const placePatch = (type, count, size) => {
+    for (let i = 0; i < count; i++) {
+      let cx = Math.floor(Math.random() * (MAP_SIZE - 20)) + 10;
+      let cy = Math.floor(Math.random() * (MAP_SIZE - 20)) + 10;
+      for (let y = -size; y <= size; y++) {
+        for (let x = -size; x <= size; x++) {
+          if (cx+x >= 0 && cx+x < MAP_SIZE && cy+y >= 0 && cy+y < MAP_SIZE) {
+            if (x*x + y*y <= size*size + Math.random()*2) {
+              map[cy+y][cx+x] = type;
+            }
+          }
+        }
+      }
+    }
+  };
+
+  placePatch(RESOURCES.WATER, 15, 6);
+  placePatch(RESOURCES.IRON, 12, 4);
+  placePatch(RESOURCES.COPPER, 10, 4);
+  placePatch(RESOURCES.COAL, 10, 4);
+  placePatch(RESOURCES.STONE, 8, 3);
+  placePatch(RESOURCES.URANIUM, 4, 3);
+  placePatch(RESOURCES.BIOMASS, 15, 2);
+
+  // Safe spawn area
+  for(let y=45; y<=55; y++) {
+    for(let x=45; x<=55; x++) {
+      if(map[y][x] === RESOURCES.WATER) map[y][x] = RESOURCES.GRASS;
+    }
+  }
+
+  return map;
+}
+
+// --- ENGINE CLASS ---
+class GameEngine {
+  constructor(updateReactState, hoverRef) {
+    this.map = generateNoiseMap();
+    this.buildings = new Map(); // key: "x,y", value: building object
+    this.items = []; // Items moving on belts {type, x, y, tx, ty, progress}
+    
+    this.player = { x: 50 * TILE_SIZE, y: 50 * TILE_SIZE, vx: 0, vy: 0, angle: 0 };
+    this.camera = { x: 0, y: 0 };
+    this.hoverRef = hoverRef;
+    
+    this.state = {
+      money: 1000,
+      research: 200,
+      pollution: 0,
+      animals: 2000,
+      inventory: { iron_ore: 0, copper_ore: 0, coal: 0, stone: 0, iron_plate: 0, iron_gear: 0 },
+      unlockedTechs: ['logistics_1', 'market_econ', 'eco_awareness', 'power_gen'],
+      powerGen: 0,
+      powerDraw: 0,
+      powerSatisfaction: 1
+    };
+
+    this.keys = {};
+    this.mouse = { x: 0, y: 0, gridX: 0, gridY: 0, isDown: false };
+    
+    this.buildMode = null; // building id
+    this.buildDir = 'N';
+    this.beltStart = null; // tracks first click for belt line placement
+
+    this.lastTime = performance.now();
+    this.simAccumulator = 0;
+
+    this.updateReactState = updateReactState;
+    this.ctx = null;
+    this.canvas = null;
+
+    this.bindEvents();
+  }
+
+  bindEvents() {
+    window.addEventListener('keydown', (e) => this.keys[e.code] = true);
+    window.addEventListener('keyup', (e) => this.keys[e.code] = false);
+  }
+
+  createTextures() {
+    // Procedural Grass Texture
+    const oc = document.createElement('canvas');
+    oc.width = TILE_SIZE; oc.height = TILE_SIZE;
+    const octx = oc.getContext('2d');
+    octx.fillStyle = RESOURCE_COLORS[RESOURCES.GRASS];
+    octx.fillRect(0, 0, TILE_SIZE, TILE_SIZE);
+    
+    octx.fillStyle = '#223d22'; // Darker grass tufts
+    for(let i=0; i<15; i++) {
+      octx.fillRect(Math.random() * TILE_SIZE, Math.random() * TILE_SIZE, 2, Math.random() * 6 + 2);
+    }
+    this.grassPattern = this.ctx.createPattern(oc, 'repeat');
+  }
+
+  setCanvas(canvas) {
+    this.canvas = canvas;
+    this.ctx = canvas.getContext('2d');
+    this.createTextures();
+    
+    // Mouse events attached to canvas
+    canvas.addEventListener('mousedown', (e) => {
+      if (e.button === 0) this.handleLeftClick();
+      if (e.button === 2) this.handleRightClick();
+    });
+    canvas.addEventListener('contextmenu', e => e.preventDefault());
+  }
+
+  handleLeftClick() {
+    const gx = this.mouse.gridX;
+    const gy = this.mouse.gridY;
+    
+    if (gx < 0 || gx >= MAP_SIZE || gy < 0 || gy >= MAP_SIZE) return;
+    
+    const key = `${gx},${gy}`;
+    const existing = this.buildings.get(key);
+
+    if (this.buildMode === 'cursor') {
+      if (existing) {
+        if (existing.type === 'assembler' || existing.type === 'furnace' || existing.type === 'storage') {
+          this.updateReactState({ modal: existing.type, activeTile: { x: gx, y: gy } });
+        }
+      }
+      return;
+    }
+
+    if (this.buildMode === 'delete') {
+      if (existing) this.buildings.delete(key);
+      return;
+    }
+
+    // Two-click straight line belt placement
+    if (this.buildMode === 'belt') {
+      if (!this.beltStart) {
+        this.beltStart = { x: gx, y: gy };
+      } else {
+        let sx = this.beltStart.x, sy = this.beltStart.y;
+        let ex = gx, ey = gy;
+        
+        if (sx === ex || sy === ey) { // Straight line
+          let dir = 'N';
+          if (sx === ex) {
+            dir = ey >= sy ? 'S' : 'N';
+            let step = ey >= sy ? 1 : -1;
+            for (let y = sy; y !== ey + step; y += step) {
+              this.placeBuilding('belt', sx, y, dir);
+            }
+          } else {
+            dir = ex >= sx ? 'E' : 'W';
+            let step = ex >= sx ? 1 : -1;
+            for (let x = sx; x !== ex + step; x += step) {
+              this.placeBuilding('belt', x, sy, dir);
+            }
+          }
+        }
+        this.beltStart = null; // Reset after placement attempt
+      }
+      return;
+    }
+
+    // Normal single-tile building placement
+    this.placeBuilding(this.buildMode, gx, gy, this.buildDir);
+  }
+
+  placeBuilding(type, gx, gy, dir) {
+    if (gx < 0 || gx >= MAP_SIZE || gy < 0 || gy >= MAP_SIZE) return;
+    if (this.map[gy][gx] === RESOURCES.WATER) return; // Cant build on water
+    
+    const key = `${gx},${gy}`;
+    const existing = this.buildings.get(key);
+    
+    if (existing) {
+      if (type === 'belt' && existing.type === 'belt') {
+         existing.dir = dir; // update direction of existing belt
+      }
+      return;
+    }
+
+    const bDef = BUILDINGS[type];
+    if (bDef && this.state.money >= bDef.cost.money) {
+      this.state.money -= bDef.cost.money;
+      const newBuilding = {
+        type: type,
+        x: gx, y: gy,
+        dir: dir,
+        powered: bDef.powerDraw === 0,
+        progress: 0,
+        inventory: {}
+      };
+      this.buildings.set(key, newBuilding);
+    }
+  }
+
+  handleRightClick() {
+    if (this.buildMode === 'belt' && this.beltStart) {
+      this.beltStart = null; // Cancel belt line
+      return;
+    }
+    this.buildMode = 'cursor';
+    this.updateReactState({ selectedTool: 'cursor' });
+  }
+
+  // --- SIMULATION LOGIC ---
+  tick() {
+    let powerGen = 0;
+    let powerDraw = 0;
+    let polDelta = 0;
+
+    // 1. Reset power & Calculate Pol / Gen
+    const poweredGrid = new Set(); // Grid keys that have power access
+    
+    this.buildings.forEach((b, key) => {
+      const def = BUILDINGS[b.type];
+      if (def.powerGen) {
+        if (b.type === 'coal_generator') {
+           b.burnTimer = b.burnTimer || 0;
+           // Consume coal to add burn time (50 ticks = 5 seconds)
+           if (b.burnTimer <= 0 && (b.inventory.coal || 0) > 0) {
+             b.inventory.coal--;
+             b.burnTimer = 50; 
+           }
+           // Generate power while burning
+           if (b.burnTimer > 0) {
+             b.burnTimer--;
+             powerGen += def.powerGen;
+             polDelta += def.pollution;
+             this.markPowerRadius(poweredGrid, b.x, b.y, 3);
+           }
+        } else {
+           powerGen += def.powerGen;
+           polDelta += def.pollution;
+           this.markPowerRadius(poweredGrid, b.x, b.y, 3);
+        }
+      }
+      if (b.type === 'power_pole') {
+        // Technically poles should link, but for simplicity, any pole provides power radius if network has power
+        this.markPowerRadius(poweredGrid, b.x, b.y, def.radius);
+      }
+      if (def.pollution) polDelta += def.pollution;
+    });
+
+    // 2. Determine power status for consumers
+    this.buildings.forEach((b, key) => {
+      const def = BUILDINGS[b.type];
+      if (def.powerDraw > 0) {
+        b.hasPowerGrid = poweredGrid.has(key);
+        if (b.hasPowerGrid) powerDraw += def.powerDraw;
+      }
+    });
+
+    this.state.powerGen = powerGen;
+    this.state.powerDraw = powerDraw;
+    this.state.powerSatisfaction = powerDraw === 0 ? 1 : Math.min(1, powerGen / powerDraw);
+
+    // 3. Update Buildings (Miners, Crafters)
+    this.buildings.forEach((b, key) => {
+      const def = BUILDINGS[b.type];
+      const eff = def.powerDraw > 0 ? (b.hasPowerGrid ? this.state.powerSatisfaction : 0) : 1;
+      
+      if (eff === 0 && def.powerDraw > 0) return; // no power
+
+      if (b.type === 'miner' || b.type === 'electric_miner') {
+        const terrain = this.map[b.y][b.x];
+        const rName = Object.keys(RESOURCES).find(k => RESOURCES[k] === terrain);
+        if (rName && rName !== 'GRASS' && rName !== 'WATER') {
+          b.progress += eff;
+          if (b.progress >= (b.type === 'miner' ? 20 : 10)) {
+            b.progress = 0;
+            const outItem = RESOURCE_TO_ITEM[rName];
+            if (outItem) this.pushItemOut(b, outItem);
+          }
+        }
+      }
+      else if ((b.type === 'assembler' || b.type === 'furnace') && b.recipe) {
+        const recipe = RECIPES[b.recipe];
+        let canCraft = true;
+        for (const [reqItem, reqAmt] of Object.entries(recipe.inputs)) {
+           if ((b.inventory[reqItem] || 0) < reqAmt) canCraft = false;
+        }
+        
+        if (canCraft) {
+          b.progress += eff;
+          if (b.progress >= recipe.time) {
+            b.progress = 0;
+            for (const [reqItem, reqAmt] of Object.entries(recipe.inputs)) {
+               b.inventory[reqItem] -= reqAmt;
+            }
+            // Add to output inventory or push
+            this.pushItemOut(b, recipe.output);
+          }
+        }
+      }
+    });
+
+    // 4. Update Belts & Items
+    const newItems = [];
+    for (let i = 0; i < this.items.length; i++) {
+      const item = this.items[i];
+      const belt = this.buildings.get(`${item.x},${item.y}`);
+      
+      if (belt && belt.type === 'belt') {
+        item.progress += 0.2; // Move 20% of a tile per tick
+        
+        if (item.progress >= 1.0) {
+          // Reached end of current tile, determine next
+          let nx = item.x, ny = item.y;
+          if (belt.dir === 'N') ny--;
+          if (belt.dir === 'S') ny++;
+          if (belt.dir === 'E') nx++;
+          if (belt.dir === 'W') nx--;
+
+          const nextB = this.buildings.get(`${nx},${ny}`);
+          
+          if (nextB) {
+            if (nextB.type === 'belt') {
+              // check if next belt has space
+              const blocked = this.items.some(other => other.x === nx && other.y === ny && other.progress < 0.5);
+              if (!blocked) {
+                item.x = nx; item.y = ny; item.progress = 0;
+                newItems.push(item);
+              } else {
+                item.progress = 0.99; // stuck
+                newItems.push(item);
+              }
+            } else if (nextB.type === 'market') {
+               this.state.money += ITEMS[item.type]?.value || 1;
+            } else if (nextB.type === 'eco_lab') {
+               this.state.research += ITEMS[item.type]?.value || 1;
+            } else if (nextB.type === 'storage') {
+               nextB.inventory[item.type] = (nextB.inventory[item.type] || 0) + 1;
+            } else if (nextB.type === 'coal_generator' && item.type === 'coal') {
+               nextB.inventory.coal = (nextB.inventory.coal || 0) + 1;
+            } else if (nextB.type === 'assembler' || nextB.type === 'furnace') {
+               nextB.inventory[item.type] = (nextB.inventory[item.type] || 0) + 1;
+            } else {
+              // Cannot enter building
+              item.progress = 0.99;
+              newItems.push(item);
+            }
+          } else {
+            // Drop on ground? No, just get stuck at end of belt
+            item.progress = 0.99;
+            newItems.push(item);
+          }
+        } else {
+          newItems.push(item); // Still moving on this tile
+        }
+      } else {
+        // Not on a belt, remove (or drop to player inv)
+        this.state.inventory[item.type] = (this.state.inventory[item.type] || 0) + 1;
+      }
+    }
+    this.items = newItems;
+
+    // 5. Update Ecology
+    this.state.pollution = Math.max(0, this.state.pollution + polDelta);
+    if (this.state.pollution > 500) {
+      const death = Math.floor((this.state.pollution - 500) / 100);
+      this.state.animals = Math.max(0, this.state.animals - death);
+    } else if (this.state.pollution < 200 && this.state.animals < 2000) {
+      this.state.animals = Math.min(2000, this.state.animals + 1);
+    }
+
+    // Sync state to UI every few ticks
+    if (Math.random() < 0.2) {
+      this.updateReactState({ 
+        money: this.state.money, 
+        research: this.state.research,
+        pollution: this.state.pollution,
+        animals: this.state.animals,
+        powerGen: this.state.powerGen,
+        powerDraw: this.state.powerDraw,
+        inventory: { ...this.state.inventory }
+      });
+    }
+  }
+
+  markPowerRadius(set, cx, cy, r) {
+    for (let y = -r; y <= r; y++) {
+      for (let x = -r; x <= r; x++) {
+        set.add(`${cx+x},${cy+y}`);
+      }
+    }
+  }
+
+  pushItemOut(building, itemType) {
+    const neighbors = [
+      {x: building.x, y: building.y-1, d:'N'},
+      {x: building.x+1, y: building.y, d:'E'},
+      {x: building.x, y: building.y+1, d:'S'},
+      {x: building.x-1, y: building.y, d:'W'}
+    ];
+
+    for (const n of neighbors) {
+      const nb = this.buildings.get(`${n.x},${n.y}`);
+      if (nb && nb.type === 'belt') {
+        // Ensure belt is pointing away from building to accept it gracefully
+        // Actually, just push it on the belt if there's no item at progress 0
+        const blocked = this.items.some(i => i.x === n.x && i.y === n.y && i.progress < 0.2);
+        if (!blocked) {
+          this.items.push({ type: itemType, x: n.x, y: n.y, progress: 0 });
+          return;
+        }
+      }
+    }
+    // If no belt, dump to global inv for simplicity
+    this.state.inventory[itemType] = (this.state.inventory[itemType] || 0) + 1;
+  }
+
+  // --- RENDER & GAME LOOP ---
+  start() {
+    const loop = (timestamp) => {
+      const dt = (timestamp - this.lastTime) / 1000;
+      this.lastTime = timestamp;
+
+      this.update(dt);
+      this.draw();
+
+      requestAnimationFrame(loop);
+    };
+    requestAnimationFrame(loop);
+  }
+
+  update(dt) {
+    // Player Movement
+    this.player.vx = 0;
+    this.player.vy = 0;
+    if (this.keys['KeyW'] || this.keys['ArrowUp']) this.player.vy = -PLAYER_SPEED;
+    if (this.keys['KeyS'] || this.keys['ArrowDown']) this.player.vy = PLAYER_SPEED;
+    if (this.keys['KeyA'] || this.keys['ArrowLeft']) this.player.vx = -PLAYER_SPEED;
+    if (this.keys['KeyD'] || this.keys['ArrowRight']) this.player.vx = PLAYER_SPEED;
+
+    this.player.x += this.player.vx * dt;
+    this.player.y += this.player.vy * dt;
+
+    if (this.player.vx !== 0 || this.player.vy !== 0) {
+       this.player.angle = Math.atan2(this.player.vy, this.player.vx);
+    }
+
+    // Constrain player
+    this.player.x = Math.max(0, Math.min(this.player.x, MAP_SIZE * TILE_SIZE));
+    this.player.y = Math.max(0, Math.min(this.player.y, MAP_SIZE * TILE_SIZE));
+
+    // Camera follow
+    if (this.canvas) {
+      this.camera.x = this.player.x - this.canvas.width / 2;
+      this.camera.y = this.player.y - this.canvas.height / 2;
+    }
+
+    // Fixed timestep simulation
+    this.simAccumulator += dt * 1000;
+    while (this.simAccumulator >= TICK_RATE) {
+      this.tick();
+      this.simAccumulator -= TICK_RATE;
+    }
+  }
+
+  draw() {
+    if (!this.ctx || !this.canvas) return;
+    const ctx = this.ctx;
+    const width = this.canvas.width;
+    const height = this.canvas.height;
+
+    ctx.save();
+    ctx.translate(-this.camera.x, -this.camera.y);
+
+    // Clear with Grass Texture (aligned to world)
+    if (this.grassPattern) {
+      ctx.fillStyle = this.grassPattern;
+    } else {
+      ctx.fillStyle = RESOURCE_COLORS[RESOURCES.GRASS];
+    }
+    ctx.fillRect(this.camera.x, this.camera.y, width, height);
+
+    // Visible bounds
+    const startX = Math.max(0, Math.floor(this.camera.x / TILE_SIZE));
+    const startY = Math.max(0, Math.floor(this.camera.y / TILE_SIZE));
+    const endX = Math.min(MAP_SIZE, Math.ceil((this.camera.x + width) / TILE_SIZE));
+    const endY = Math.min(MAP_SIZE, Math.ceil((this.camera.y + height) / TILE_SIZE));
+
+    // 1. Terrain
+    for (let y = startY; y < endY; y++) {
+      for (let x = startX; x < endX; x++) {
+        const t = this.map[y][x];
+        if (t !== RESOURCES.GRASS) {
+          if (t === RESOURCES.WATER) {
+            ctx.fillStyle = RESOURCE_COLORS[t];
+            ctx.fillRect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+            // Water ripples
+            ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+            ctx.beginPath();
+            ctx.moveTo(x * TILE_SIZE + 10, y * TILE_SIZE + 20);
+            ctx.lineTo(x * TILE_SIZE + 30, y * TILE_SIZE + 20);
+            ctx.moveTo(x * TILE_SIZE + 34, y * TILE_SIZE + 40);
+            ctx.lineTo(x * TILE_SIZE + 54, y * TILE_SIZE + 40);
+            ctx.stroke();
+          } else {
+            // Draw Ore Rocks
+            ctx.fillStyle = RESOURCE_COLORS[t];
+            ctx.beginPath();
+            const cx = x * TILE_SIZE + TILE_SIZE/2;
+            const cy = y * TILE_SIZE + TILE_SIZE/2;
+            // Rock cluster
+            ctx.arc(cx - 12, cy - 12, 14, 0, Math.PI*2);
+            ctx.arc(cx + 12, cy - 8, 16, 0, Math.PI*2);
+            ctx.arc(cx, cy + 12, 18, 0, Math.PI*2);
+            ctx.fill();
+            
+            // Shadow detail for depth
+            ctx.fillStyle = 'rgba(0,0,0,0.2)';
+            ctx.beginPath();
+            ctx.arc(cx + 4, cy + 14, 10, 0, Math.PI*2);
+            ctx.fill();
+          }
+        }
+        
+        // Grid
+        ctx.strokeStyle = 'rgba(255,255,255,0.05)';
+        ctx.strokeRect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+      }
+    }
+
+    // 2. Cables (Electricity)
+    ctx.lineWidth = 3;
+    this.buildings.forEach((b1, key1) => {
+      if (b1.type === 'power_pole') {
+        this.buildings.forEach((b2, key2) => {
+          if (b2.type === 'power_pole' && key1 < key2) {
+            const dist = Math.hypot(b1.x - b2.x, b1.y - b2.y);
+            if (dist <= BUILDINGS.power_pole.radius * 2) {
+              ctx.strokeStyle = '#475569';
+              ctx.beginPath();
+              // Offset line slightly up to connect to the top of the pole visually
+              ctx.moveTo(b1.x * TILE_SIZE + TILE_SIZE/2, b1.y * TILE_SIZE + TILE_SIZE/2 - 10);
+              ctx.lineTo(b2.x * TILE_SIZE + TILE_SIZE/2, b2.y * TILE_SIZE + TILE_SIZE/2 - 10);
+              ctx.stroke();
+            }
+          }
+        });
+      }
+      
+      const def1 = BUILDINGS[b1.type];
+      if (b1.type !== 'power_pole' && (def1.powerDraw > 0 || def1.powerGen > 0)) {
+        let nearestPole = null;
+        let minDist = Infinity;
+        this.buildings.forEach(b2 => {
+          if (b2.type === 'power_pole') {
+            const dist = Math.hypot(b1.x - b2.x, b1.y - b2.y);
+            if (dist <= BUILDINGS.power_pole.radius && dist < minDist) {
+              minDist = dist;
+              nearestPole = b2;
+            }
+          }
+        });
+        if (nearestPole) {
+          ctx.strokeStyle = '#64748b';
+          ctx.lineWidth = 1.5;
+          ctx.beginPath();
+          ctx.moveTo(b1.x * TILE_SIZE + TILE_SIZE/2, b1.y * TILE_SIZE + TILE_SIZE/2);
+          ctx.lineTo(nearestPole.x * TILE_SIZE + TILE_SIZE/2, nearestPole.y * TILE_SIZE + TILE_SIZE/2 - 10);
+          ctx.stroke();
+        }
+      }
+    });
+
+    // 2.5 Buildings
+    this.buildings.forEach((b, key) => {
+      const bx = b.x * TILE_SIZE;
+      const by = b.y * TILE_SIZE;
+
+      if (b.type === 'belt') {
+        ctx.fillStyle = '#334155';
+        ctx.fillRect(bx + 4, by + 4, TILE_SIZE - 8, TILE_SIZE - 8);
+        ctx.fillStyle = '#64748b';
+        // Draw directional arrows
+        ctx.save();
+        ctx.translate(bx + TILE_SIZE/2, by + TILE_SIZE/2);
+        if (b.dir === 'E') ctx.rotate(Math.PI/2);
+        if (b.dir === 'S') ctx.rotate(Math.PI);
+        if (b.dir === 'W') ctx.rotate(-Math.PI/2);
+        ctx.beginPath();
+        ctx.moveTo(-10, 10);
+        ctx.lineTo(0, -10);
+        ctx.lineTo(10, 10);
+        ctx.fill();
+        ctx.restore();
+      } else {
+        // Base building shadow & shape
+        ctx.fillStyle = 'rgba(0,0,0,0.4)';
+        ctx.fillRect(bx + 4, by + 4, TILE_SIZE, TILE_SIZE);
+        
+        let color = '#475569';
+        if (b.type === 'market') color = '#059669';
+        if (b.type === 'eco_lab') color = '#9333ea';
+        if (b.type === 'coal_generator') color = '#b91c1c';
+        if (b.type === 'assembler') color = '#e11d48';
+        if (b.type === 'power_pole') color = '#ca8a04';
+        if (b.type === 'storage') color = '#0284c7';
+        
+        ctx.fillStyle = color;
+        ctx.fillRect(bx + 8, by + 8, TILE_SIZE - 16, TILE_SIZE - 16);
+
+        // Lack of power indicator
+        if (BUILDINGS[b.type].powerDraw > 0 && !b.hasPowerGrid) {
+           ctx.fillStyle = 'rgba(255, 0, 0, 0.5)';
+           ctx.fillRect(bx + 8, by + 8, TILE_SIZE - 16, TILE_SIZE - 16);
+           ctx.fillStyle = 'white';
+           ctx.font = '20px sans-serif';
+           ctx.fillText('⚡', bx + 20, by + 40);
+        }
+      }
+    });
+
+    // 3. Items on Belts
+    this.items.forEach(item => {
+      const b = this.buildings.get(`${item.x},${item.y}`);
+      let px = item.x * TILE_SIZE + TILE_SIZE/2;
+      let py = item.y * TILE_SIZE + TILE_SIZE/2;
+
+      if (b && b.type === 'belt') {
+        const offset = (item.progress - 0.5) * TILE_SIZE;
+        if (b.dir === 'N') py += offset; // moves up, offset is - when prog < 0.5, but wait. If prog goes 0->1, offset goes -32 -> +32. Up means Y decreases.
+        // Actually: progress 0 means entering tile. If moving N, it enters from bottom (Y+32) and goes to top (Y-32).
+        if (b.dir === 'N') py -= (item.progress - 0.5) * TILE_SIZE;
+        if (b.dir === 'S') py += (item.progress - 0.5) * TILE_SIZE;
+        if (b.dir === 'E') px += (item.progress - 0.5) * TILE_SIZE;
+        if (b.dir === 'W') px -= (item.progress - 0.5) * TILE_SIZE;
+      }
+
+      ctx.fillStyle = ITEMS[item.type]?.color || '#fff';
+      ctx.beginPath();
+      ctx.arc(px, py, 8, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = '#000';
+      ctx.stroke();
+    });
+
+    // 4. Player
+    ctx.save();
+    ctx.translate(this.player.x, this.player.y);
+    ctx.rotate(this.player.angle);
+    
+    // Backpack
+    ctx.fillStyle = '#1e40af';
+    ctx.fillRect(-20, -12, 10, 24);
+    
+    // Body
+    ctx.fillStyle = '#3b82f6';
+    ctx.beginPath();
+    ctx.arc(0, 0, 16, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = '#1e3a8a';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    
+    // Head / Yellow Hard Hat
+    ctx.fillStyle = '#fbbf24';
+    ctx.beginPath();
+    ctx.arc(4, 0, 10, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = '#d97706';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+    
+    // Hands / Tool
+    ctx.fillStyle = '#fca5a5';
+    ctx.beginPath();
+    ctx.arc(10, 12, 5, 0, Math.PI*2);
+    ctx.arc(10, -12, 5, 0, Math.PI*2);
+    ctx.fill();
+    
+    ctx.restore();
+
+    // 5. Hover / Build Grid
+    if (this.mouse.gridX >= 0 && this.mouse.gridX < MAP_SIZE && this.mouse.gridY >= 0 && this.mouse.gridY < MAP_SIZE) {
+      const hx = this.mouse.gridX * TILE_SIZE;
+      const hy = this.mouse.gridY * TILE_SIZE;
+      ctx.fillStyle = 'rgba(255,255,255,0.2)';
+      ctx.fillRect(hx, hy, TILE_SIZE, TILE_SIZE);
+      ctx.strokeStyle = 'white';
+      ctx.strokeRect(hx, hy, TILE_SIZE, TILE_SIZE);
+
+      // Show power radius if building pole
+      if (this.buildMode === 'power_pole') {
+        ctx.fillStyle = 'rgba(250, 204, 21, 0.2)';
+        const r = BUILDINGS.power_pole.radius * TILE_SIZE;
+        ctx.fillRect(hx + TILE_SIZE/2 - r, hy + TILE_SIZE/2 - r, r*2, r*2);
+      }
+    }
+
+    // Belt placement line preview
+    if (this.buildMode === 'belt' && this.beltStart) {
+      let sx = this.beltStart.x, sy = this.beltStart.y;
+      let ex = this.mouse.gridX, ey = this.mouse.gridY;
+      
+      if (sx === ex || sy === ey) {
+        ctx.fillStyle = 'rgba(59, 130, 246, 0.4)'; // Blue highlight
+        if (sx === ex) {
+          let step = ey >= sy ? 1 : -1;
+          for (let y = sy; y !== ey + step; y += step) {
+            ctx.fillRect(sx * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+          }
+        } else {
+          let step = ex >= sx ? 1 : -1;
+          for (let x = sx; x !== ex + step; x += step) {
+            ctx.fillRect(x * TILE_SIZE, sy * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+          }
+        }
+      } else {
+        // Invalid line, just highlight start red
+        ctx.fillStyle = 'rgba(239, 68, 68, 0.4)';
+        ctx.fillRect(sx * TILE_SIZE, sy * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+      }
+    }
+
+    ctx.restore();
+    
+    // --- MINIMAP ---
+    const mmSize = 150;
+    const mmX = width - mmSize - 20;
+    const mmY = 70;
+    
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.8)';
+    ctx.fillRect(mmX, mmY, mmSize, mmSize);
+    ctx.strokeStyle = '#334155';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(mmX, mmY, mmSize, mmSize);
+
+    const scale = mmSize / MAP_SIZE;
+    
+    // Minimap Terrain
+    for (let y = 0; y < MAP_SIZE; y+=2) {
+      for (let x = 0; x < MAP_SIZE; x+=2) {
+        const t = this.map[y][x];
+        if (t !== RESOURCES.GRASS) {
+          ctx.fillStyle = RESOURCE_COLORS[t];
+          ctx.fillRect(mmX + x * scale, mmY + y * scale, scale*2, scale*2);
+        }
+      }
+    }
+    
+    // Minimap Buildings
+    ctx.fillStyle = '#ef4444';
+    this.buildings.forEach(b => {
+      ctx.fillRect(mmX + b.x * scale, mmY + b.y * scale, Math.max(1, scale*1.5), Math.max(1, scale*1.5));
+    });
+
+    // Minimap Player
+    ctx.fillStyle = '#3b82f6';
+    const px = (this.player.x / TILE_SIZE) * scale;
+    const py = (this.player.y / TILE_SIZE) * scale;
+    ctx.beginPath();
+    ctx.arc(mmX + px, mmY + py, 3, 0, Math.PI*2);
+    ctx.fill();
+
+    // --- HOVER TOOLTIP ---
+    ctx.setTransform(1, 0, 0, 1, 0, 0); // Reset transform for UI rendering
+    const hx = this.mouse.gridX;
+    const hy = this.mouse.gridY;
+    if (hx >= 0 && hx < MAP_SIZE && hy >= 0 && hy < MAP_SIZE) {
+       const boxW = 200;
+       const boxH = 90;
+       const boxX = (width / 2) - (boxW / 2);
+       const boxY = 80;
+       
+       ctx.fillStyle = 'rgba(15, 23, 42, 0.9)';
+       ctx.fillRect(boxX, boxY, boxW, boxH);
+       ctx.strokeStyle = '#334155';
+       ctx.strokeStyle = '#ffffff';
+       ctx.lineWidth = 1;
+       ctx.strokeRect(boxX, boxY, boxW, boxH);
+       
+       ctx.font = '14px monospace';
+       ctx.fillStyle = '#ffffff';
+       ctx.fillText(`Grid Pos: [${hx}, ${hy}]`, boxX + 15, boxY + 30);
+       
+       const terrainType = this.map[hy][hx];
+       const rName = Object.keys(RESOURCES).find(k => RESOURCES[k] === terrainType);
+       ctx.fillStyle = (rName === 'GRASS' || rName === 'WATER') ? '#94a3b8' : '#34d399';
+       ctx.fillText(`Terrain:  ${rName}`, boxX + 15, boxY + 55);
+       
+       const b = this.buildings.get(`${hx},${hy}`);
+       if (b) {
+         ctx.fillStyle = '#fbbf24';
+         ctx.fillText(`Building: ${BUILDINGS[b.type].name}`, boxX + 15, boxY + 80);
+       }
+       
+       const itemOnBelt = this.items.find(i => i.x === hx && i.y === hy);
+       if (itemOnBelt) {
+         ctx.fillStyle = '#60a5fa';
+         ctx.fillText(`Item:     ${ITEMS[itemOnBelt.type]?.name || itemOnBelt.type}`, boxX + 15, boxY + (b ? 105 : 80));
+       }
+    }
+  }
+}
+
+// --- REACT APP COMPONENT ---
+export default function App() {
+  const canvasRef = useRef(null);
+  const engineRef = useRef(null);
+  const hoverRef = useRef({ x: 0, y: 0, gridX: -1, gridY: -1 });
+
+  const [uiState, setUiState] = useState({
+    money: 1000, research: 200, pollution: 0, animals: 2000,
+    powerGen: 0, powerDraw: 0, inventory: {},
+    modal: null, activeTile: null, selectedTool: 'cursor', buildDir: 'N',
+    unlockedTechs: ['logistics_1', 'market_econ', 'eco_awareness', 'power_gen'],
+    showTutorial: true, tutorialStep: 0
+  });
+
+  // Init Engine
+  useEffect(() => {
+    const updateReact = (newState) => {
+      setUiState(prev => ({ ...prev, ...newState }));
+    };
+    engineRef.current = new GameEngine(updateReact, hoverRef);
+    
+    // Mount canvas
+    const handleResize = () => {
+      if (canvasRef.current) {
+        canvasRef.current.width = window.innerWidth;
+        canvasRef.current.height = window.innerHeight;
+      }
+    };
+    window.addEventListener('resize', handleResize);
+    handleResize();
+
+    engineRef.current.setCanvas(canvasRef.current);
+    engineRef.current.start();
+
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // Update Engine Build Mode
+  useEffect(() => {
+    if (engineRef.current) {
+      engineRef.current.buildMode = uiState.selectedTool;
+      engineRef.current.buildDir = uiState.buildDir;
+    }
+  }, [uiState.selectedTool, uiState.buildDir]);
+
+  const researchTech = (techId) => {
+    const tech = TECH_TREE[techId];
+    if (uiState.research >= tech.cost && !uiState.unlockedTechs.includes(techId)) {
+      engineRef.current.state.research -= tech.cost;
+      engineRef.current.state.unlockedTechs.push(techId);
+      
+      setUiState(prev => ({
+        ...prev, 
+        research: prev.research - tech.cost,
+        unlockedTechs: [...prev.unlockedTechs, techId]
+      }));
+    }
+  };
+
+  const selectRecipe = (recipeId) => {
+    if (engineRef.current && uiState.activeTile) {
+      const b = engineRef.current.buildings.get(`${uiState.activeTile.x},${uiState.activeTile.y}`);
+      if (b) {
+        b.recipe = recipeId;
+        b.progress = 0;
+      }
+    }
+    setUiState(prev => ({ ...prev, modal: null, activeTile: null }));
+  };
+
+  const handleMouseMove = (e) => {
+    if (!canvasRef.current || !engineRef.current) return;
+    const rect = canvasRef.current.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    const cam = engineRef.current.camera;
+    
+    hoverRef.current = {
+      x, y,
+      gridX: Math.floor((x + cam.x) / TILE_SIZE),
+      gridY: Math.floor((y + cam.y) / TILE_SIZE)
+    };
+    
+    // Sync engine mouse for clicking logic
+    engineRef.current.mouse.x = x;
+    engineRef.current.mouse.y = y;
+    engineRef.current.mouse.gridX = hoverRef.current.gridX;
+    engineRef.current.mouse.gridY = hoverRef.current.gridY;
+  };
+
+  return (
+    <div className="w-full h-screen bg-black overflow-hidden text-slate-100 font-sans select-none relative">
+      
+      {/* GAME CANVAS */}
+      <canvas ref={canvasRef} onMouseMove={handleMouseMove} className="absolute inset-0 z-0 cursor-crosshair block w-full h-full" />
+
+      {/* TOP HUD */}
+      <header className="absolute top-0 left-0 right-0 h-14 bg-slate-900/80 backdrop-blur border-b border-slate-700 z-10 flex items-center justify-between px-6">
+        <div className="flex items-center gap-2">
+          <Globe className="text-blue-400" />
+          <h1 className="text-lg font-bold tracking-widest text-white shadow-black drop-shadow-md">ECO-FACTORIO 2.0</h1>
+        </div>
+        
+        <div className="flex gap-6 items-center">
+          <div className="flex items-center gap-2" title="Pollution">
+            <Flame className={uiState.pollution > 500 ? "text-red-500" : "text-slate-400"} size={18} />
+            <span className="font-mono text-sm">{Math.floor(uiState.pollution)}</span>
+          </div>
+          <div className="flex items-center gap-2" title="Nature">
+            <TreePine className={uiState.animals < 1000 ? "text-amber-500" : "text-green-500"} size={18} />
+            <span className="font-mono text-sm">{uiState.animals}</span>
+          </div>
+          <div className="flex items-center gap-2" title="Power Grid">
+            <Zap className={uiState.powerGen >= uiState.powerDraw ? "text-yellow-400" : "text-red-500"} size={18} />
+            <span className="font-mono text-sm text-yellow-400">{Math.floor(uiState.powerDraw)} / {Math.floor(uiState.powerGen)} kW</span>
+          </div>
+          <div className="w-px h-6 bg-slate-700 mx-2"></div>
+          <div className="flex items-center gap-2 text-emerald-400" title="Money">
+            <CircleDollarSign size={18} />
+            <span className="font-mono text-sm">${uiState.money}</span>
+          </div>
+          <div className="flex items-center gap-2 text-fuchsia-400" title="Research">
+            <Microscope size={18} />
+            <span className="font-mono text-sm">{uiState.research} RP</span>
+          </div>
+        </div>
+
+        <div>
+          <button onClick={() => setUiState(prev => ({ ...prev, modal: 'tech' }))} className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 px-4 py-1.5 rounded shadow">
+            <BookOpen size={16} /> Tech Tree
+          </button>
+        </div>
+      </header>
+
+      {/* LEFT INVENTORY PANEL */}
+      <div className="absolute left-4 top-20 bottom-24 w-56 bg-slate-900/90 backdrop-blur rounded-lg border border-slate-700 p-4 shadow-2xl flex flex-col z-10 pointer-events-none">
+        <h3 className="text-xs font-bold text-slate-400 mb-2 uppercase tracking-widest border-b border-slate-700 pb-2">Storage</h3>
+        <div className="flex-1 overflow-y-auto custom-scrollbar flex flex-col gap-2">
+          {Object.entries(uiState.inventory).map(([key, count]) => {
+            const itemDef = ITEMS[key] || { name: key.replace('_', ' '), color: '#ccc' };
+            if (count <= 0) return null;
+            return (
+              <div key={key} className="flex justify-between items-center text-sm">
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-full shadow-sm border border-slate-700" style={{backgroundColor: itemDef.color}}></div>
+                  <span className="text-slate-300 truncate">{itemDef.name}</span>
+                </div>
+                <span className="font-mono text-emerald-400">{count}</span>
+              </div>
+            );
+          })}
+          {Object.keys(uiState.inventory).length === 0 && (
+             <div className="text-xs text-slate-500 italic mt-4 text-center">No items stored</div>
+          )}
+        </div>
+      </div>
+
+      {/* BOTTOM HOTBAR */}
+      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10 bg-slate-900/90 backdrop-blur p-2 rounded-lg border border-slate-700 flex gap-2 shadow-2xl">
+        
+        <div className="flex flex-col gap-1 mr-4 border-r border-slate-700 pr-4 justify-center">
+           <div className="text-[10px] text-slate-400 uppercase text-center font-bold">Direction</div>
+           <div className="grid grid-cols-3 gap-1 w-16">
+              <div/>
+              <button onClick={()=>setUiState(p=>({...p, buildDir:'N'}))} className={`p-1 bg-slate-800 rounded flex justify-center ${uiState.buildDir==='N'?'bg-blue-600 text-white':''}`}><ArrowUp size={12}/></button>
+              <div/>
+              <button onClick={()=>setUiState(p=>({...p, buildDir:'W'}))} className={`p-1 bg-slate-800 rounded flex justify-center ${uiState.buildDir==='W'?'bg-blue-600 text-white':''}`}><ArrowLeft size={12}/></button>
+              <button onClick={()=>setUiState(p=>({...p, buildDir:'S'}))} className={`p-1 bg-slate-800 rounded flex justify-center ${uiState.buildDir==='S'?'bg-blue-600 text-white':''}`}><ArrowDown size={12}/></button>
+              <button onClick={()=>setUiState(p=>({...p, buildDir:'E'}))} className={`p-1 bg-slate-800 rounded flex justify-center ${uiState.buildDir==='E'?'bg-blue-600 text-white':''}`}><ArrowRight size={12}/></button>
+           </div>
+        </div>
+
+        <HotbarBtn id="cursor" icon={<Wrench/>} label="Select" uiState={uiState} setUiState={setUiState} />
+        <HotbarBtn id="delete" icon={<Trash2 className="text-red-400"/>} label="Delete" uiState={uiState} setUiState={setUiState} />
+        <div className="w-px bg-slate-700 mx-1"></div>
+        <HotbarBtn id="belt" icon={<ArrowUp/>} label="Belt" bDef={BUILDINGS.belt} uiState={uiState} setUiState={setUiState} />
+        <HotbarBtn id="miner" icon={<Pickaxe/>} label="Burn Miner" bDef={BUILDINGS.miner} uiState={uiState} setUiState={setUiState} />
+        
+        {uiState.unlockedTechs.includes('smelting_1') && <HotbarBtn id="furnace" icon={<Flame/>} label="Furnace" bDef={BUILDINGS.furnace} uiState={uiState} setUiState={setUiState} />}
+        {uiState.unlockedTechs.includes('automation_1') && <HotbarBtn id="assembler" icon={<Factory/>} label="Assembler" bDef={BUILDINGS.assembler} uiState={uiState} setUiState={setUiState} />}
+        {uiState.unlockedTechs.includes('market_econ') && <HotbarBtn id="market" icon={<Store/>} label="Market" bDef={BUILDINGS.market} uiState={uiState} setUiState={setUiState} />}
+        {uiState.unlockedTechs.includes('eco_awareness') && <HotbarBtn id="eco_lab" icon={<Microscope/>} label="Eco Lab" bDef={BUILDINGS.eco_lab} uiState={uiState} setUiState={setUiState} />}
+        
+        <div className="w-px bg-slate-700 mx-1"></div>
+        <HotbarBtn id="storage" icon={<Box/>} label="Storage" bDef={BUILDINGS.storage} uiState={uiState} setUiState={setUiState} />
+
+        {uiState.unlockedTechs.includes('power_gen') && (
+          <>
+            <div className="w-px bg-slate-700 mx-1"></div>
+            <HotbarBtn id="coal_generator" icon={<Battery/>} label="Coal Gen" bDef={BUILDINGS.coal_generator} uiState={uiState} setUiState={setUiState} />
+            <HotbarBtn id="power_pole" icon={<RadioTower/>} label="Power Pole" bDef={BUILDINGS.power_pole} uiState={uiState} setUiState={setUiState} />
+            <HotbarBtn id="electric_miner" icon={<Pickaxe className="text-blue-300"/>} label="Elec Miner" bDef={BUILDINGS.electric_miner} uiState={uiState} setUiState={setUiState} />
+          </>
+        )}
+      </div>
+
+      {/* MODALS */}
+      {uiState.modal === 'tech' && (
+        <div className="absolute inset-0 bg-slate-950/80 backdrop-blur z-50 flex items-center justify-center p-8">
+          <div className="bg-slate-900 border border-slate-700 rounded-xl w-full max-w-6xl flex flex-col shadow-2xl" style={{ height: '85vh' }}>
+             <div className="p-6 border-b border-slate-700 flex justify-between items-center bg-slate-800 rounded-t-xl shrink-0">
+               <h2 className="text-2xl font-bold flex items-center gap-2"><BookOpen className="text-indigo-400"/> Research & Tech Tree</h2>
+               <div className="flex gap-4 items-center">
+                 <span className="text-fuchsia-400 font-mono font-bold text-xl">{uiState.research} RP Available</span>
+                 <button onClick={() => setUiState(prev => ({ ...prev, modal: null }))} className="px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded">Close</button>
+               </div>
+             </div>
+             
+             <div className="p-6 overflow-auto custom-scrollbar relative flex-1">
+                <svg className="absolute top-0 left-0" style={{ width: '2500px', height: '1400px', pointerEvents: 'none' }}>
+                  {Object.values(TECH_TREE)
+                    .filter(t => !t.hidden)
+                    .map(tech => 
+                    tech.req.map(reqId => {
+                       const parent = TECH_TREE[reqId];
+                       if (!parent || parent.hidden) return null;
+                       const startX = parent.gridX * 280 + 240;
+                       const startY = parent.gridY * 160 + 80;
+                       const endX = tech.gridX * 280;
+                       const endY = tech.gridY * 160 + 80;
+                       const unlocked = uiState.unlockedTechs.includes(tech.id);
+                       return (
+                         <path 
+                           key={`${reqId}-${tech.id}`} 
+                           d={`M ${startX} ${startY} C ${startX + 100} ${startY}, ${endX - 100} ${endY}, ${endX} ${endY}`} 
+                           fill="none" 
+                           stroke={unlocked ? '#6366f1' : '#334155'} 
+                           strokeWidth="3" 
+                         />
+                       )
+                    })
+                  )}
+                </svg>
+                
+                <div style={{ position: 'relative', width: '2500px', height: '1400px' }}>
+                  {Object.values(TECH_TREE)
+                    .filter(t => !t.hidden)
+                    .map(tech => {
+                    const unlocked = uiState.unlockedTechs.includes(tech.id);
+                    const canAfford = uiState.research >= tech.cost;
+                    const reqsMet = tech.req.every(r => uiState.unlockedTechs.includes(r));
+                    
+                    return (
+                      <div key={tech.id} style={{ position: 'absolute', left: tech.gridX * 280, top: tech.gridY * 160, width: 240 }} className={`p-4 rounded-lg border flex flex-col ${unlocked ? 'bg-indigo-900/40 border-indigo-500/50 z-10' : reqsMet ? 'bg-slate-800 border-slate-600 z-10' : 'bg-slate-900 border-slate-800 opacity-50'}`}>
+                        <h3 className="font-bold text-lg text-white mb-1">{tech.name}</h3>
+                        <p className="text-sm text-slate-400 mb-2 h-10 line-clamp-2">{tech.desc}</p>
+                        <div className="mt-auto flex justify-between items-center">
+                          <span className="font-mono text-fuchsia-400">{tech.cost} RP</span>
+                          <button 
+                            disabled={unlocked || !canAfford || !reqsMet}
+                            onClick={() => researchTech(tech.id)}
+                            className={`px-3 py-1 rounded text-xs font-bold transition-all ${unlocked ? 'bg-indigo-600/50 text-indigo-200' : canAfford && reqsMet ? 'bg-fuchsia-600 hover:bg-fuchsia-500 text-white shadow-[0_0_10px_rgba(192,38,211,0.5)]' : 'bg-slate-700 text-slate-500 cursor-not-allowed'}`}
+                          >
+                            {unlocked ? 'Done' : 'Unlock'}
+                          </button>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+             </div>
+          </div>
+        </div>
+      )}
+
+      {(uiState.modal === 'assembler' || uiState.modal === 'furnace') && (
+        <div className="absolute inset-0 bg-black/60 z-50 flex items-center justify-center">
+          <div className="bg-slate-800 p-6 rounded-lg border border-slate-600 max-w-md w-full shadow-2xl">
+            <h2 className="text-xl font-bold mb-4">Select Recipe</h2>
+            <div className="flex flex-col gap-2 max-h-96 overflow-y-auto">
+               {Object.values(RECIPES)
+                 .filter(r => uiState.modal === 'furnace' ? r.name.includes('Smelt') : !r.name.includes('Smelt'))
+                 .map(recipe => (
+                 <button 
+                   key={recipe.id}
+                   onClick={() => selectRecipe(recipe.id)}
+                   className="p-3 bg-slate-700 hover:bg-slate-600 rounded flex justify-between items-center border border-slate-600"
+                 >
+                   <span className="font-bold text-white">{recipe.name}</span>
+                   <div className="text-xs text-slate-400">
+                      Cost: {Object.entries(recipe.inputs).map(([k, v]) => `${v} ${ITEMS[k]?.name || k}`).join(', ')}
+                   </div>
+                 </button>
+               ))}
+            </div>
+            <button onClick={() => setUiState(prev => ({ ...prev, modal: null }))} className="mt-4 w-full p-2 bg-slate-700 hover:bg-slate-600 rounded">Cancel</button>
+          </div>
+        </div>
+      )}
+
+      {uiState.modal === 'storage' && uiState.activeTile && (
+        <div className="absolute inset-0 bg-black/60 z-50 flex items-center justify-center">
+          <div className="bg-slate-800 p-6 rounded-lg border border-slate-600 max-w-sm w-full shadow-2xl">
+            <h2 className="text-xl font-bold mb-4 flex items-center gap-2"><Box className="text-sky-400" /> Storage Unit</h2>
+            <div className="bg-slate-900 rounded p-4 mb-4 h-48 overflow-y-auto custom-scrollbar flex flex-col gap-2">
+              {(() => {
+                const b = engineRef.current?.buildings.get(`${uiState.activeTile.x},${uiState.activeTile.y}`);
+                if (!b || !b.inventory || Object.keys(b.inventory).length === 0) {
+                  return <span className="text-slate-500 italic flex justify-center mt-8">Empty</span>;
+                }
+                return Object.entries(b.inventory).map(([key, count]) => {
+                  const itemDef = ITEMS[key] || { name: key.replace('_', ' '), color: '#ccc' };
+                  if (count <= 0) return null;
+                  return (
+                    <div key={key} className="flex justify-between items-center text-sm border-b border-slate-700 pb-2 mb-1">
+                      <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 rounded-full" style={{backgroundColor: itemDef.color}}></div>
+                        <span className="text-slate-200">{itemDef.name}</span>
+                      </div>
+                      <span className="font-mono text-emerald-400">{count}</span>
+                    </div>
+                  );
+                });
+              })()}
+            </div>
+            <button onClick={() => setUiState(prev => ({ ...prev, modal: null }))} className="w-full p-2 bg-slate-700 hover:bg-slate-600 rounded">Close</button>
+          </div>
+        </div>
+      )}
+
+      {/* TUTORIAL MODAL */}
+      {uiState.showTutorial && (
+        <div className="absolute left-8 top-1/2 -translate-y-1/2 z-50 bg-slate-900/95 backdrop-blur border border-slate-600 p-6 rounded-xl shadow-2xl w-80 flex flex-col gap-4">
+          <div className="flex justify-between items-center border-b border-slate-700 pb-2">
+            <h2 className="text-lg font-bold text-blue-400">
+              {TUTORIAL_STEPS[uiState.tutorialStep].title}
+            </h2>
+            <span className="text-xs font-mono text-slate-500">
+              {uiState.tutorialStep + 1} / {TUTORIAL_STEPS.length}
+            </span>
+          </div>
+          <p className="text-sm text-slate-200 leading-relaxed min-h-[4rem]">
+            {TUTORIAL_STEPS[uiState.tutorialStep].text}
+          </p>
+          <div className="flex justify-between items-center mt-2 pt-2 border-t border-slate-700">
+            <button 
+              onClick={() => setUiState(p => ({ ...p, showTutorial: false }))} 
+              className="text-xs text-slate-400 hover:text-white transition-colors"
+            >
+              Skip Tutorial
+            </button>
+            <div className="flex gap-2">
+              <button 
+                onClick={() => setUiState(p => ({ ...p, tutorialStep: Math.max(0, p.tutorialStep - 1) }))}
+                disabled={uiState.tutorialStep === 0}
+                className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed rounded text-xs font-bold"
+              >
+                Prev
+              </button>
+              {uiState.tutorialStep < TUTORIAL_STEPS.length - 1 ? (
+                <button 
+                  onClick={() => setUiState(p => ({ ...p, tutorialStep: p.tutorialStep + 1 }))}
+                  className="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 rounded text-xs font-bold shadow-lg shadow-blue-900/50"
+                >
+                  Next
+                </button>
+              ) : (
+                <button 
+                  onClick={() => setUiState(p => ({ ...p, showTutorial: false }))}
+                  className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 rounded text-xs font-bold shadow-lg shadow-emerald-900/50"
+                >
+                  Finish
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+    </div>
+  );
+}
+
+// --- HELPER UI COMPONENT ---
+const HotbarBtn = ({ id, icon, label, bDef, uiState, setUiState }) => {
+  const active = uiState.selectedTool === id;
+  return (
+    <button
+      onClick={() => setUiState(prev => ({ ...prev, selectedTool: id }))}
+      className={`relative w-16 h-16 flex flex-col items-center justify-center rounded border-2 transition-all ${
+        active ? 'bg-blue-900/50 border-blue-400 shadow-[0_0_15px_rgba(96,165,250,0.4)]' : 'bg-slate-800 border-slate-700 hover:border-slate-500'
+      }`}
+    >
+      <div className="mb-1">{icon}</div>
+      <span className="text-[9px] uppercase tracking-tighter text-slate-300 font-bold leading-tight">{label}</span>
+      {bDef && (
+        <span className="absolute top-1 right-1 text-[9px] text-emerald-400 font-mono">${bDef.cost.money}</span>
+      )}
+      {bDef?.powerDraw > 0 && (
+         <span className="absolute bottom-1 left-1 text-[8px] text-red-400">⚡{bDef.powerDraw}</span>
+      )}
+    </button>
+  );
+}
+</script>
+
+<script>
+(function(){
+  // ---- Minimal lucide-react icon shim (emoji-based, no external dependency) ----
+  function makeIcon(glyph){
+    return function(props){
+      props = props || {};
+      var size = props.size || 20;
+      var style = Object.assign({
+        display: 'inline-block', lineHeight: 1, fontSize: size + 'px', fontStyle: 'normal'
+      }, props.style || {});
+      return React.createElement('span', {
+        className: props.className || '', style: style, 'aria-hidden': 'true'
+      }, glyph);
+    };
+  }
+  window.__lucideShim = {
+    Pickaxe: makeIcon('⛏'), ArrowRight: makeIcon('→'), ArrowDown: makeIcon('↓'),
+    ArrowLeft: makeIcon('←'), ArrowUp: makeIcon('↑'), Factory: makeIcon('🏭'),
+    Building: makeIcon('🏢'), Fan: makeIcon('🌀'), Sun: makeIcon('☀'),
+    Settings: makeIcon('⚙'), Hexagon: makeIcon('⬡'), Circle: makeIcon('⚪'),
+    Leaf: makeIcon('🍃'), FlaskConical: makeIcon('🧪'), Activity: makeIcon('📈'),
+    Globe: makeIcon('🌐'), Cpu: makeIcon('💻'), Wrench: makeIcon('🔧'),
+    TreePine: makeIcon('🌲'), Droplets: makeIcon('💧'), BookOpen: makeIcon('📖'),
+    Trash2: makeIcon('🗑'), User: makeIcon('🧑'), Store: makeIcon('🏪'),
+    CircleDollarSign: makeIcon('💲'), Microscope: makeIcon('🔬'), HeartHandshake: makeIcon('🤝'),
+    Zap: makeIcon('⚡'), ShieldAlert: makeIcon('🛡'), Flame: makeIcon('🔥'),
+    Battery: makeIcon('🔋'), RadioTower: makeIcon('📡'), Box: makeIcon('📦')
+  };
+
+  // ---- Transpile the embedded source (TS/TSX -> plain JS, CommonJS modules) ----
+  var src = document.getElementById('app-src').textContent;
+  var result = Babel.transform(src, {
+    presets: [
+      ['typescript', { isTSX: true, allExtensions: true }],
+      ['env', { modules: 'commonjs' }],
+      'react'
+    ],
+    filename: 'EcoFactorio.tsx'
+  });
+
+  var moduleObj = { exports: {} };
+  function req(name){
+    if (name === 'react') return window.React;
+    if (name === 'react-dom') return window.ReactDOM;
+    if (name === 'lucide-react') return window.__lucideShim;
+    throw new Error('Cannot resolve module: ' + name);
+  }
+
+  var runModule = new Function('module', 'exports', 'require', 'React', 'ReactDOM', result.code);
+  runModule(moduleObj, moduleObj.exports, req, window.React, window.ReactDOM);
+
+  var App = moduleObj.exports.default || moduleObj.exports;
+  var root = ReactDOM.createRoot(document.getElementById('root'));
+  root.render(React.createElement(App));
+})();
+</script>
+<script type="module" src="../../shared/lab-sdk.js"></script>
+</body>
+</html>
