@@ -87,4 +87,14 @@
   "status": "live"
 }
 
+  ,
+{
+  "slug": "eco-factorio",
+  "title": "EcoFactorio",
+  "subject": "Science",
+  "grade": "N/A",
+  "thumbnail": "games/eco-factorio/icon.png",
+  "status": "live"
+}
+
 ]
