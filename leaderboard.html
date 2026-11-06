@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Leaderboards — DCI Arcade</title>
+<title>Hall of Fame — DCI Arcade</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Mountains+of+Christmas:wght@700&display=swap" rel="stylesheet">
@@ -89,19 +89,24 @@
 
 <header>
   <a class="back" href="./">&larr; Back to Arcade</a>
-  <h1>🏆 Leaderboards</h1>
-  <p>See how you stack up — overall and game by game.</p>
+  <h1>🏆 Hall of Fame</h1>
+  <p>Everyone on this page earned their spot. Think you can crack the top 3?</p>
 </header>
 
 <div class="wrap">
   <div id="you-section"></div>
 
-  <div class="section-title">Top 20 — Arcade Points</div>
+  <div class="section-title">Top 20 — Arcade Rating</div>
   <div id="podium"></div>
   <div id="global-board"><p class="loading">Loading…</p></div>
 
   <div class="section-title">By Game</div>
   <div id="per-game-boards"><p class="loading">Loading…</p></div>
+
+  <div style="text-align:center; margin-top:40px; padding:28px; background:var(--card-bg); border:1px dashed var(--border); border-radius:16px;">
+    <p style="margin:0 0 14px; color:var(--muted); font-size:0.95rem;">Not on here yet? Every name on this page started at zero.</p>
+    <a href="./" style="display:inline-block; background:var(--accent); color:#fff; padding:12px 26px; border-radius:999px; text-decoration:none; font-weight:800;">🎮 Pick a game, make your mark</a>
+  </div>
 </div>
 
 <script type="module">
@@ -128,7 +133,7 @@
         <div class="left">
           <div class="label">Your Rank</div>
           <div class="handle">${handle}</div>
-          <div class="pts">${mine.total_points} Arcade Points &middot; ${mine.games_played} game${mine.games_played === 1 ? "" : "s"} played</div>
+          <div class="pts">${mine.rating} Arcade Rating &middot; ${mine.games_played} game${mine.games_played === 1 ? "" : "s"} played</div>
         </div>
         <div class="right">
           <div class="rank-num">#${mine.rank}</div>
@@ -155,7 +160,7 @@
       <div class="spot ${classes[i]}">
         <span class="medal">${MEDALS[i]}</span>
         <div class="handle">${p.handle}</div>
-        <div class="pts">${p.total_points} pts</div>
+        <div class="pts">${p.rating} rating</div>
         <div class="games">${p.games_played} game${p.games_played === 1 ? "" : "s"}</div>
       </div>
     `).join("") + `</div>`;
@@ -168,7 +173,7 @@
       <div class="row ${isYou ? "is-you" : ""}">
         <div class="rank">#${rank}</div>
         <div class="handle">${p.handle}${isYou ? '<span class="you-tag">YOU</span>' : ""}<div class="detail">${p.games_played} game${p.games_played === 1 ? "" : "s"} played</div></div>
-        <div class="value">${p.total_points} pts</div>
+        <div class="value">${p.rating} rating</div>
       </div>`;
     }).join("");
   }
