@@ -97,4 +97,14 @@
   "status": "live"
 }
 
+  ,
+{
+  "slug": "eco-balance",
+  "title": "EcoBalance",
+  "subject": "Science",
+  "grade": "N/A",
+  "thumbnail": "games/eco-balance/icon.png",
+  "status": "live"
+}
+
 ]
