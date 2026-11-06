@@ -122,13 +122,15 @@
   <a class="back" href="./">&larr; Back to Arcade</a>
   <h1>📊 My Stats</h1>
   <p id="handle-line">Loading…</p>
-  <p style="margin-top:4px;"><a href="leaderboard.html" style="color:var(--gold);text-decoration:none;font-weight:700;font-size:0.9rem;">🏆 Leaderboards</a> &nbsp;·&nbsp; <a href="about.html" style="color:var(--gold);text-decoration:none;font-weight:700;font-size:0.9rem;">🔥 About</a></p>
+  <p style="margin-top:4px;"><a href="leaderboard.html" style="color:var(--gold);text-decoration:none;font-weight:700;font-size:0.9rem;">🏆 Hall of Fame</a> &nbsp;·&nbsp; <a href="about.html" style="color:var(--gold);text-decoration:none;font-weight:700;font-size:0.9rem;">🔥 About</a></p>
 </header>
 
 <div class="points-hero">
   <div class="points-card">
     <div class="value" id="total-points">—</div>
-    <div class="label">Arcade Points</div>
+    <div class="label">Arcade Rating</div>
+    <div style="font-size:0.72rem;color:var(--muted);margin-top:6px;">Your average score per game — play well, not just a lot.</div>
+    <button id="share-rating-btn" style="margin-top:14px;background:var(--accent);color:#fff;border:none;border-radius:999px;padding:9px 20px;font-size:0.85rem;font-weight:700;cursor:pointer;">📤 Share my rating</button>
   </div>
 </div>
 
@@ -158,8 +160,23 @@
     document.getElementById("handle-line").innerHTML =
       `Playing as <strong>${handle}</strong>`;
 
-    const { total, breakdown } = await LabSDK.getArcadePoints();
-    document.getElementById("total-points").textContent = total;
+    const { rating, breakdown } = await LabSDK.getArcadePoints();
+    document.getElementById("total-points").textContent = rating;
+
+    document.getElementById("share-rating-btn").addEventListener("click", async () => {
+      const text = `My Arcade Rating on DCI Arcade is ${rating}. Think you can beat it?`;
+      const url = window.location.origin + window.location.pathname.replace("my-stats.html", "");
+      const btn = document.getElementById("share-rating-btn");
+      try {
+        if (navigator.share) {
+          await navigator.share({ title: "DCI Arcade", text, url });
+        } else if (navigator.clipboard) {
+          await navigator.clipboard.writeText(`${text} ${url}`);
+          btn.textContent = "Copied! ✅";
+          setTimeout(() => { btn.textContent = "📤 Share my rating"; }, 1800);
+        }
+      } catch (e) { /* share sheet cancelled, ignore */ }
+    });
 
     const stats = await LabSDK.getMyStats();
     const list = document.getElementById("stats-list");
