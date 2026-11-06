@@ -6,27 +6,20 @@
 <title>DCI Arcade</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Creepster&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Mountains+of+Christmas:wght@700&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #150f24;
-    --bg2: #1f1533;
-    --text: #f4ecff;
-    --muted: #b7a9d9;
-    --accent: #ff7a1a;
-    --accent-dark: #e8640a;
-    --purple: #7b2ff7;
-    --card-bg: #211636;
-    --card-border: #3a2a5c;
-    --label-bg: #2a1d45;
+    --bg: #0b2016; --bg2: #0f2a1c; --text: #f3f6f2; --muted: #a9c2ae;
+    --accent: #d62f2f; --accent-dark: #b82525; --gold: #e8b64a;
+    --card-bg: #10301f; --card-border: #1e4a30; --label-bg: #163b25;
   }
   * { box-sizing: border-box; }
   body {
     margin: 0;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
     background:
-      radial-gradient(ellipse 700px 400px at 20% -5%, rgba(255,122,26,0.18), transparent 60%),
-      radial-gradient(ellipse 600px 400px at 85% 10%, rgba(123,47,247,0.22), transparent 60%),
+      radial-gradient(ellipse 800px 450px at 15% -8%, rgba(230,180,74,0.15), transparent 60%),
+      radial-gradient(ellipse 700px 450px at 90% 5%, rgba(214,47,47,0.14), transparent 60%),
       var(--bg);
     color: var(--text);
     min-height: 100vh;
@@ -34,236 +27,115 @@
     overflow-x: hidden;
   }
 
-  .bat {
-    position: fixed;
-    top: -40px;
-    font-size: 1.6rem;
-    opacity: 0.55;
-    animation: drift linear infinite;
-    pointer-events: none;
-    z-index: 0;
-    filter: drop-shadow(0 0 6px rgba(0,0,0,0.5));
+  .snow {
+    position: fixed; top: -20px; color: #fff; opacity: 0.85;
+    animation: snowfall linear infinite; pointer-events: none; z-index: 0;
+    text-shadow: 0 0 6px rgba(255,255,255,0.5);
   }
-  @keyframes drift {
-    0%   { transform: translate(0, -10vh) rotate(-6deg); }
-    50%  { transform: translate(-6vw, 55vh) rotate(6deg); }
-    100% { transform: translate(2vw, 115vh) rotate(-6deg); }
+  @keyframes snowfall {
+    0%   { transform: translate(0, -5vh) rotate(0deg); }
+    100% { transform: translate(20px, 110vh) rotate(180deg); }
   }
 
-  .topbar {
-    background: linear-gradient(90deg, var(--accent), var(--purple));
-    height: 6px;
-    position: relative;
-    z-index: 1;
-  }
-  header {
-    padding: 36px 24px 20px;
-    max-width: 1100px;
-    margin: 0 auto;
-    position: relative;
-    z-index: 1;
-  }
+  .topbar { background: linear-gradient(90deg, var(--accent), var(--gold)); height: 6px; position: relative; z-index: 1; }
+  header { padding: 36px 24px 20px; max-width: 1100px; margin: 0 auto; position: relative; z-index: 1; }
   header h1 {
-    font-family: 'Creepster', cursive;
-    font-size: 3rem;
-    font-weight: 400;
-    margin: 0 0 6px;
-    letter-spacing: 1px;
-    text-shadow: 0 0 18px rgba(255,122,26,0.5), 0 0 4px rgba(255,122,26,0.8);
+    font-family: 'Mountains of Christmas', cursive;
+    font-size: 3.4rem; font-weight: 700; margin: 0 0 4px; letter-spacing: 0.5px;
+    color: var(--gold); text-shadow: 0 0 18px rgba(232,182,74,0.4);
   }
-  header h1 span { color: var(--accent); }
-  header p.tagline {
-    margin: 0;
-    color: var(--muted);
-    font-size: 1.05rem;
-  }
-  header .links {
-    margin-top: 10px;
-    display: flex;
-    gap: 18px;
-    flex-wrap: wrap;
-  }
-  header .links a {
-    color: var(--accent);
-    font-weight: 600;
-    text-decoration: none;
-    font-size: 0.9rem;
-  }
+  header h1 span { color: var(--accent); text-shadow: 0 0 18px rgba(214,47,47,0.45); }
+  header p.tagline { margin: 0; color: var(--muted); font-size: 1.05rem; }
+  header .links { margin-top: 10px; display: flex; gap: 18px; flex-wrap: wrap; }
+  header .links a { color: var(--gold); font-weight: 700; text-decoration: none; font-size: 0.9rem; }
   header .links a:hover { text-decoration: underline; }
 
-  .pills {
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
-    max-width: 1100px;
-    margin: 0 auto;
-    padding: 4px 24px 28px;
-    position: relative;
-    z-index: 1;
-  }
+  .pills { display: flex; gap: 10px; flex-wrap: wrap; max-width: 1100px; margin: 0 auto; padding: 4px 24px 28px; position: relative; z-index: 1; }
   .pill {
-    background: var(--accent);
-    color: #1a1026;
-    border: none;
-    border-radius: 999px;
-    padding: 12px 20px;
-    font-size: 0.88rem;
-    font-weight: 700;
-    letter-spacing: 0.3px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 8px;
+    background: var(--accent); color: #fff; border: none; border-radius: 999px;
+    padding: 12px 20px; font-size: 0.88rem; font-weight: 700; letter-spacing: 0.3px;
+    cursor: pointer; display: flex; align-items: center; gap: 8px;
     transition: background 0.15s ease, transform 0.1s ease;
   }
   .pill:hover { background: var(--accent-dark); }
   .pill:active { transform: scale(0.97); }
-  .pill.inactive {
-    background: var(--label-bg);
-    color: var(--text);
-  }
-  .pill.inactive:hover { background: #352352; }
+  .pill.inactive { background: var(--label-bg); color: var(--text); }
+  .pill.inactive:hover { background: #1d4a2e; }
 
-  .section-title {
-    max-width: 1100px;
-    margin: 0 auto;
-    padding: 8px 24px 0;
-    position: relative;
-    z-index: 1;
-  }
+  .section-title { max-width: 1100px; margin: 0 auto; padding: 8px 24px 0; position: relative; z-index: 1; }
   .section-title h2 {
-    font-size: 1.4rem;
-    font-weight: 800;
-    margin: 0 0 4px;
-    display: inline-block;
-    padding-bottom: 10px;
-    border-bottom: 3px solid var(--accent);
+    font-size: 1.4rem; font-weight: 800; margin: 0 0 4px; display: inline-block;
+    padding-bottom: 10px; border-bottom: 3px solid var(--gold);
   }
 
   .grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 20px;
-    max-width: 1100px;
-    margin: 0 auto;
-    padding: 20px 24px 60px;
-    position: relative;
-    z-index: 1;
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px;
+    max-width: 1100px; margin: 0 auto; padding: 20px 24px 60px; position: relative; z-index: 1;
   }
   .card {
-    background: var(--card-bg);
-    border: 1px solid var(--card-border);
-    border-radius: 10px;
-    overflow: hidden;
-    text-decoration: none;
-    color: var(--text);
-    display: flex;
-    flex-direction: column;
+    background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 10px;
+    overflow: hidden; text-decoration: none; color: var(--text);
+    display: flex; flex-direction: column;
     transition: box-shadow 0.15s ease, transform 0.15s ease, border-color 0.15s ease;
     position: relative;
   }
-  .card:hover {
-    box-shadow: 0 6px 22px rgba(255,122,26,0.25);
-    transform: translateY(-2px);
-    border-color: var(--accent);
-  }
+  .card:hover { box-shadow: 0 6px 22px rgba(232,182,74,0.22); transform: translateY(-2px); border-color: var(--gold); }
   .card .thumb {
-    width: 100%;
-    aspect-ratio: 1 / 1;
-    background: linear-gradient(135deg, #2a1d45, #1a1130);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 2.4rem;
-    position: relative;
+    width: 100%; aspect-ratio: 1 / 1; background: linear-gradient(135deg, #163b25, #0d2818);
+    display: flex; align-items: center; justify-content: center; font-size: 2.4rem; position: relative;
   }
-  .card .thumb img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
+  .card .thumb img { width: 100%; height: 100%; object-fit: cover; }
   .card .badge {
-    position: absolute;
-    top: 8px;
-    left: 8px;
-    background: var(--accent);
-    color: #1a1026;
-    font-size: 0.68rem;
-    font-weight: 800;
-    padding: 3px 8px;
-    border-radius: 4px;
-    letter-spacing: 0.4px;
+    position: absolute; top: 8px; left: 8px; background: var(--accent); color: #fff;
+    font-size: 0.68rem; font-weight: 800; padding: 3px 8px; border-radius: 4px; letter-spacing: 0.4px;
   }
   .card .label-strip {
-    background: var(--label-bg);
-    text-align: center;
-    font-size: 0.72rem;
-    font-weight: 700;
-    color: var(--muted);
-    padding: 6px 0;
-    letter-spacing: 0.3px;
-    border-top: 1px solid var(--card-border);
-    border-bottom: 1px solid var(--card-border);
-    text-transform: uppercase;
+    background: var(--label-bg); text-align: center; font-size: 0.72rem; font-weight: 700;
+    color: var(--muted); padding: 6px 0; letter-spacing: 0.3px;
+    border-top: 1px solid var(--card-border); border-bottom: 1px solid var(--card-border); text-transform: uppercase;
   }
-  .card .info {
-    padding: 10px 12px 14px;
-  }
-  .card h3 {
-    margin: 0 0 2px;
-    font-size: 0.95rem;
-    font-weight: 700;
-    line-height: 1.3;
-  }
-  .card .meta {
-    font-size: 0.78rem;
-    color: var(--muted);
-  }
-  .empty {
-    text-align: center;
-    color: var(--muted);
-    padding: 60px 24px;
-    grid-column: 1 / -1;
-  }
+  .card .info { padding: 10px 12px 14px; }
+  .card h3 { margin: 0 0 2px; font-size: 0.95rem; font-weight: 700; line-height: 1.3; }
+  .card .meta { font-size: 0.78rem; color: var(--muted); }
+  .empty { text-align: center; color: var(--muted); padding: 60px 24px; grid-column: 1 / -1; }
 
   .music-toggle {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    width: 52px;
-    height: 52px;
-    border-radius: 50%;
-    background: var(--card-bg);
-    border: 1px solid var(--card-border);
-    color: var(--text);
-    font-size: 1.3rem;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 4px 16px rgba(0,0,0,0.4);
-    z-index: 1000;
-    transition: transform 0.15s ease, border-color 0.15s ease;
+    position: fixed; bottom: 20px; right: 20px; width: 56px; height: 56px; border-radius: 50%;
+    background: var(--card-bg); border: 1px solid var(--card-border); color: var(--text);
+    font-size: 1.3rem; cursor: pointer; display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.4); z-index: 1000; transition: transform 0.15s ease, border-color 0.15s ease;
   }
-  .music-toggle:hover { transform: scale(1.08); border-color: var(--accent); }
-  .music-toggle.playing { border-color: var(--accent); box-shadow: 0 0 16px rgba(255,122,26,0.4); }
+  .music-toggle:hover { transform: scale(1.08); border-color: var(--gold); }
+  .music-toggle.playing { border-color: var(--gold); box-shadow: 0 0 18px rgba(232,182,74,0.45); }
+  .music-label {
+    position: fixed; bottom: 30px; right: 84px; background: var(--card-bg); border: 1px solid var(--card-border);
+    color: var(--muted); font-size: 0.75rem; padding: 6px 12px; border-radius: 999px; z-index: 1000;
+    opacity: 0; transition: opacity 0.3s ease; pointer-events: none;
+  }
+  .music-label.show { opacity: 1; }
 </style>
 </head>
 <body>
 
-<span class="bat" style="left:8%; animation-duration:16s; animation-delay:0s;">🦇</span>
-<span class="bat" style="left:35%; animation-duration:21s; animation-delay:3s; font-size:1.1rem;">🦇</span>
-<span class="bat" style="left:62%; animation-duration:18s; animation-delay:7s;">🦇</span>
-<span class="bat" style="left:85%; animation-duration:24s; animation-delay:1s; font-size:1.2rem;">🦇</span>
+<!-- Falling snow -->
+<span class="snow" style="left:5%; font-size:1.1rem; animation-duration:11s; animation-delay:0s;">❄</span>
+<span class="snow" style="left:18%; font-size:0.8rem; animation-duration:14s; animation-delay:2s;">❄</span>
+<span class="snow" style="left:32%; font-size:1.3rem; animation-duration:9s; animation-delay:1s;">❄</span>
+<span class="snow" style="left:48%; font-size:0.9rem; animation-duration:13s; animation-delay:4s;">❄</span>
+<span class="snow" style="left:63%; font-size:1.1rem; animation-duration:10s; animation-delay:3s;">❄</span>
+<span class="snow" style="left:77%; font-size:0.85rem; animation-duration:15s; animation-delay:5s;">❄</span>
+<span class="snow" style="left:88%; font-size:1.2rem; animation-duration:12s; animation-delay:1.5s;">❄</span>
+<span class="snow" style="left:95%; font-size:0.9rem; animation-duration:16s; animation-delay:6s;">❄</span>
 
 <div class="topbar"></div>
 
 <header>
-  <h1>🎃 DCI <span>Arcade</span></h1>
-  <p class="tagline">Games built by students, for students.</p>
+  <h1>🎄 DCI <span>Arcade</span></h1>
+  <p class="tagline">Games built by students, for students. Happy holidays!</p>
   <div class="links">
     <a href="my-stats.html">📊 My Stats</a>
     <a href="leaderboard.html">🏆 Leaderboards</a>
+    <a href="about.html">🔥 About Launch Lab</a>
   </div>
 </header>
 
@@ -279,43 +151,8 @@
   <p class="empty">Loading games…</p>
 </div>
 
-<audio id="bg-music" src="shared/halloween-theme.mp3" loop preload="none"></audio>
-<button id="music-toggle" class="music-toggle" aria-label="Toggle background music" title="Play spooky music">🔇</button>
-
-<script>
-  const music = document.getElementById("bg-music");
-  const musicBtn = document.getElementById("music-toggle");
-  const MUSIC_PREF_KEY = "dci_arcade_music_on";
-
-  function setMusicState(playing) {
-    musicBtn.textContent = playing ? "🔊" : "🔇";
-    musicBtn.classList.toggle("playing", playing);
-    musicBtn.title = playing ? "Mute music" : "Play spooky music";
-  }
-
-  musicBtn.addEventListener("click", () => {
-    if (music.paused) {
-      music.volume = 0.35;
-      music.play().then(() => {
-        setMusicState(true);
-        localStorage.setItem(MUSIC_PREF_KEY, "on");
-      }).catch(err => console.error("Playback failed", err));
-    } else {
-      music.pause();
-      setMusicState(false);
-      localStorage.setItem(MUSIC_PREF_KEY, "off");
-    }
-  });
-
-  // If the visitor had music on last time, try to resume automatically.
-  // Browsers block this until they've interacted with the page at least
-  // once this session, so it silently falls back to showing the muted
-  // icon if that fails — no error, just waits for a click.
-  if (localStorage.getItem(MUSIC_PREF_KEY) === "on") {
-    music.volume = 0.35;
-    music.play().then(() => setMusicState(true)).catch(() => setMusicState(false));
-  }
-</script>
+<button id="music-toggle" class="music-toggle" aria-label="Toggle holiday music" title="Play holiday music">🔇</button>
+<div class="music-label" id="music-label">Jingle Shimmer</div>
 
 <script>
   const grid = document.getElementById("game-grid");
@@ -325,18 +162,10 @@
   let allGames = [];
   let activeSubject = "";
 
-  function uniqueSorted(values) {
-    return [...new Set(values.filter(Boolean))].sort();
-  }
+  function uniqueSorted(values) { return [...new Set(values.filter(Boolean))].sort(); }
 
   function subjectIcon(subject) {
-    const map = {
-      "Math": "🔢",
-      "Science": "🔬",
-      "ELA": "📖",
-      "Social Studies": "🌍",
-      "Other": "✨"
-    };
+    const map = { "Math": "🔢", "Science": "🔬", "ELA": "📖", "Social Studies": "🌍", "Other": "✨" };
     return map[subject] || "🎮";
   }
 
@@ -344,13 +173,10 @@
     const subjects = uniqueSorted(allGames.map(g => g.subject));
     pillsEl.innerHTML = `<button class="pill" data-value="">All Games</button>` +
       subjects.map(s => `<button class="pill inactive" data-value="${s}">${subjectIcon(s)} ${s}</button>`).join("");
-
     pillsEl.querySelectorAll(".pill").forEach(btn => {
       btn.addEventListener("click", () => {
         activeSubject = btn.dataset.value;
-        pillsEl.querySelectorAll(".pill").forEach(b => {
-          b.classList.toggle("inactive", b.dataset.value !== activeSubject);
-        });
+        pillsEl.querySelectorAll(".pill").forEach(b => b.classList.toggle("inactive", b.dataset.value !== activeSubject));
         sectionLabel.textContent = activeSubject ? activeSubject + " Games" : "All Games";
         render();
       });
@@ -367,9 +193,7 @@
       <a class="card" href="games/${game.slug}/">
         <div class="thumb">
           ${game.badge ? `<span class="badge">${game.badge}</span>` : ""}
-          ${game.thumbnail
-            ? `<img src="${game.thumbnail}" alt="${game.title}" />`
-            : subjectIcon(game.subject)}
+          ${game.thumbnail ? `<img src="${game.thumbnail}" alt="${game.title}" />` : subjectIcon(game.subject)}
         </div>
         <div class="label-strip">${game.subject || "Game"}</div>
         <div class="info">
@@ -391,6 +215,163 @@
       console.error("Failed to load catalog", err);
       grid.innerHTML = `<p class="empty">Couldn't load the game list. Try refreshing.</p>`;
     });
+</script>
+
+<!-- ============================================================
+     Original procedural holiday music (Web Audio API synthesis).
+     No audio files, no copyrighted melodies — generic sleigh-bell
+     percussion + a I-V-vi-IV bell arpeggio, rotating between two
+     original "flavors" every 16 bars so it doesn't feel static.
+     ============================================================ -->
+<script>
+(function(){
+  const AC = window.AudioContext || window.webkitAudioContext;
+  if (!AC) return;
+
+  const btn = document.getElementById('music-toggle');
+  const label = document.getElementById('music-label');
+  const PREF_KEY = 'dci_arcade_holiday_music';
+
+  let ac, master, delaySend, noiseBuf, on = false, timer, step = 0, bar = 0, nextTime = 0;
+  const STEP_DUR = 60/128/2; // 128bpm, 8th notes
+
+  const CHORDS = [
+    [60,64,67],  // C major (I)
+    [67,71,74],  // G major (V)
+    [57,60,64],  // A minor (vi)
+    [65,69,72]   // F major (IV)
+  ];
+  const fq = m => 440 * Math.pow(2, (m-69)/12);
+
+  function init(){
+    ac = new AC();
+    master = ac.createGain(); master.gain.value = 0;
+    const lp = ac.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=6500;
+    const comp = ac.createDynamicsCompressor();
+    master.connect(lp); lp.connect(comp); comp.connect(ac.destination);
+
+    // gentle slapback/echo for warmth
+    const dl = ac.createDelay(1); dl.delayTime.value = 0.28;
+    const fb = ac.createGain(); fb.gain.value = 0.22;
+    const wet = ac.createGain(); wet.gain.value = 0.3;
+    delaySend = ac.createGain();
+    delaySend.connect(dl); dl.connect(fb); fb.connect(dl); dl.connect(wet); wet.connect(master);
+
+    noiseBuf = ac.createBuffer(1, ac.sampleRate, ac.sampleRate);
+    const d = noiseBuf.getChannelData(0);
+    for (let i=0;i<d.length;i++) d[i] = Math.random()*2-1;
+  }
+
+  function tone(freq, t, attack, decay, vol, type, send){
+    const o = ac.createOscillator(), g = ac.createGain();
+    o.type = type; o.frequency.setValueAtTime(freq, t);
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.linearRampToValueAtTime(vol, t+attack);
+    g.gain.exponentialRampToValueAtTime(0.0001, t+attack+decay);
+    o.connect(g); g.connect(master);
+    if (send) { const s = ac.createGain(); s.gain.value = send; g.connect(s); s.connect(delaySend); }
+    o.start(t); o.stop(t+attack+decay+0.05);
+  }
+
+  function shaker(t, vol){
+    const s = ac.createBufferSource(); s.buffer = noiseBuf;
+    const f = ac.createBiquadFilter(); f.type='bandpass'; f.frequency.value = 5200; f.Q.value = 0.9;
+    const g = ac.createGain(); g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.0001, t+0.07);
+    s.connect(f); f.connect(g); g.connect(master);
+    s.start(t, Math.random()*0.3, 0.1);
+  }
+
+  function softKick(t){
+    const o = ac.createOscillator(), g = ac.createGain();
+    o.frequency.setValueAtTime(110, t);
+    o.frequency.exponentialRampToValueAtTime(48, t+0.12);
+    g.gain.setValueAtTime(0.5, t);
+    g.gain.exponentialRampToValueAtTime(0.0001, t+0.3);
+    o.connect(g); g.connect(master);
+    o.start(t); o.stop(t+0.32);
+  }
+
+  function playStep(s16, t){
+    const barIdx = Math.floor(bar) % 4;
+    const chord = CHORDS[barIdx];
+    const flavorA = (Math.floor(bar/16) % 2) === 0; // rotate flavor every 16 bars
+
+    // sleigh bell shaker — every 8th note, this is the "jingling" texture
+    shaker(t, flavorA ? 0.22 : 0.14);
+
+    // soft pulse: flavor A = every beat, flavor B = half-time, cozier
+    if (flavorA ? (s16 % 2 === 0) : (s16 % 4 === 0)) softKick(t);
+
+    // bright bell arpeggio walking the current chord
+    if (s16 % 2 === 0) {
+      const noteIdx = (Math.floor(s16/2) + barIdx) % chord.length;
+      const octave = flavorA ? 12 : 0;
+      tone(fq(chord[noteIdx] + octave), t, 0.004, flavorA ? 0.5 : 0.8, flavorA ? 0.09 : 0.06, 'triangle', 0.35);
+    }
+
+    // warm pad underneath, once per bar
+    if (s16 === 0) {
+      chord.forEach((m, i) => tone(fq(m - 12), t, 0.08, 1.6, 0.045, 'sine', 0.2));
+    }
+  }
+
+  function loop(){
+    while (nextTime < ac.currentTime + 0.2) {
+      playStep(step, nextTime);
+      nextTime += STEP_DUR;
+      step++;
+      if (step >= 8) { step = 0; bar++; }
+    }
+  }
+
+  function updateLabel(){
+    const flavorA = (Math.floor(bar/16) % 2) === 0;
+    label.textContent = flavorA ? 'Jingle Shimmer ✨' : 'Cozy Holiday Lo-fi ☕';
+    label.classList.add('show');
+    clearTimeout(updateLabel._t);
+    updateLabel._t = setTimeout(() => label.classList.remove('show'), 2500);
+  }
+
+  function start(){
+    if (!ac) init();
+    ac.resume();
+    on = true;
+    master.gain.setTargetAtTime(0.55, ac.currentTime, 0.4);
+    nextTime = ac.currentTime + 0.1;
+    step = 0;
+    clearInterval(timer);
+    timer = setInterval(loop, 40);
+    btn.textContent = '🔊'; btn.classList.add('playing'); btn.title = 'Mute holiday music';
+    updateLabel();
+    clearInterval(start._lblTimer);
+    start._lblTimer = setInterval(updateLabel, 16 * 8 * STEP_DUR * 1000);
+  }
+
+  function stop(){
+    on = false;
+    clearInterval(timer);
+    clearInterval(start._lblTimer);
+    if (ac) master.gain.setTargetAtTime(0, ac.currentTime, 0.3);
+    btn.textContent = '🔇'; btn.classList.remove('playing'); btn.title = 'Play holiday music';
+  }
+
+  btn.addEventListener('click', () => {
+    if (on) { stop(); try { localStorage.setItem(PREF_KEY, 'off'); } catch(e){} }
+    else { start(); try { localStorage.setItem(PREF_KEY, 'on'); } catch(e){} }
+  });
+
+  // Resume automatically on return visits, once the browser allows audio
+  // (requires a prior interaction this session — falls back silently).
+  let pref;
+  try { pref = localStorage.getItem(PREF_KEY); } catch(e) { pref = null; }
+  if (pref === 'on') {
+    const tryStart = () => {
+      start();
+      ['pointerdown','keydown'].forEach(k => window.removeEventListener(k, tryStart, true));
+    };
+    ['pointerdown','keydown'].forEach(k => window.addEventListener(k, tryStart, true));
+  }
+})();
 </script>
 
 </body>
