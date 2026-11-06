@@ -177,18 +177,51 @@ async function getHandle() {
 }
 
 // ---- On-screen toast (so a score never records silently) ----
+// Optionally includes a built-in Share button — this is the main lever
+// for word-of-mouth growth: every good score becomes a one-tap invite
+// back to the exact game that produced it, with no per-game code needed.
 
-function showToast(message) {
+function showToast(message, shareText) {
   const el = document.createElement("div");
   el.style.cssText = `
     position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-20px);
-    background: #1a1d24; color: #fff; padding: 14px 22px; border-radius: 10px;
+    background: #1a1d24; color: #fff; padding: 14px 18px; border-radius: 10px;
     font-family: -apple-system, sans-serif; font-size: 14px; font-weight: 600;
     box-shadow: 0 8px 24px rgba(0,0,0,0.35); z-index: 999999;
     opacity: 0; transition: opacity 0.25s ease, transform 0.25s ease;
-    max-width: 90vw; text-align: center; pointer-events: none;
+    max-width: 90vw; text-align: center; pointer-events: auto;
+    display: flex; align-items: center; gap: 12px; flex-wrap: wrap; justify-content: center;
   `;
-  el.textContent = message;
+
+  const msgSpan = document.createElement("span");
+  msgSpan.textContent = message;
+  el.appendChild(msgSpan);
+
+  if (shareText) {
+    const shareBtn = document.createElement("button");
+    shareBtn.textContent = "📤 Share";
+    shareBtn.style.cssText = `
+      background: #d62f2f; color: #fff; border: none; border-radius: 999px;
+      padding: 5px 14px; font-size: 13px; font-weight: 700; cursor: pointer;
+      font-family: inherit; white-space: nowrap;
+    `;
+    shareBtn.addEventListener("click", async () => {
+      const url = window.location.href;
+      try {
+        if (navigator.share) {
+          await navigator.share({ title: "DCI Arcade", text: shareText, url });
+        } else if (navigator.clipboard) {
+          await navigator.clipboard.writeText(`${shareText} ${url}`);
+          shareBtn.textContent = "Copied! ✅";
+          setTimeout(() => { shareBtn.textContent = "📤 Share"; }, 1800);
+        }
+      } catch (e) {
+        // user cancelled the native share sheet — not an error worth logging
+      }
+    });
+    el.appendChild(shareBtn);
+  }
+
   document.body.appendChild(el);
   requestAnimationFrame(() => {
     el.style.opacity = "1";
@@ -198,7 +231,7 @@ function showToast(message) {
     el.style.opacity = "0";
     el.style.transform = "translateX(-50%) translateY(-20px)";
     setTimeout(() => el.remove(), 300);
-  }, 3800);
+  }, 6000);
 }
 
 // Records a play in the permanent log, AND updates the student's
@@ -237,14 +270,18 @@ async function recordScore(gameId, score, meta = {}) {
     }
   });
 
-  // 3. Immediate feedback — fetch rank right after and show it on screen.
+  // 3. Immediate feedback — fetch rank right after and show it on screen,
+  // with a one-tap Share so a good run can turn into a new player.
   try {
     const rank = await getMyRank(gameId);
     const totalQuery = query(collection(db, "leaderboards"), where("game_id", "==", gameId));
     const totalSnap = await getCountFromServer(totalQuery);
     const total = totalSnap.data().count;
     const prefix = isNewBest ? "🏆 New best!" : "Score saved.";
-    showToast(`${prefix} Rank #${rank} of ${total} — ${score} pts`);
+    showToast(
+      `${prefix} Rank #${rank} of ${total} — ${score} pts`,
+      `I just scored ${score} and ranked #${rank} of ${total} on ${gameId} in DCI Arcade. Think you can beat me?`
+    );
   } catch (e) {
     console.error("LabSDK: toast feedback failed", e);
     showToast(`Score saved: ${score} pts`);
@@ -327,9 +364,12 @@ function pointsForRank(rank, totalPlayers) {
   return 1;
 }
 
-// This player's total Arcade Points across every game they've played,
-// plus the per-game breakdown that produced it.
-// Returns: { total, breakdown: [{ game_id, rank, total_players, points }, ...] }
+// This player's Arcade Rating: their AVERAGE placement-points per game
+// played, not the sum. Averaging (rather than summing) means playing
+// more games never inflates your rating on its own — only actually
+// placing well does. A player who's great at one game can outrank
+// someone who's just played a lot of games without doing well in them.
+// Returns: { rating, breakdown: [{ game_id, rank, total_players, points }, ...] }
 async function getArcadePoints() {
   const stats = await getMyStats();
   const breakdown = stats.map(s => ({
@@ -338,14 +378,17 @@ async function getArcadePoints() {
     total_players: s.total_players,
     points: pointsForRank(s.rank, s.total_players)
   }));
-  const total = breakdown.reduce((sum, b) => sum + b.points, 0);
-  return { total, breakdown };
+  const sum = breakdown.reduce((total, b) => total + b.points, 0);
+  const rating = breakdown.length ? +(sum / breakdown.length).toFixed(1) : 0;
+  return { rating, breakdown };
 }
 
 // Shared internal helper: pulls the whole leaderboards collection once
-// and computes total Arcade Points + games played for every player,
-// site-wide. Both getGlobalLeaderboard and getMyGlobalRank build on this
-// so the ranking logic only lives in one place.
+// and computes each player's Arcade Rating (AVERAGE placement-points
+// per game, not a sum) site-wide. Both getGlobalLeaderboard and
+// getMyGlobalRank build on this so the ranking logic only lives in one
+// place. Sorted by rating first; players tied on rating are broken by
+// who's proven it across more games.
 async function computeAllTotals() {
   const snap = await getDocs(collection(db, "leaderboards"));
   const allEntries = snap.docs.map((d) => d.data());
@@ -372,22 +415,26 @@ async function computeAllTotals() {
     });
   });
 
-  return Object.values(totals).sort((a, b) => b.total_points - a.total_points);
+  return Object.values(totals)
+    .map((p) => ({ ...p, rating: +(p.total_points / p.games_played).toFixed(1) }))
+    .sort((a, b) => b.rating - a.rating || b.games_played - a.games_played);
 }
 
-// Top players site-wide, ranked by total Arcade Points across every game.
-// Returns: [{ uid, handle, total_points, games_played }, ...]
+// Top players site-wide, ranked by Arcade Rating (average points per
+// game played) — NOT total points, so playing more games never inflates
+// your spot on its own.
+// Returns: [{ uid, handle, rating, total_points, games_played }, ...]
 async function getGlobalLeaderboard(max = 20) {
   const sorted = await computeAllTotals();
   return sorted.slice(0, max);
 }
 
-// This player's own site-wide rank and total Arcade Points, even when
-// they're well outside the top N shown on the public leaderboard. This
-// is what powers a "you are #47 of 230" callout without needing to pull
-// 47 rows just to count them.
-// Returns: { rank, total_points, games_played, total_players } or null
-// if this player hasn't recorded a score anywhere yet.
+// This player's own site-wide rank and Arcade Rating, even when they're
+// well outside the top N shown on the public leaderboard. This is what
+// powers a "you are #47 of 230" callout without needing to pull 47 rows
+// just to count them.
+// Returns: { rank, rating, total_points, games_played, total_players }
+// or null if this player hasn't recorded a score anywhere yet.
 async function getMyGlobalRank() {
   const user = await waitForAuth();
   const sorted = await computeAllTotals();
@@ -395,6 +442,7 @@ async function getMyGlobalRank() {
   if (idx === -1) return null;
   return {
     rank: idx + 1,
+    rating: sorted[idx].rating,
     total_points: sorted[idx].total_points,
     games_played: sorted[idx].games_played,
     total_players: sorted.length
