@@ -4,107 +4,85 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Leaderboards — DCI Arcade</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Mountains+of+Christmas:wght@700&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #0f1115;
-    --card-bg: #1a1d24;
-    --text: #f2f2f2;
-    --muted: #9aa0ab;
-    --accent: #2d6cdf;
-    --gold: #e0b94f;
-    --border: #2a2e37;
+    --bg: #0b2016; --card-bg: #10301f; --text: #f3f6f2; --muted: #a9c2ae;
+    --accent: #d62f2f; --gold: #e8b64a; --border: #1e4a30; --you: #3f8f5f;
   }
   * { box-sizing: border-box; }
   body {
     margin: 0;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    background: var(--bg);
+    background: radial-gradient(ellipse 800px 450px at 50% -10%, rgba(232,182,74,0.12), transparent 60%), var(--bg);
     color: var(--text);
   }
-  header {
-    padding: 32px 24px 8px;
-    text-align: center;
-  }
-  header a.back {
-    display: inline-block;
-    margin-bottom: 16px;
-    color: var(--muted);
-    text-decoration: none;
-    font-size: 0.9rem;
-  }
+  header { padding: 32px 24px 8px; text-align: center; }
+  header a.back { display: inline-block; margin-bottom: 16px; color: var(--muted); text-decoration: none; font-size: 0.9rem; }
   header a.back:hover { color: var(--text); }
-  header h1 { margin: 0 0 4px; font-size: 1.8rem; }
+  header h1 {
+    font-family: 'Mountains of Christmas', cursive; font-weight: 700;
+    margin: 0 0 4px; font-size: 2.6rem; color: var(--gold); text-shadow: 0 0 16px rgba(232,182,74,0.35);
+  }
   header p { color: var(--muted); margin: 0 0 24px; }
 
-  .wrap {
-    max-width: 720px;
-    margin: 0 auto;
-    padding: 0 24px 60px;
+  .wrap { max-width: 740px; margin: 0 auto; padding: 0 24px 60px; }
+
+  /* Your Rank callout */
+  .you-card {
+    background: linear-gradient(135deg, var(--card-bg), #0d2818);
+    border: 2px solid var(--gold); border-radius: 16px; padding: 20px 24px;
+    display: flex; align-items: center; justify-content: space-between; margin-bottom: 36px;
+    box-shadow: 0 0 24px rgba(232,182,74,0.12);
   }
+  .you-card .left { display: flex; flex-direction: column; gap: 2px; }
+  .you-card .label { font-size: 0.78rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+  .you-card .handle { font-size: 1.3rem; font-weight: 800; }
+  .you-card .right { text-align: right; }
+  .you-card .rank-num { font-size: 2.2rem; font-weight: 800; color: var(--gold); line-height: 1; }
+  .you-card .of { font-size: 0.8rem; color: var(--muted); }
+  .you-card .pts { font-size: 0.85rem; color: var(--text); margin-top: 2px; }
 
   .section-title {
-    font-size: 1.15rem;
-    font-weight: 800;
-    margin: 36px 0 14px;
-    padding-bottom: 8px;
-    border-bottom: 2px solid var(--accent);
+    font-size: 1.15rem; font-weight: 800; margin: 36px 0 14px; padding-bottom: 8px;
+    border-bottom: 2px solid var(--gold);
   }
   .section-title:first-of-type { margin-top: 0; }
 
-  .row {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    background: var(--card-bg);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 12px 16px;
-    margin-bottom: 8px;
+  /* Podium for top 3 */
+  .podium { display: flex; align-items: flex-end; gap: 12px; margin-bottom: 24px; }
+  .podium .spot {
+    flex: 1; background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px 12px 6px 6px;
+    text-align: center; padding: 14px 8px; position: relative;
   }
-  .row .rank {
-    font-weight: 800;
-    font-size: 1.1rem;
-    min-width: 28px;
-    color: var(--muted);
-    text-align: center;
-  }
-  .row.gold .rank { color: var(--gold); }
-  .row .handle {
-    flex: 1;
-    font-weight: 700;
-  }
-  .row .detail {
-    color: var(--muted);
-    font-size: 0.82rem;
-  }
-  .row .value {
-    font-weight: 800;
-    color: var(--gold);
-    white-space: nowrap;
-  }
+  .podium .spot.gold { order: 2; padding-top: 26px; border-color: var(--gold); box-shadow: 0 0 20px rgba(232,182,74,0.25); }
+  .podium .spot.silver { order: 1; opacity: 0.95; }
+  .podium .spot.bronze { order: 3; opacity: 0.9; }
+  .podium .medal { font-size: 1.8rem; display: block; margin-bottom: 4px; }
+  .podium .handle { font-weight: 800; font-size: 0.95rem; word-break: break-word; }
+  .podium .pts { color: var(--gold); font-weight: 700; font-size: 0.85rem; margin-top: 4px; }
+  .podium .games { color: var(--muted); font-size: 0.72rem; margin-top: 2px; }
 
-  .game-block {
-    margin-bottom: 28px;
+  .row {
+    display: flex; align-items: center; gap: 14px; background: var(--card-bg); border: 1px solid var(--border);
+    border-radius: 10px; padding: 12px 16px; margin-bottom: 8px;
   }
-  .game-block h3 {
-    font-size: 1rem;
-    margin: 0 0 8px;
-    color: var(--text);
-  }
+  .row.is-you { border-color: var(--you); background: linear-gradient(90deg, rgba(63,143,95,0.18), var(--card-bg)); }
+  .row .rank { font-weight: 800; font-size: 1.1rem; min-width: 28px; color: var(--muted); text-align: center; }
+  .row .handle { flex: 1; font-weight: 700; }
+  .row .handle .you-tag { color: var(--you); font-size: 0.72rem; font-weight: 800; margin-left: 6px; }
+  .row .detail { color: var(--muted); font-size: 0.82rem; }
+  .row .value { font-weight: 800; color: var(--gold); white-space: nowrap; }
+
+  .game-block { margin-bottom: 28px; }
+  .game-block h3 { font-size: 1rem; margin: 0 0 8px; color: var(--text); }
   .game-block .row { padding: 8px 14px; }
   .game-block .row .rank { font-size: 0.95rem; min-width: 22px; }
 
-  .empty {
-    text-align: center;
-    color: var(--muted);
-    padding: 20px;
-    font-size: 0.9rem;
-  }
-  .loading {
-    text-align: center;
-    color: var(--muted);
-    padding: 40px;
-  }
+  .empty { text-align: center; color: var(--muted); padding: 20px; font-size: 0.9rem; }
+  .loading { text-align: center; color: var(--muted); padding: 40px; }
 </style>
 </head>
 <body>
@@ -116,7 +94,10 @@
 </header>
 
 <div class="wrap">
-  <div class="section-title">Overall Arcade Points</div>
+  <div id="you-section"></div>
+
+  <div class="section-title">Top 20 — Arcade Points</div>
+  <div id="podium"></div>
   <div id="global-board"><p class="loading">Loading…</p></div>
 
   <div class="section-title">By Game</div>
@@ -132,30 +113,71 @@
     }
   }
 
-  function medalClass(rank) {
-    return rank <= 3 ? "gold" : "";
+  const MEDALS = ["🥇", "🥈", "🥉"];
+
+  async function renderYouCard(myUid) {
+    const mine = await LabSDK.getMyGlobalRank();
+    const el = document.getElementById("you-section");
+    if (!mine) {
+      el.innerHTML = `<div class="you-card"><div class="left"><div class="label">Your Rank</div><div class="handle">Play a game to get on the board!</div></div></div>`;
+      return;
+    }
+    const handle = await LabSDK.getHandle();
+    el.innerHTML = `
+      <div class="you-card">
+        <div class="left">
+          <div class="label">Your Rank</div>
+          <div class="handle">${handle}</div>
+          <div class="pts">${mine.total_points} Arcade Points &middot; ${mine.games_played} game${mine.games_played === 1 ? "" : "s"} played</div>
+        </div>
+        <div class="right">
+          <div class="rank-num">#${mine.rank}</div>
+          <div class="of">of ${mine.total_players}</div>
+        </div>
+      </div>`;
   }
 
   async function renderGlobal() {
     const top = await LabSDK.getGlobalLeaderboard(20);
+    const myHandle = await LabSDK.getHandle();
+    const podiumEl = document.getElementById("podium");
     const el = document.getElementById("global-board");
+
     if (top.length === 0) {
+      podiumEl.innerHTML = "";
       el.innerHTML = `<p class="empty">No scores yet — be the first to play!</p>`;
       return;
     }
-    el.innerHTML = top.map((p, i) => `
-      <div class="row ${medalClass(i+1)}">
-        <div class="rank">#${i+1}</div>
-        <div class="handle">${p.handle}<div class="detail">${p.games_played} game${p.games_played === 1 ? "" : "s"} played</div></div>
-        <div class="value">${p.total_points} pts</div>
+
+    const top3 = top.slice(0, 3);
+    const classes = ["gold", "silver", "bronze"];
+    podiumEl.innerHTML = `<div class="podium">` + top3.map((p, i) => `
+      <div class="spot ${classes[i]}">
+        <span class="medal">${MEDALS[i]}</span>
+        <div class="handle">${p.handle}</div>
+        <div class="pts">${p.total_points} pts</div>
+        <div class="games">${p.games_played} game${p.games_played === 1 ? "" : "s"}</div>
       </div>
-    `).join("");
+    `).join("") + `</div>`;
+
+    const rest = top.slice(3);
+    el.innerHTML = rest.map((p, i) => {
+      const rank = i + 4;
+      const isYou = p.handle === myHandle;
+      return `
+      <div class="row ${isYou ? "is-you" : ""}">
+        <div class="rank">#${rank}</div>
+        <div class="handle">${p.handle}${isYou ? '<span class="you-tag">YOU</span>' : ""}<div class="detail">${p.games_played} game${p.games_played === 1 ? "" : "s"} played</div></div>
+        <div class="value">${p.total_points} pts</div>
+      </div>`;
+    }).join("");
   }
 
   async function renderPerGame() {
     const res = await fetch("catalog/games.json");
     const games = (await res.json()).filter(g => g.status === "live");
     const container = document.getElementById("per-game-boards");
+    const myHandle = await LabSDK.getHandle();
 
     if (games.length === 0) {
       container.innerHTML = `<p class="empty">No games published yet.</p>`;
@@ -170,13 +192,15 @@
       if (board.length === 0) {
         block.innerHTML = `<h3>${game.title}</h3><p class="empty">No plays yet.</p>`;
       } else {
-        block.innerHTML = `<h3>${game.title}</h3>` + board.map((p, i) => `
-          <div class="row ${medalClass(i+1)}">
-            <div class="rank">#${i+1}</div>
-            <div class="handle">${p.handle}</div>
+        block.innerHTML = `<h3>${game.title}</h3>` + board.map((p, i) => {
+          const isYou = p.handle === myHandle;
+          return `
+          <div class="row ${isYou ? "is-you" : ""}">
+            <div class="rank">${i < 3 ? MEDALS[i] : "#" + (i+1)}</div>
+            <div class="handle">${p.handle}${isYou ? '<span class="you-tag">YOU</span>' : ""}</div>
             <div class="value">${p.best_score}</div>
-          </div>
-        `).join("");
+          </div>`;
+        }).join("");
       }
       container.appendChild(block);
     }
@@ -184,7 +208,7 @@
 
   async function init() {
     await waitForSDK();
-    await Promise.all([renderGlobal(), renderPerGame()]);
+    await Promise.all([renderYouCard(), renderGlobal(), renderPerGame()]);
   }
 
   init().catch(err => {
