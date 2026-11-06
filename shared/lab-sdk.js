@@ -9,6 +9,7 @@
 //   LabSDK.getMyStats()                 — this player's rank across EVERY game they've played
 //   LabSDK.getArcadePoints()            — this player's total placement-based points across all games
 //   LabSDK.getGlobalLeaderboard()       — top players site-wide, ranked by total Arcade Points
+//   LabSDK.getMyGlobalRank()            — this player's own site-wide rank, even outside the top N
 // recordScore() also shows a brief on-screen toast with the result, so
 // players get instant feedback without needing to visit a stats page.
 
@@ -341,24 +342,21 @@ async function getArcadePoints() {
   return { total, breakdown };
 }
 
-// Top players site-wide, ranked by total Arcade Points across every
-// game. Pulls the whole leaderboards collection once (fine at classroom
-// scale) and computes ranks/points for every game and every player
-// client-side, so this is a handful of reads regardless of player count.
-// Returns: [{ uid, handle, total_points, games_played }, ...]
-async function getGlobalLeaderboard(max = 20) {
+// Shared internal helper: pulls the whole leaderboards collection once
+// and computes total Arcade Points + games played for every player,
+// site-wide. Both getGlobalLeaderboard and getMyGlobalRank build on this
+// so the ranking logic only lives in one place.
+async function computeAllTotals() {
   const snap = await getDocs(collection(db, "leaderboards"));
   const allEntries = snap.docs.map((d) => d.data());
 
-  // Group by game, so we can rank within each game
   const byGame = {};
   allEntries.forEach((e) => {
     if (!byGame[e.game_id]) byGame[e.game_id] = [];
     byGame[e.game_id].push(e);
   });
 
-  // Accumulate points per uid across every game
-  const totals = {}; // uid -> { handle, total_points, games_played }
+  const totals = {}; // uid -> { uid, handle, total_points, games_played }
   Object.values(byGame).forEach((entries) => {
     entries.sort((a, b) => b.best_score - a.best_score);
     const totalPlayers = entries.length;
@@ -374,9 +372,33 @@ async function getGlobalLeaderboard(max = 20) {
     });
   });
 
-  return Object.values(totals)
-    .sort((a, b) => b.total_points - a.total_points)
-    .slice(0, max);
+  return Object.values(totals).sort((a, b) => b.total_points - a.total_points);
+}
+
+// Top players site-wide, ranked by total Arcade Points across every game.
+// Returns: [{ uid, handle, total_points, games_played }, ...]
+async function getGlobalLeaderboard(max = 20) {
+  const sorted = await computeAllTotals();
+  return sorted.slice(0, max);
+}
+
+// This player's own site-wide rank and total Arcade Points, even when
+// they're well outside the top N shown on the public leaderboard. This
+// is what powers a "you are #47 of 230" callout without needing to pull
+// 47 rows just to count them.
+// Returns: { rank, total_points, games_played, total_players } or null
+// if this player hasn't recorded a score anywhere yet.
+async function getMyGlobalRank() {
+  const user = await waitForAuth();
+  const sorted = await computeAllTotals();
+  const idx = sorted.findIndex((p) => p.uid === user.uid);
+  if (idx === -1) return null;
+  return {
+    rank: idx + 1,
+    total_points: sorted[idx].total_points,
+    games_played: sorted[idx].games_played,
+    total_players: sorted.length
+  };
 }
 
 window.LabSDK = {
@@ -386,5 +408,6 @@ window.LabSDK = {
   getMyRank,
   getMyStats,
   getArcadePoints,
-  getGlobalLeaderboard
+  getGlobalLeaderboard,
+  getMyGlobalRank
 };
