@@ -83,6 +83,25 @@
 
   .empty { text-align: center; color: var(--muted); padding: 20px; font-size: 0.9rem; }
   .loading { text-align: center; color: var(--muted); padding: 40px; }
+
+  .howto {
+    background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px;
+    margin-bottom: 24px; overflow: hidden;
+  }
+  .howto summary {
+    cursor: pointer; padding: 14px 18px; font-weight: 700; font-size: 0.92rem;
+    color: var(--gold); list-style: none; display: flex; align-items: center; gap: 8px;
+  }
+  .howto summary::-webkit-details-marker { display: none; }
+  .howto summary::before { content: "▸"; transition: transform 0.15s ease; }
+  .howto[open] summary::before { transform: rotate(90deg); }
+  .howto .body { padding: 0 18px 18px; font-size: 0.88rem; color: #dce8e0; line-height: 1.55; }
+  .howto .body p { margin: 0 0 10px; }
+  .howto table { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 0.85rem; }
+  .howto table th, .howto table td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--border); }
+  .howto table th { color: var(--muted); font-weight: 600; }
+  .howto table td.pts { color: var(--gold); font-weight: 700; }
+  .howto .note { color: var(--muted); font-size: 0.82rem; font-style: italic; margin-top: 10px; }
 </style>
 </head>
 <body>
@@ -94,6 +113,23 @@
 </header>
 
 <div class="wrap">
+  <details class="howto">
+    <summary>ℹ️ How Arcade Rating works</summary>
+    <div class="body">
+      <p>Every game you play, you earn <strong>placement points</strong> based on where you rank <em>in that game</em>:</p>
+      <table>
+        <tr><th>Your rank in a game</th><th>Points earned</th></tr>
+        <tr><td>🥇 1st place</td><td class="pts">10</td></tr>
+        <tr><td>🥈 2nd place</td><td class="pts">7</td></tr>
+        <tr><td>🥉 3rd place</td><td class="pts">5</td></tr>
+        <tr><td>Top half of players</td><td class="pts">3</td></tr>
+        <tr><td>Everyone else who played</td><td class="pts">1</td></tr>
+      </table>
+      <p>Your <strong>Arcade Rating</strong> is the <em>average</em> of those points across every game you've played &mdash; not the total. That's on purpose: playing ten games without placing well won't outrank someone who's genuinely dominant at two or three. Showing up still earns you something, but <strong>placing well is what actually moves your rating.</strong></p>
+      <p class="note">Ties on rating are broken by whoever's proven it across more games.</p>
+    </div>
+  </details>
+
   <div id="you-section"></div>
 
   <div class="section-title">Top 20 — Arcade Rating</div>
