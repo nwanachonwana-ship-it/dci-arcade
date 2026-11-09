@@ -126,7 +126,7 @@
         <tr><td>Everyone else who played</td><td class="pts">1</td></tr>
       </table>
       <p>Your <strong>Arcade Rating</strong> is the <em>average</em> of those points across every game you've played &mdash; not the total. That's on purpose: playing ten games without placing well won't outrank someone who's genuinely dominant at two or three. Showing up still earns you something, but <strong>placing well is what actually moves your rating.</strong></p>
-      <p class="note">Ties on rating are broken by whoever's proven it across more games.</p>
+      <p class="note">If two players end up with the exact same rating, they share the same rank — whoever's proven it across more games just gets listed first.</p>
     </div>
   </details>
 
@@ -194,7 +194,7 @@
     const classes = ["gold", "silver", "bronze"];
     podiumEl.innerHTML = `<div class="podium">` + top3.map((p, i) => `
       <div class="spot ${classes[i]}">
-        <span class="medal">${MEDALS[i]}</span>
+        <span class="medal">${MEDALS[Math.min(p.rank, 3) - 1]}</span>
         <div class="handle">${p.handle}</div>
         <div class="pts">${p.rating} rating</div>
         <div class="games">${p.games_played} game${p.games_played === 1 ? "" : "s"}</div>
@@ -202,12 +202,11 @@
     `).join("") + `</div>`;
 
     const rest = top.slice(3);
-    el.innerHTML = rest.map((p, i) => {
-      const rank = i + 4;
+    el.innerHTML = rest.map((p) => {
       const isYou = p.handle === myHandle;
       return `
       <div class="row ${isYou ? "is-you" : ""}">
-        <div class="rank">#${rank}</div>
+        <div class="rank">#${p.rank}</div>
         <div class="handle">${p.handle}${isYou ? '<span class="you-tag">YOU</span>' : ""}<div class="detail">${p.games_played} game${p.games_played === 1 ? "" : "s"} played</div></div>
         <div class="value">${p.rating} rating</div>
       </div>`;
@@ -233,11 +232,11 @@
       if (board.length === 0) {
         block.innerHTML = `<h3>${game.title}</h3><p class="empty">No plays yet.</p>`;
       } else {
-        block.innerHTML = `<h3>${game.title}</h3>` + board.map((p, i) => {
+        block.innerHTML = `<h3>${game.title}</h3>` + board.map((p) => {
           const isYou = p.handle === myHandle;
           return `
           <div class="row ${isYou ? "is-you" : ""}">
-            <div class="rank">${i < 3 ? MEDALS[i] : "#" + (i+1)}</div>
+            <div class="rank">${p.rank <= 3 ? MEDALS[p.rank-1] : "#" + p.rank}</div>
             <div class="handle">${p.handle}${isYou ? '<span class="you-tag">YOU</span>' : ""}</div>
             <div class="value">${p.best_score}</div>
           </div>`;
