@@ -50,6 +50,28 @@
   header .links a { color: var(--gold); font-weight: 700; text-decoration: none; font-size: 0.9rem; }
   header .links a:hover { text-decoration: underline; }
 
+  .hof-widget {
+    display: block; max-width: 1100px; margin: 4px auto 20px; padding: 0 24px;
+    text-decoration: none; color: inherit; position: relative; z-index: 1;
+  }
+  .hof-widget .hof-head {
+    background: linear-gradient(90deg, var(--accent), var(--gold)); color: #1a0f06;
+    font-weight: 800; font-size: 0.95rem; padding: 10px 18px; border-radius: 12px 12px 0 0;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .hof-widget .hof-arrow { font-size: 0.78rem; font-weight: 700; }
+  .hof-widget .hof-body {
+    background: var(--card-bg); border: 1px solid var(--card-border); border-top: none;
+    border-radius: 0 0 12px 12px; padding: 14px 18px; display: flex; gap: 20px;
+    flex-wrap: wrap; align-items: center;
+  }
+  .hof-widget:hover .hof-body { border-color: var(--gold); }
+  .hof-loading { color: var(--muted); font-size: 0.85rem; }
+  .hof-slot { display: flex; align-items: center; gap: 8px; font-size: 0.88rem; }
+  .hof-slot .medal { font-size: 1.1rem; }
+  .hof-slot .name { font-weight: 800; }
+  .hof-slot .rating { color: var(--gold); font-weight: 700; }
+
   .pills { display: flex; gap: 10px; flex-wrap: wrap; max-width: 1100px; margin: 0 auto; padding: 4px 24px 28px; position: relative; z-index: 1; }
   .pill {
     background: var(--accent); color: #fff; border: none; border-radius: 999px;
@@ -134,10 +156,14 @@
   <p class="tagline">Built by students, for students. Play one. Beat a friend. Brag about it.</p>
   <div class="links">
     <a href="my-stats.html">📊 My Stats</a>
-    <a href="leaderboard.html">🏆 Hall of Fame</a>
     <a href="about.html">🔥 About Launch Lab</a>
   </div>
 </header>
+
+<a href="leaderboard.html" id="hof-widget" class="hof-widget">
+  <div class="hof-head">🏆 Hall of Fame <span class="hof-arrow">See full rankings &rarr;</span></div>
+  <div class="hof-body" id="hof-body"><span class="hof-loading">Loading current standings…</span></div>
+</a>
 
 <div class="pills" id="filter-pills">
   <button class="pill" data-type="subject" data-value="">All Games</button>
@@ -372,6 +398,38 @@
     ['pointerdown','keydown'].forEach(k => window.addEventListener(k, tryStart, true));
   }
 })();
+</script>
+
+<!-- Live Hall of Fame preview — real standings, not just a link to them. -->
+<script type="module">
+  import "./shared/lab-sdk.js";
+  const MEDALS = ["🥇", "🥈", "🥉"];
+
+  async function waitForSDK() {
+    while (!window.LabSDK) await new Promise(r => setTimeout(r, 50));
+  }
+
+  async function loadWidget() {
+    await waitForSDK();
+    const top = await LabSDK.getGlobalLeaderboard(3);
+    const body = document.getElementById("hof-body");
+    if (top.length === 0) {
+      body.innerHTML = `<span class="hof-loading">No scores yet — be the first on the board!</span>`;
+      return;
+    }
+    body.innerHTML = top.map((p, i) => `
+      <span class="hof-slot">
+        <span class="medal">${MEDALS[Math.min(p.rank, 3) - 1]}</span>
+        <span class="name">${p.handle}</span>
+        <span class="rating">${p.rating} rating</span>
+      </span>
+    `).join("");
+  }
+
+  loadWidget().catch(err => {
+    console.error("Hall of Fame widget failed to load", err);
+    document.getElementById("hof-body").innerHTML = `<span class="hof-loading">Couldn't load standings right now.</span>`;
+  });
 </script>
 
 </body>
