@@ -432,14 +432,16 @@ async function computeAllTotals() {
     .map((p) => ({ ...p, rating: +(p.total_points / p.games_played).toFixed(1) }))
     .sort((a, b) => b.rating - a.rating || b.games_played - a.games_played);
 
-  // Site-wide rank, tie-aware on the full sort key (rating, then games
-  // played, matching the explainer text on the Hall of Fame page) — a
-  // true tie (same rating AND same games played) shares the same rank.
-  withRating.forEach((p, i) => {
-    if (i === 0) { p.rank = 1; return; }
-    const prev = withRating[i - 1];
-    const sameTie = p.rating === prev.rating && p.games_played === prev.games_played;
-    p.rank = sameTie ? prev.rank : i + 1;
+  // Site-wide rank is based on rating ALONE — if two players show the
+  // same rating, they share the same rank and the same medal, full
+  // stop. games_played only decided their left-to-right SORT ORDER
+  // above (so a proven 10.0 lists before a one-game 10.0), it never
+  // invents a different rank for an identical number on screen.
+  let rank = 0, lastRating = null, seen = 0;
+  withRating.forEach((p) => {
+    seen++;
+    if (p.rating !== lastRating) { rank = seen; lastRating = p.rating; }
+    p.rank = rank;
   });
 
   return withRating;
