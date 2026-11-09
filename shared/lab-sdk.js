@@ -2,7 +2,7 @@
 // Include in any game with:
 //   <script type="module" src="https://<you>.github.io/launch-lab-arcade/shared/lab-sdk.js"></script>
 // Then use:
-//   LabSDK.getHandle()                  — permanent player name
+//   LabSDK.getHandle()                  — permanent player name (now with cross-device login)
 //   LabSDK.recordScore(gameId, score)   — logs the play AND updates best-score leaderboard
 //   LabSDK.getGameLeaderboard(gameId)   — top N players for one game
 //   LabSDK.getMyRank(gameId)            — this player's rank in one game
@@ -12,12 +12,20 @@
 //   LabSDK.getMyGlobalRank()            — this player's own site-wide rank, even outside the top N
 // recordScore() also shows a brief on-screen toast with the result, so
 // players get instant feedback without needing to visit a stats page.
+//
+// IMPORTANT one-time setup: Firebase console → Authentication → Sign-in
+// method → enable "Email/Password" (in addition to Anonymous, already
+// enabled). No real emails are ever collected — see the note above
+// SYNTHETIC_EMAIL_DOMAIN below for why this is safe.
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
 import {
   getAuth,
   signInAnonymously,
-  onAuthStateChanged
+  onAuthStateChanged,
+  linkWithCredential,
+  signInWithEmailAndPassword,
+  EmailAuthProvider
 } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
 import {
   getFirestore,
@@ -45,13 +53,33 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// ---- Auth bootstrap ----
+// No real email address is ever collected or sent anywhere. This fake
+// domain is only ever used locally to satisfy Firebase's email/password
+// API shape — it lets a student's existing ANONYMOUS account be upgraded
+// in place (same UID, so every score/leaderboard row they already have
+// stays valid) into one they can sign back into from a different device,
+// using their handle + a secret code instead of a real email.
+const SYNTHETIC_EMAIL_DOMAIN = "dciarcade.local";
+function syntheticEmail(handle) {
+  return `${handle.toLowerCase()}@${SYNTHETIC_EMAIL_DOMAIN}`;
+}
 
+// ---- Auth bootstrap ----
+// currentUser always reflects whoever is signed in RIGHT NOW — this
+// matters because logging in on a new device swaps the session out
+// from under an already-running page (anonymous user -> the student's
+// real returning account), and every LabSDK call needs to pick up that
+// swap immediately rather than keep using a stale first-resolved user.
+
+let currentUser = null;
 let authReadyResolve;
 const authReady = new Promise((resolve) => { authReadyResolve = resolve; });
 
 onAuthStateChanged(auth, (user) => {
-  if (user) authReadyResolve(user);
+  if (user) {
+    currentUser = user;
+    if (authReadyResolve) { authReadyResolve(user); authReadyResolve = null; }
+  }
 });
 
 signInAnonymously(auth).catch((err) => {
@@ -59,15 +87,29 @@ signInAnonymously(auth).catch((err) => {
 });
 
 function waitForAuth() {
-  return authReady;
+  return currentUser ? Promise.resolve(currentUser) : authReady;
 }
 
-// ---- Username modal ----
+// ---- New Player / Log In modal ----
 
 const LOCAL_UID_KEY = "labsdk_uid";
 const LOCAL_HANDLE_KEY = "labsdk_handle";
+const LOCAL_SECURE_DISMISS_KEY = "labsdk_secure_dismissed";
 
-function showHandleModal({ errorMessage } = {}) {
+function validateHandle(val) {
+  if (val.length < 3 || val.length > 20) return "Name must be 3-20 characters.";
+  if (!/^[a-zA-Z0-9_]+$/.test(val)) return "Letters, numbers, and underscores only.";
+  return null;
+}
+function validateCode(val) {
+  if (val.length < 6 || val.length > 20) return "Secret code must be 6-20 characters.";
+  return null;
+}
+
+// Shows a tabbed New Player / Log In modal. Resolves to either:
+//   { mode: "new", handle, code }
+//   { mode: "login", handle, code }
+function showAuthModal({ errorMessage } = {}) {
   return new Promise((resolve) => {
     const overlay = document.createElement("div");
     overlay.style.cssText = `
@@ -76,43 +118,118 @@ function showHandleModal({ errorMessage } = {}) {
       z-index: 999999; font-family: sans-serif;
     `;
     overlay.innerHTML = `
-      <div style="background:#fff; padding:24px; border-radius:12px; width:300px; max-width:90vw; text-align:center;">
-        <h2 style="margin:0 0 8px; font-size:18px; color:#111;">Choose your player name</h2>
-        <p style="margin:0 0 12px; font-size:13px; color:#555;">
-          This is permanent and used across all Launch Lab games. No real names.
-        </p>
-        ${errorMessage ? `<p style="color:#c0392b; font-size:13px; margin:0 0 8px;">${errorMessage}</p>` : ""}
-        <input id="labsdk-handle-input" type="text" maxlength="20" placeholder="e.g. mathwizard42"
-          style="width:100%; box-sizing:border-box; padding:8px; font-size:14px; border:1px solid #ccc; border-radius:6px; margin-bottom:12px;" />
-        <button id="labsdk-handle-submit"
-          style="width:100%; padding:10px; font-size:14px; background:#2d6cdf; color:#fff; border:none; border-radius:6px; cursor:pointer;">
-          Confirm
-        </button>
+      <div style="background:#fff; padding:24px; border-radius:12px; width:320px; max-width:90vw; text-align:center;">
+        <div style="display:flex; border-radius:8px; overflow:hidden; margin-bottom:16px; border:1px solid #ddd;">
+          <button id="labsdk-tab-new" style="flex:1; padding:9px; border:none; cursor:pointer; font-size:13px; font-weight:700; background:#2d6cdf; color:#fff;">New Player</button>
+          <button id="labsdk-tab-login" style="flex:1; padding:9px; border:none; cursor:pointer; font-size:13px; font-weight:700; background:#f1f3f5; color:#333;">Log In</button>
+        </div>
+
+        <div id="labsdk-pane-new">
+          <h2 style="margin:0 0 6px; font-size:17px; color:#111;">Choose your player name</h2>
+          <p style="margin:0 0 10px; font-size:12px; color:#555;">Used across all Launch Lab games. No real names.</p>
+          <input id="labsdk-new-handle" type="text" maxlength="20" placeholder="e.g. mathwizard42"
+            style="width:100%; box-sizing:border-box; padding:8px; font-size:14px; border:1px solid #ccc; border-radius:6px; margin-bottom:8px;" />
+          <input id="labsdk-new-code" type="password" maxlength="20" placeholder="Secret code (6+ characters)"
+            style="width:100%; box-sizing:border-box; padding:8px; font-size:14px; border:1px solid #ccc; border-radius:6px; margin-bottom:4px;" />
+          <p style="margin:0 0 10px; font-size:11px; color:#888; text-align:left;">Remember this! It's how you log back in on another device. We can't recover it if you forget.</p>
+          <button id="labsdk-new-submit" style="width:100%; padding:10px; font-size:14px; background:#2d6cdf; color:#fff; border:none; border-radius:6px; cursor:pointer;">Create Account</button>
+        </div>
+
+        <div id="labsdk-pane-login" style="display:none;">
+          <h2 style="margin:0 0 6px; font-size:17px; color:#111;">Log in to your account</h2>
+          <p style="margin:0 0 10px; font-size:12px; color:#555;">Enter the handle and secret code from when you first signed up.</p>
+          <input id="labsdk-login-handle" type="text" maxlength="20" placeholder="Your handle"
+            style="width:100%; box-sizing:border-box; padding:8px; font-size:14px; border:1px solid #ccc; border-radius:6px; margin-bottom:8px;" />
+          <input id="labsdk-login-code" type="password" maxlength="20" placeholder="Your secret code"
+            style="width:100%; box-sizing:border-box; padding:8px; font-size:14px; border:1px solid #ccc; border-radius:6px; margin-bottom:12px;" />
+          <button id="labsdk-login-submit" style="width:100%; padding:10px; font-size:14px; background:#2d6cdf; color:#fff; border:none; border-radius:6px; cursor:pointer;">Log In</button>
+        </div>
+
+        ${errorMessage ? `<p style="color:#c0392b; font-size:12px; margin:10px 0 0;">${errorMessage}</p>` : ""}
       </div>
     `;
     document.body.appendChild(overlay);
-    const input = overlay.querySelector("#labsdk-handle-input");
-    const button = overlay.querySelector("#labsdk-handle-submit");
-    input.focus();
 
-    function submit() {
-      const val = input.value.trim();
-      if (val.length < 3 || val.length > 20) {
-        alert("Name must be 3-20 characters.");
-        return;
-      }
-      if (!/^[a-zA-Z0-9_]+$/.test(val)) {
-        alert("Letters, numbers, and underscores only.");
-        return;
-      }
+    const tabNew = overlay.querySelector("#labsdk-tab-new");
+    const tabLogin = overlay.querySelector("#labsdk-tab-login");
+    const paneNew = overlay.querySelector("#labsdk-pane-new");
+    const paneLogin = overlay.querySelector("#labsdk-pane-login");
+
+    function showTab(which) {
+      const isNew = which === "new";
+      paneNew.style.display = isNew ? "block" : "none";
+      paneLogin.style.display = isNew ? "none" : "block";
+      tabNew.style.background = isNew ? "#2d6cdf" : "#f1f3f5";
+      tabNew.style.color = isNew ? "#fff" : "#333";
+      tabLogin.style.background = isNew ? "#f1f3f5" : "#2d6cdf";
+      tabLogin.style.color = isNew ? "#333" : "#fff";
+    }
+    tabNew.addEventListener("click", () => showTab("new"));
+    tabLogin.addEventListener("click", () => showTab("login"));
+
+    function finish(result) {
       document.body.removeChild(overlay);
-      resolve(val);
+      resolve(result);
     }
 
-    button.addEventListener("click", submit);
-    input.addEventListener("keydown", (e) => {
-      if (e.key === "Enter") submit();
+    overlay.querySelector("#labsdk-new-submit").addEventListener("click", () => {
+      const handle = overlay.querySelector("#labsdk-new-handle").value.trim();
+      const code = overlay.querySelector("#labsdk-new-code").value;
+      const handleErr = validateHandle(handle);
+      if (handleErr) { alert(handleErr); return; }
+      const codeErr = validateCode(code);
+      if (codeErr) { alert(codeErr); return; }
+      finish({ mode: "new", handle, code });
     });
+
+    overlay.querySelector("#labsdk-login-submit").addEventListener("click", () => {
+      const handle = overlay.querySelector("#labsdk-login-handle").value.trim();
+      const code = overlay.querySelector("#labsdk-login-code").value;
+      if (!handle || !code) { alert("Enter both your handle and secret code."); return; }
+      finish({ mode: "login", handle, code });
+    });
+  });
+}
+
+// Small, non-blocking "secure your account" banner — offered once to
+// players who signed up before login existed, so nobody's locked out
+// of cross-device access just because they joined early.
+function showSecurePrompt() {
+  if (localStorage.getItem(LOCAL_SECURE_DISMISS_KEY)) return;
+  const bar = document.createElement("div");
+  bar.style.cssText = `
+    position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%);
+    background: #1a1d24; color: #fff; padding: 10px 14px; border-radius: 10px;
+    font-family: sans-serif; font-size: 13px; font-weight: 600; z-index: 999998;
+    display: flex; align-items: center; gap: 10px; box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+    max-width: 92vw; text-align: center;
+  `;
+  bar.innerHTML = `
+    <span>🔒 Set a secret code to log in on other devices</span>
+    <button id="labsdk-secure-yes" style="background:#2d6cdf; color:#fff; border:none; border-radius:999px; padding:5px 12px; font-size:12px; font-weight:700; cursor:pointer;">Set it up</button>
+    <button id="labsdk-secure-no" style="background:transparent; color:#aaa; border:none; font-size:16px; cursor:pointer; padding:0 4px;">✕</button>
+  `;
+  document.body.appendChild(bar);
+  bar.querySelector("#labsdk-secure-no").addEventListener("click", () => {
+    localStorage.setItem(LOCAL_SECURE_DISMISS_KEY, "1");
+    bar.remove();
+  });
+  bar.querySelector("#labsdk-secure-yes").addEventListener("click", async () => {
+    const code = prompt("Choose a secret code (6+ characters) to log in on other devices later:");
+    if (!code) return;
+    const err = validateCode(code);
+    if (err) { alert(err); return; }
+    try {
+      const handle = await getHandle();
+      const cred = EmailAuthProvider.credential(syntheticEmail(handle), code);
+      await linkWithCredential(currentUser, cred);
+      localStorage.setItem(LOCAL_SECURE_DISMISS_KEY, "1");
+      bar.innerHTML = `<span>✅ Secret code set — you can log in with "${handle}" on any device now.</span>`;
+      setTimeout(() => bar.remove(), 3000);
+    } catch (e) {
+      console.error("LabSDK: securing account failed", e);
+      alert("Something went wrong setting your code. Try again later.");
+    }
   });
 }
 
@@ -144,28 +261,55 @@ async function getHandle() {
     if (cached) return cached;
   }
 
-  // Check Firestore for an existing handle tied to this uid
+  // Check Firestore for an existing handle tied to this uid (covers
+  // returning to the same browser after the local cache was cleared)
   const userRef = doc(db, "usernames", uid);
   const snap = await getDoc(userRef);
   if (snap.exists()) {
     const handle = snap.data().handle;
     localStorage.setItem(LOCAL_UID_KEY, uid);
     localStorage.setItem(LOCAL_HANDLE_KEY, handle);
+    const alreadySecured = user.providerData.some((p) => p.providerId === "password");
+    if (!alreadySecured) showSecurePrompt();
     return handle;
   }
 
-  // No handle yet — prompt, retry on collision
+  // No handle on this device/session yet — offer New Player or Log In
   let errorMessage;
   while (true) {
-    const candidate = await showHandleModal({ errorMessage });
+    const { mode, handle, code } = await showAuthModal({ errorMessage });
+
+    if (mode === "login") {
+      try {
+        const result = await signInWithEmailAndPassword(auth, syntheticEmail(handle), code);
+        currentUser = result.user; // swap the active session to the returning account
+        localStorage.setItem(LOCAL_UID_KEY, result.user.uid);
+        localStorage.setItem(LOCAL_HANDLE_KEY, handle);
+        return handle;
+      } catch (err) {
+        console.error("LabSDK: login failed", err);
+        errorMessage = "Handle or secret code is incorrect.";
+        continue;
+      }
+    }
+
+    // mode === "new"
     try {
-      await claimHandle(uid, candidate);
+      await claimHandle(uid, handle);
+      try {
+        const cred = EmailAuthProvider.credential(syntheticEmail(handle), code);
+        await linkWithCredential(currentUser, cred);
+      } catch (linkErr) {
+        // Handle is claimed either way — login from another device just
+        // won't work yet if this step failed. Not fatal to this session.
+        console.error("LabSDK: linking secret code failed", linkErr);
+      }
       localStorage.setItem(LOCAL_UID_KEY, uid);
-      localStorage.setItem(LOCAL_HANDLE_KEY, candidate);
-      return candidate;
+      localStorage.setItem(LOCAL_HANDLE_KEY, handle);
+      return handle;
     } catch (err) {
       errorMessage = err.message === "TAKEN"
-        ? `"${candidate}" is already taken. Try another.`
+        ? `"${handle}" is already taken. Try another, or use Log In if that's your account.`
         : "Something went wrong. Try again.";
       console.error("LabSDK: failed to claim handle", err);
     }
