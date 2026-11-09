@@ -27,13 +27,9 @@ import {
   collection,
   query,
   where,
-  orderBy,
-  limit as fbLimit,
   getDocs,
   addDoc,
-  setDoc,
-  serverTimestamp,
-  getCountFromServer
+  serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -273,10 +269,11 @@ async function recordScore(gameId, score, meta = {}) {
   // 3. Immediate feedback — fetch rank right after and show it on screen,
   // with a one-tap Share so a good run can turn into a new player.
   try {
-    const rank = await getMyRank(gameId);
-    const totalQuery = query(collection(db, "leaderboards"), where("game_id", "==", gameId));
-    const totalSnap = await getCountFromServer(totalQuery);
-    const total = totalSnap.data().count;
+    const rows = await fetchGameRows(gameId);
+    const ranked = rankEntries(rows);
+    const mine = ranked.find((r) => r.uid === user.uid);
+    const rank = mine ? mine.rank : 1;
+    const total = ranked.length;
     const prefix = isNewBest ? "🏆 New best!" : "Score saved.";
     showToast(
       `${prefix} Rank #${rank} of ${total} — ${score} pts`,
@@ -288,68 +285,82 @@ async function recordScore(gameId, score, meta = {}) {
   }
 }
 
-// Top N players for one game, by best score.
-async function getGameLeaderboard(gameId, max = 10) {
-  const q = query(
-    collection(db, "leaderboards"),
-    where("game_id", "==", gameId),
-    orderBy("best_score", "desc"),
-    fbLimit(max)
-  );
+// Shared internal helpers — every ranking function in this file reads
+// via a plain equality-only query (`where game_id == X`, nothing else)
+// and ranks client-side afterward. Firestore always serves an
+// equality-only query with its automatic single-field index, so none
+// of this ever depends on a manually-created composite index existing
+// (or being rebuilt after someone edits rules). Sorting/ranking a few
+// hundred rows in JS is instant at classroom scale.
+
+async function fetchGameRows(gameId) {
+  const q = query(collection(db, "leaderboards"), where("game_id", "==", gameId));
   const snap = await getDocs(q);
   return snap.docs.map((d) => d.data());
+}
+
+// Sorts by best_score desc and tags each row with a tie-aware rank —
+// equal scores share the same rank (1,1,3,4...).
+function rankEntries(rows) {
+  const sorted = [...rows].sort((a, b) => b.best_score - a.best_score);
+  let rank = 0, lastScore = null, seen = 0;
+  sorted.forEach((r) => {
+    seen++;
+    if (r.best_score !== lastScore) { rank = seen; lastScore = r.best_score; }
+    r.rank = rank;
+  });
+  return sorted;
+}
+
+// Top N players for one game, by best score. Ranks are tie-aware —
+// equal scores share the same rank, matching how getMyRank computes
+// rank everywhere else, so a player never sees a different rank on
+// their own stats than on this public board.
+async function getGameLeaderboard(gameId, max = 10) {
+  const rows = await fetchGameRows(gameId);
+  return rankEntries(rows).slice(0, max);
 }
 
 // This player's rank in one game (1 = first place). Returns null if
 // they haven't recorded a score for this game yet.
 async function getMyRank(gameId) {
   const user = await waitForAuth();
-  const myRef = doc(db, "leaderboards", `${gameId}_${user.uid}`);
-  const mySnap = await getDoc(myRef);
-  if (!mySnap.exists()) return null;
-
-  const myScore = mySnap.data().best_score;
-  const higherQuery = query(
-    collection(db, "leaderboards"),
-    where("game_id", "==", gameId),
-    where("best_score", ">", myScore)
-  );
-  const countSnap = await getCountFromServer(higherQuery);
-  return countSnap.data().count + 1;
+  const rows = await fetchGameRows(gameId);
+  const ranked = rankEntries(rows);
+  const mine = ranked.find((r) => r.uid === user.uid);
+  return mine ? mine.rank : null;
 }
 
 // This player's rank across EVERY game they've played — the data
-// a cross-game "my stats" / profile page needs, in one call.
+// a cross-game "my stats" / profile page needs. Pulls the WHOLE
+// leaderboards collection once (same proven pattern as the Hall of
+// Fame page) rather than one query per game, so this is a single
+// network round trip regardless of how many games this player has
+// played.
 // Returns: [{ game_id, best_score, rank, total_players }, ...]
 async function getMyStats() {
   const user = await waitForAuth();
-  const q = query(collection(db, "leaderboards"), where("uid", "==", user.uid));
-  const snap = await getDocs(q);
-  const entries = snap.docs.map((d) => d.data());
+  const snap = await getDocs(collection(db, "leaderboards"));
+  const allRows = snap.docs.map((d) => d.data());
 
-  return Promise.all(
-    entries.map(async (entry) => {
-      const higherQuery = query(
-        collection(db, "leaderboards"),
-        where("game_id", "==", entry.game_id),
-        where("best_score", ">", entry.best_score)
-      );
-      const totalQuery = query(
-        collection(db, "leaderboards"),
-        where("game_id", "==", entry.game_id)
-      );
-      const [higherSnap, totalSnap] = await Promise.all([
-        getCountFromServer(higherQuery),
-        getCountFromServer(totalQuery)
-      ]);
-      return {
-        game_id: entry.game_id,
-        best_score: entry.best_score,
-        rank: higherSnap.data().count + 1,
-        total_players: totalSnap.data().count
-      };
-    })
-  );
+  const byGame = {};
+  allRows.forEach((r) => {
+    if (!byGame[r.game_id]) byGame[r.game_id] = [];
+    byGame[r.game_id].push(r);
+  });
+
+  const myGameIds = allRows.filter((r) => r.uid === user.uid).map((r) => r.game_id);
+
+  return myGameIds.map((gameId) => {
+    const ranked = rankEntries(byGame[gameId]);
+    const mine = ranked.find((r) => r.uid === user.uid);
+    return {
+      game_id: gameId,
+      best_score: mine.best_score,
+      rank: mine.rank,
+      total_players: ranked.length
+    };
+  });
 }
 
 // Converts a rank (out of totalPlayers) into Arcade Points.
@@ -401,11 +412,13 @@ async function computeAllTotals() {
 
   const totals = {}; // uid -> { uid, handle, total_points, games_played }
   Object.values(byGame).forEach((entries) => {
-    entries.sort((a, b) => b.best_score - a.best_score);
-    const totalPlayers = entries.length;
-    entries.forEach((entry, idx) => {
-      const rank = idx + 1;
-      const points = pointsForRank(rank, totalPlayers);
+    // Tie-aware rank within this game (shared with every other ranking
+    // function): equal scores earn equal points, rather than whichever
+    // player's row Firestore happened to return first.
+    const ranked = rankEntries(entries);
+    const totalPlayers = ranked.length;
+    ranked.forEach((entry) => {
+      const points = pointsForRank(entry.rank, totalPlayers);
       if (!totals[entry.uid]) {
         totals[entry.uid] = { uid: entry.uid, handle: entry.handle, total_points: 0, games_played: 0 };
       }
@@ -415,9 +428,21 @@ async function computeAllTotals() {
     });
   });
 
-  return Object.values(totals)
+  const withRating = Object.values(totals)
     .map((p) => ({ ...p, rating: +(p.total_points / p.games_played).toFixed(1) }))
     .sort((a, b) => b.rating - a.rating || b.games_played - a.games_played);
+
+  // Site-wide rank, tie-aware on the full sort key (rating, then games
+  // played, matching the explainer text on the Hall of Fame page) — a
+  // true tie (same rating AND same games played) shares the same rank.
+  withRating.forEach((p, i) => {
+    if (i === 0) { p.rank = 1; return; }
+    const prev = withRating[i - 1];
+    const sameTie = p.rating === prev.rating && p.games_played === prev.games_played;
+    p.rank = sameTie ? prev.rank : i + 1;
+  });
+
+  return withRating;
 }
 
 // Top players site-wide, ranked by Arcade Rating (average points per
@@ -438,13 +463,13 @@ async function getGlobalLeaderboard(max = 20) {
 async function getMyGlobalRank() {
   const user = await waitForAuth();
   const sorted = await computeAllTotals();
-  const idx = sorted.findIndex((p) => p.uid === user.uid);
-  if (idx === -1) return null;
+  const mine = sorted.find((p) => p.uid === user.uid);
+  if (!mine) return null;
   return {
-    rank: idx + 1,
-    rating: sorted[idx].rating,
-    total_points: sorted[idx].total_points,
-    games_played: sorted[idx].games_played,
+    rank: mine.rank,
+    rating: mine.rating,
+    total_points: mine.total_points,
+    games_played: mine.games_played,
     total_players: sorted.length
   };
 }
